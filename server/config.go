@@ -205,7 +205,12 @@ func updateConfig(k string, v any) error {
 	} else {
 		return errors.New("invalid setting")
 	}
-	return writeConfig()
+	err := writeConfig()
+	if err != nil {
+		slog.Error("updateConfig: Failed to write updated config!", "error", err)
+		return errors.New("failed to write config")
+	}
+	return nil
 }
 
 // Write current Config to file

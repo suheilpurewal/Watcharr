@@ -769,7 +769,7 @@ func (b *BaseRouter) addAuthRoutes() {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Proxy authentication disabled"})
 			return
 		}
-		user.Username = c.GetHeader(Config.HEADER_AUTH.HEADER_NAME)
+		user.Username = c.GetHeader(Config.HEADER_AUTH.HeaderName)
 		if user.Username == "" {
 			slog.Error("Request made to login via Proxy, but authentication header was not provided")
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Authentication header missing"})
@@ -1158,12 +1158,36 @@ func (b *BaseRouter) addServerRoutes() {
 
 	// Update config
 	server.POST("/config", func(c *gin.Context) {
+		// If query param `s` provided, handle specific setting.
+		// In this case, request body should be new setting value.
+		s := c.Query("s")
+		if s != "" {
+			switch s {
+			case "HEADER_AUTH":
+				var ur TrustedHeaderAuthSetting
+				err := c.ShouldBindJSON(&ur)
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+					return
+				}
+				err = setTrustedHeaderAuthSetting(ur)
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+					return
+				}
+				c.Status(http.StatusOK)
+				return
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: "unsupported setting"})
+			return
+		}
+		// No `s` param.. handle normally with `updateConfig` func.
 		var ur KeyValueRequest
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
 			err := updateConfig(ur.Key, ur.Value)
 			if err != nil {
-				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
 			}
 			c.Status(http.StatusOK)

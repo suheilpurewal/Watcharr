@@ -933,6 +933,10 @@ export interface ServerConfig {
   DEBUG: boolean;
 }
 
+export interface ServerConfigByName<T> {
+  value: T;
+}
+
 export interface SonarrSettings {
   name: string;
   host?: string;
@@ -955,6 +959,13 @@ export interface RadarrSettings {
 export interface TwitchSettings {
   clientId: string;
   clientSecret: string;
+}
+
+export interface TrustedHeaderAuthSetting {
+  enabled: boolean;
+  headerName: string;
+  autoLogin?: boolean;
+  logoutUrl?: string;
 }
 
 export interface DropDownItem {

@@ -14,21 +14,37 @@ import (
 )
 
 type TrustedHeaderAuthSetting struct {
-	// What is the name of the trusted header that
-	// will contain the logged in users username?
-	HEADER_NAME string `json:",omitempty"`
+	// Required: Should header auth be enabled?
+	// This bool exists so header auth can be toggled
+	// easily without having to remove configuration.
+	// To be actually enabled, HEADER_NAME must also
+	// be set.
+	Enabled bool `json:"enabled,omitempty"`
+	// Required: What is the name of the trusted header
+	// that will contain the logged in users username?
+	HeaderName string `json:"headerName,omitempty"`
 	// Should the frontend attempt auto login if
 	// trusted header auth is enabled.
-	AUTO_LOGIN bool `json:",omitempty"`
+	AutoLogin bool `json:"autoLogin,omitempty"`
 	// Where can we redirect the user to logout
 	// of the auth service?
-	LOGOUT_URL string `json:",omitempty"`
+	LogoutUrl string `json:"logoutUrl,omitempty"`
 }
 
 // Is trusted header auth configured on this server?
-// If yes, then it is enabled.
 func trustedHeaderAuthIsEnabled() bool {
-	return Config.HEADER_AUTH.HEADER_NAME != ""
+	return Config.HEADER_AUTH.Enabled && Config.HEADER_AUTH.HeaderName != ""
+}
+
+func setTrustedHeaderAuthSetting(has TrustedHeaderAuthSetting) error {
+	slog.Debug("setTrustedHeaderAuthSetting: Attempting to update to new provided value", "new_value", has)
+	Config.HEADER_AUTH = has
+	err := writeConfig()
+	if err != nil {
+		slog.Error("setTrustedHeaderAuthSetting: Failed to write updated config!", "error", err)
+		return errors.New("failed to write config")
+	}
+	return nil
 }
 
 // Login via header sso
