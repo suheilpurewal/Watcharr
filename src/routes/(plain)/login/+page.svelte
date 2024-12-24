@@ -10,6 +10,8 @@
   let error: string;
   let login = true;
   let availableProviders: string[] = [];
+  let apHeader = false;
+  let apPlex = false;
   let signupEnabled = true;
   let useEmby = false;
 
@@ -25,6 +27,8 @@
           goto("/setup");
         }
         availableProviders = r.data.available;
+        apHeader = availableProviders?.includes("header");
+        apPlex = availableProviders?.includes("plex");
         signupEnabled = r.data.signupEnabled;
         useEmby = r.data.useEmby;
       }
@@ -186,32 +190,36 @@
             {/if}
           {/if}
         </div>
-        {#if availableProviders?.findIndex((provider) => provider == "header") > -1}
-          <button
-            type="button"
-            name="proxy"
-            class="other"
-            on:click={() => {
-              proxyLogin();
-            }}
-          >
-            SSO
-          </button>
-        {/if}
-        {#if availableProviders?.findIndex((provider) => provider == "plex") > -1}
+        {#if apHeader || apPlex}
           <p style="font-weight: bold; font-size: 14px;">or</p>
-          <div class="login-btns">
-            <button
-              type="button"
-              on:click={() => {
-                plexLogin();
-              }}
-              name="plex"
-              class="plex other"
-            >
-              <Icon i="plex" wh={18} />Continue with Plex
-            </button>
-          </div>
+          {#if apHeader}
+            <div class="login-btns">
+              <button
+                type="button"
+                name="proxy"
+                class="proxy other"
+                on:click={() => {
+                  proxyLogin();
+                }}
+              >
+                <Icon i="lock-closed" wh={18} />Continue with SSO
+              </button>
+            </div>
+          {/if}
+          {#if apPlex}
+            <div class="login-btns">
+              <button
+                type="button"
+                on:click={() => {
+                  plexLogin();
+                }}
+                name="plex"
+                class="plex other"
+              >
+                <Icon i="plex" wh={18} />Continue with Plex
+              </button>
+            </div>
+          {/if}
         {/if}
       {:else}
         <div class="login-btns">

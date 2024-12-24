@@ -35,11 +35,26 @@
   }
 
   async function save() {
+    const nid = notify({
+      type: "loading",
+      text: "Saving.."
+    });
     try {
       await axios.post("/server/config", headerCfg, { params: { s: "HEADER_AUTH" } });
+      notify({
+        id: nid,
+        type: "success",
+        text: "Changes saved!"
+      });
+      onClose();
     } catch (err) {
       console.error("save failed!", err);
-      notify({ type: "error", text: "Failed to save config. Please try again!", time: 6000 });
+      notify({
+        id: nid,
+        type: "error",
+        text: "Failed to save config. Please try again!",
+        time: 6000
+      });
     }
   }
 

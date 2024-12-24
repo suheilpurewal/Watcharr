@@ -51,7 +51,8 @@ export type Icon =
   | "unpin"
   | "sparkles"
   | "tag"
-  | "ticket";
+  | "ticket"
+  | "lock-closed";
 
 export type Theme = "light" | "dark";
 

@@ -39,7 +39,6 @@
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
-  let proxyHeaderDisabled = false;
   let jfDisabled = false;
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
@@ -229,7 +228,7 @@
             disabled={tmdbkDisabled}
           />
         </Setting>
-        <Setting title="Signup" desc="Allow signing up with web ui" row>
+        <Setting title="Signup" desc="Allow signing up with Watcharr credentials." row>
           <Checkbox
             name="SIGNUP_ENABLED"
             disabled={signupDisabled}
@@ -242,7 +241,7 @@
             }}
           />
         </Setting>
-        <Setting title="Debug" desc="Enable debug logging" row>
+        <Setting title="Debug" desc="Enable debug logging." row>
           <Checkbox
             name="DEBUG"
             disabled={debugDisabled}
