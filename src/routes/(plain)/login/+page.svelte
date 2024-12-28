@@ -280,6 +280,11 @@
     gap: 10px;
     width: 100%;
 
+    /* Hardcoded point for when main watcharr/jellyfin btns break. */
+    @media screen and (max-width: 320px) {
+      flex-wrap: wrap;
+    }
+
     button {
       display: flex;
       flex-flow: row;
