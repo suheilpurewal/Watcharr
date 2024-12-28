@@ -66,8 +66,8 @@ func loginTrustedHeaderAuth(user *User, db *gorm.DB) (AuthResponse, error) {
 	dbUser := new(User)
 	res := db.Where("username = ? AND (type IS NULL OR type = 0 OR type = ?)", user.Username, PROXY_USER).Take(&dbUser)
 	if res.Error != nil {
-		slog.Debug("loginTrustedHeaderAuth: Creating new User from authentication header", "username_from_header", user.Username)
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			slog.Info("loginTrustedHeaderAuth: Creating new User from authentication header", "username_from_header", user.Username)
 			// Record not found, so we should create the user (if configured to do so)
 			// dbUser will be empty, so we can just reuse it for this purpose.
 			dbUser.Username = user.Username
