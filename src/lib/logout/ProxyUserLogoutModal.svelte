@@ -45,7 +45,7 @@
 
 <Modal
   title="Logout"
-  desc="You logged in via single sign-on. Did you mean to try logging out?"
+  desc="You logged in via single sign-on. Did you click log out by mistake?"
   {onClose}
 >
   {#if loadingBtns}
