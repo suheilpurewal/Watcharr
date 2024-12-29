@@ -67,7 +67,8 @@
       <p>
         Logging out of Watcharr will clear your local credentials and data, but <b
           >you will still be logged in to your single sign-on service</b
-        >!
+        >! Do <b>not</b> do this on a public machine and assume you are logged out, this account could
+        still be accessible.
       </p>
       <button on:click={logout}>Log out of Watcharr</button>
     </div>
