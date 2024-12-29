@@ -215,7 +215,7 @@
                   proxyLogin();
                 }}
               >
-                <Icon i="lock-closed" wh={18} />Continue with SSO
+                <Icon i="lock-closed" wh={18} />Continue with Single Sign-On
               </button>
             </div>
           {/if}
