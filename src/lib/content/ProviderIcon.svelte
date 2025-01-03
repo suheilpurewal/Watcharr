@@ -4,8 +4,12 @@
 -->
 
 <script lang="ts">
-  export let i: string;
-  export let wh = 24;
+  interface Props {
+    i: string;
+    wh?: number;
+  }
+
+  let { i, wh = 24 }: Props = $props();
 </script>
 
 {#if i === "Apple TV Plus"}

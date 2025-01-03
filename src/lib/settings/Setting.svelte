@@ -1,8 +1,19 @@
 <script lang="ts">
-  export let title: string = "";
-  export let desc: string = "";
-  export let row: boolean = false;
-  export let tag: string | undefined = undefined;
+  interface Props {
+    title?: string;
+    desc?: string;
+    row?: boolean;
+    tag?: string | undefined;
+    children?: import('svelte').Snippet;
+  }
+
+  let {
+    title = "",
+    desc = "",
+    row = false,
+    tag = undefined,
+    children
+  }: Props = $props();
 </script>
 
 <div class={[row ? "row" : "", "setting-ctr"].join(" ")}>
@@ -26,7 +37,7 @@
     <h5 class="norm">{desc}</h5>
   {/if}
 
-  <slot />
+  {@render children?.()}
 </div>
 
 <style lang="scss">

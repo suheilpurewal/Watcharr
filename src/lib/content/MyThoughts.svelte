@@ -1,16 +1,22 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from "svelte";
   import Modal from "../Modal.svelte";
   import Icon from "../Icon.svelte";
   import { notify } from "../util/notify";
 
-  export let contentTitle: string;
-  export let thoughts: string;
-  export let onChange: (newThoughts: string) => Promise<boolean>;
+  interface Props {
+    contentTitle: string;
+    thoughts: string;
+    onChange: (newThoughts: string) => Promise<boolean>;
+  }
 
-  let modalOpen = false;
-  let textarea: HTMLTextAreaElement | undefined;
-  $: thoughtsToDisplay = thoughts ? thoughts : `Set thoughts on ${contentTitle}`;
+  let { contentTitle, thoughts, onChange }: Props = $props();
+
+  let modalOpen = $state(false);
+  let textarea: HTMLTextAreaElement | undefined = $state();
+  let thoughtsToDisplay = $derived(thoughts ? thoughts : `Set thoughts on ${contentTitle}`);
 
   function resizeTextarea() {
     if (!textarea) {
@@ -20,12 +26,14 @@
     textarea.style.height = textarea.scrollHeight + "px";
   }
 
-  $: textarea, resizeTextarea();
+  run(() => {
+    textarea, resizeTextarea();
+  });
 </script>
 
 <button
   class={`plain thoughts${thoughtsToDisplay?.length > 100 ? " long" : ""}${thoughts ? "" : " placeholdered"}`}
-  on:click={() => {
+  onclick={() => {
     modalOpen = !modalOpen;
     if (modalOpen) {
       resizeTextarea();
@@ -59,8 +67,8 @@
       placeholder={`My thoughts on ${contentTitle}`}
       value={thoughts}
       bind:this={textarea}
-      on:input={resizeTextarea}
-    />
+      oninput={resizeTextarea}
+></textarea>
   </Modal>
 {/if}
 

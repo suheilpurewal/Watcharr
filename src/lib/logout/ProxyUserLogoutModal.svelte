@@ -7,10 +7,14 @@
   import { clearWatcharrData } from ".";
   import { goto } from "$app/navigation";
 
-  export let onClose: () => void;
+  interface Props {
+    onClose: () => void;
+  }
 
-  let loadingBtns = true;
-  let logoutUrl: string | undefined = undefined;
+  let { onClose }: Props = $props();
+
+  let loadingBtns = $state(true);
+  let logoutUrl: string | undefined = $state(undefined);
 
   onMount(async () => {
     try {
@@ -62,7 +66,7 @@
           operator, let them know!
         {/if}
       </p>
-      <button disabled={!logoutUrl} on:click={proxyLogout}>Log out of Single Sign-On Service</button
+      <button disabled={!logoutUrl} onclick={proxyLogout}>Log out of Single Sign-On Service</button
       >
       <p>
         Logging out of Watcharr will clear your local credentials and data, but <b
@@ -70,7 +74,7 @@
         >! Do <b>not</b> do this on a public machine and assume you are logged out, this account could
         still be accessible.
       </p>
-      <button on:click={logout}>Log out of Watcharr</button>
+      <button onclick={logout}>Log out of Watcharr</button>
     </div>
   {/if}
 </Modal>

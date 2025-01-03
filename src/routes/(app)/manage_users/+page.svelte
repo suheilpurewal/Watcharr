@@ -27,39 +27,43 @@
       <Spinner />
     {:then}
       <table>
-        <tr>
-          <th>Name</th>
-          <th>Private</th>
-          <th>Joined</th>
-          <th></th>
-        </tr>
-        {#each allUsers as u}
-          {@const joinDate = new Date(u.createdAt)}
+        <thead>
           <tr>
-            <td class="username">
-              <div class={`type-${u.type}`}>
-                <UserTypeIcon type={u.type} />
-                {u.username}
-                {#if userHasPermission(u.permissions, UserPermission.PERM_ADMIN)}
-                  <span class="tag">Admin</span>
-                {/if}
-              </div>
-            </td>
-            <td>{u.private === true ? "Yes" : "No"}</td>
-            <td>
-              {joinDate.getDate()}{getOrdinalSuffix(joinDate.getDate())}
-              {monthsShort[joinDate.getMonth()]}
-              {joinDate.getFullYear() === currentYear
-                ? ""
-                : `'${String(joinDate.getFullYear()).substring(2, 4)}`}</td
-            >
-            <td>
-              <button class="plain" on:click={() => (editingUser = u)}>
-                <Icon i="chevron" facing="right" wh={24} />
-              </button>
-            </td>
+            <th>Name</th>
+            <th>Private</th>
+            <th>Joined</th>
+            <th></th>
           </tr>
-        {/each}
+        </thead>
+        <tbody>
+          {#each allUsers as u}
+            {@const joinDate = new Date(u.createdAt)}
+            <tr>
+              <td class="username">
+                <div class={`type-${u.type}`}>
+                  <UserTypeIcon type={u.type} />
+                  {u.username}
+                  {#if userHasPermission(u.permissions, UserPermission.PERM_ADMIN)}
+                    <span class="tag">Admin</span>
+                  {/if}
+                </div>
+              </td>
+              <td>{u.private === true ? "Yes" : "No"}</td>
+              <td>
+                {joinDate.getDate()}{getOrdinalSuffix(joinDate.getDate())}
+                {monthsShort[joinDate.getMonth()]}
+                {joinDate.getFullYear() === currentYear
+                  ? ""
+                  : `'${String(joinDate.getFullYear()).substring(2, 4)}`}</td
+              >
+              <td>
+                <button class="plain" on:click={() => (editingUser = u)}>
+                  <Icon i="chevron" facing="right" wh={24} />
+                </button>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
       </table>
 
       {#if editingUser}

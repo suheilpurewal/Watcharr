@@ -15,8 +15,8 @@
     activeFilters.update((a) => (a = af));
   }
 
-  $: filter = $activeFilters;
-  $: features = $serverFeatures;
+  let filter = $derived($activeFilters);
+  let features = $derived($serverFeatures);
 </script>
 
 <div class="menu">
@@ -27,7 +27,7 @@
         <button
           class="plain"
           use:tooltip={{ text: "Clear", pos: "left" }}
-          on:click={() => clearActiveFilters()}
+          onclick={() => clearActiveFilters()}
         >
           <Icon i="close-circle" wh={18} />
         </button>
@@ -36,20 +36,20 @@
     <div class="type-filter">
       <button
         class={`${filter.type.includes("tv") ? "active" : ""}`}
-        on:click={() => filterClicked("type", "tv")}
+        onclick={() => filterClicked("type", "tv")}
       >
         SHOW
       </button>
       <button
         class={`${filter.type.includes("movie") ? "active" : ""}`}
-        on:click={() => filterClicked("type", "movie")}
+        onclick={() => filterClicked("type", "movie")}
       >
         MOVIE
       </button>
       {#if features.games}
         <button
           class={`${filter.type.includes("game") ? "active" : ""}`}
-          on:click={() => filterClicked("type", "game")}
+          onclick={() => filterClicked("type", "game")}
         >
           GAME
         </button>
@@ -58,13 +58,13 @@
     <h4 class="norm sm-caps">status</h4>
     <button
       class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
-      on:click={() => filterClicked("status", "planned")}
+      onclick={() => filterClicked("status", "planned")}
     >
       planned
     </button>
     <button
       class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
-      on:click={() => filterClicked("status", "watching")}
+      onclick={() => filterClicked("status", "watching")}
     >
       watching
       {#if features.games}
@@ -73,7 +73,7 @@
     </button>
     <button
       class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
-      on:click={() => filterClicked("status", "finished")}
+      onclick={() => filterClicked("status", "finished")}
     >
       finished
       {#if features.games}
@@ -82,13 +82,13 @@
     </button>
     <button
       class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
-      on:click={() => filterClicked("status", "hold")}
+      onclick={() => filterClicked("status", "hold")}
     >
       on hold
     </button>
     <button
       class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
-      on:click={() => filterClicked("status", "dropped")}
+      onclick={() => filterClicked("status", "dropped")}
     >
       dropped
     </button>

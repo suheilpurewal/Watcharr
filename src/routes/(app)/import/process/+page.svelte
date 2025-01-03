@@ -545,90 +545,94 @@
           {/if}
         </h5>
         <table class={isImporting ? "is-importing" : ""}>
-          <tr>
-            {#if isImporting}
-              <th class="loading-col"></th>
-            {/if}
-            <th>Name</th>
-            <th>Year</th>
-            <th>Type</th>
-            <th>Status</th>
-            {#if !isImporting}
-              <th></th>
-            {/if}
-          </tr>
-          {#each rList as l}
+          <thead>
             <tr>
               {#if isImporting}
-                <td class="icon-cell">
-                  <div>
-                    {#if !l.state}
-                      <SpinnerTiny style="width: 13px;" />
-                    {:else if l.state === ImportResponseType.IMPORT_SUCCESS}
-                      <Icon i="check" wh={22} />
-                    {:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
-                      <Icon i="close" wh={22} />
-                    {:else if l.state === ImportResponseType.IMPORT_FAILED}
-                      <Icon i="close" wh={22} />
-                    {:else if l.state === ImportResponseType.IMPORT_EXISTS}
-                      <Icon i="check" wh={22} />
-                    {/if}
-                  </div>
-                </td>
+                <th class="loading-col"></th>
               {/if}
-              <td><input class="plain" bind:value={l.name} disabled={isImporting} /></td>
-              <td class="year">
-                <input
-                  class="plain"
-                  bind:value={l.year}
-                  placeholder="YYYY"
-                  type="number"
-                  disabled={isImporting}
-                />
-              </td>
-              <td class="type">
-                <DropDown
-                  options={["movie", "tv"]}
-                  bind:active={l.type}
-                  placeholder="Type"
-                  blendIn={true}
-                  disabled={isImporting}
-                />
-              </td>
-              <td class="type">
-                <DropDown
-                  options={["FINISHED", "PLANNED", "WATCHING", "HOLD", "DROPPED"]}
-                  bind:active={l.status}
-                  placeholder="Status"
-                  blendIn={true}
-                  disabled={isImporting}
-                />
-              </td>
+              <th>Name</th>
+              <th>Year</th>
+              <th>Type</th>
+              <th>Status</th>
               {#if !isImporting}
-                <td>
-                  <button
-                    class="plain delete"
-                    on:click={() => {
-                      removeRow(l);
-                    }}
-                  >
-                    <Icon i="close" wh="25" />
-                  </button>
-                </td>
+                <th></th>
               {/if}
             </tr>
-          {/each}
-          {#if !isImporting}
-            <tr>
-              <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
-              <td class="year">
-                <input class="plain" id="addYear" placeholder="YYYY" type="number" />
-              </td>
-              <td class="type"></td>
-              <td class="status"></td>
-              <td></td>
-            </tr>
-          {/if}
+          </thead>
+          <tbody>
+            {#each rList as l}
+              <tr>
+                {#if isImporting}
+                  <td class="icon-cell">
+                    <div>
+                      {#if !l.state}
+                        <SpinnerTiny style="width: 13px;" />
+                      {:else if l.state === ImportResponseType.IMPORT_SUCCESS}
+                        <Icon i="check" wh={22} />
+                      {:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
+                        <Icon i="close" wh={22} />
+                      {:else if l.state === ImportResponseType.IMPORT_FAILED}
+                        <Icon i="close" wh={22} />
+                      {:else if l.state === ImportResponseType.IMPORT_EXISTS}
+                        <Icon i="check" wh={22} />
+                      {/if}
+                    </div>
+                  </td>
+                {/if}
+                <td><input class="plain" bind:value={l.name} disabled={isImporting} /></td>
+                <td class="year">
+                  <input
+                    class="plain"
+                    bind:value={l.year}
+                    placeholder="YYYY"
+                    type="number"
+                    disabled={isImporting}
+                  />
+                </td>
+                <td class="type">
+                  <DropDown
+                    options={["movie", "tv"]}
+                    bind:active={l.type}
+                    placeholder="Type"
+                    blendIn={true}
+                    disabled={isImporting}
+                  />
+                </td>
+                <td class="type">
+                  <DropDown
+                    options={["FINISHED", "PLANNED", "WATCHING", "HOLD", "DROPPED"]}
+                    bind:active={l.status}
+                    placeholder="Status"
+                    blendIn={true}
+                    disabled={isImporting}
+                  />
+                </td>
+                {#if !isImporting}
+                  <td>
+                    <button
+                      class="plain delete"
+                      on:click={() => {
+                        removeRow(l);
+                      }}
+                    >
+                      <Icon i="close" wh="25" />
+                    </button>
+                  </td>
+                {/if}
+              </tr>
+            {/each}
+            {#if !isImporting}
+              <tr>
+                <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
+                <td class="year">
+                  <input class="plain" id="addYear" placeholder="YYYY" type="number" />
+                </td>
+                <td class="type"></td>
+                <td class="status"></td>
+                <td></td>
+              </tr>
+            {/if}
+          </tbody>
         </table>
         <div class="btns">
           <button on:click={() => goto("/import")}><Icon i="arrow" />Back</button>

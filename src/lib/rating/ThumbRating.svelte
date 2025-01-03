@@ -4,30 +4,34 @@
   import Icon from "../Icon.svelte";
   import tooltip from "../actions/tooltip";
 
-  export let rating: number | undefined;
-  export let onChange: (newRating: number) => Promise<boolean>;
+  interface Props {
+    rating: number | undefined;
+    onChange: (newRating: number) => Promise<boolean>;
+  }
 
-  $: r = rating ? Math.round(rating) : 0;
+  let { rating, onChange }: Props = $props();
+
+  let r = $derived(rating ? Math.round(rating) : 0);
 </script>
 
 <div class="thumbs-ctr">
   <button
     use:tooltip={{ text: "Disliked", pos: "top" }}
-    on:click={() => onChange(1)}
+    onclick={() => onChange(1)}
     class={r && r > 0 && r < 5 ? "active" : ""}
   >
     <Icon i="thumb-down" />
   </button>
   <button
     use:tooltip={{ text: "Mediocre", pos: "top" }}
-    on:click={() => onChange(5)}
+    onclick={() => onChange(5)}
     class={r && r > 4 && r < 8 ? "active" : ""}
   >
     <span>-</span>
   </button>
   <button
     use:tooltip={{ text: "Liked", pos: "top" }}
-    on:click={() => onChange(9)}
+    onclick={() => onChange(9)}
     class={r && r > 7 ? "active" : ""}
   >
     <Icon i="thumb-up" />

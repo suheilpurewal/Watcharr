@@ -1,31 +1,32 @@
 <!-- To be used from Rating component -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { userSettings } from "@/store";
   import { RatingStep, RatingSystem } from "@/types";
   import { onMount } from "svelte";
 
-  $: settings = $userSettings;
 
-  export let rating: number | undefined;
-  export let onChange: (newRating: number) => Promise<boolean>;
+  interface Props {
+    rating: number | undefined;
+    onChange: (newRating: number) => Promise<boolean>;
+  }
 
-  let hoveredRating: number | undefined;
-  let shownRating: number | undefined;
-  let shownPerc: number | undefined;
-  let ratingContainer: HTMLDivElement;
-  let ratingWrapEl: HTMLDivElement;
-  let ratingText: HTMLSpanElement;
-  let highlightContainer: HTMLDivElement;
-  let normalContainer: HTMLDivElement;
+  let { rating, onChange }: Props = $props();
+
+  let hoveredRating: number | undefined = $state();
+  let shownRating: number | undefined = $state();
+  let shownPerc: number | undefined = $state();
+  let ratingContainer: HTMLDivElement = $state();
+  let ratingWrapEl: HTMLDivElement = $state();
+  let ratingText: HTMLSpanElement = $state();
+  let highlightContainer: HTMLDivElement = $state();
+  let normalContainer: HTMLDivElement = $state();
   /**
    * Percentage star step.
    */
-  let starStep = 10;
-  $: stars =
-    settings?.ratingSystem == RatingSystem.OutOf5
-      ? [5, 4, 3, 2, 1]
-      : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+  let starStep = $state(10);
 
   const ratingDesc = [
     "Apalling",
@@ -56,25 +57,6 @@
     return await onChange(r);
   }
 
-  $: {
-    if (hoveredRating !== undefined && hoveredRating > 0) {
-      console.debug("showRatingCaller: We have a hoveredRating.");
-      shownRating = hoveredRating;
-      showRating(
-        Math.round(
-          (hoveredRating * 100) / (settings?.ratingSystem === RatingSystem.OutOf5 ? 5 : 10)
-        )
-      );
-    } else if (rating !== undefined) {
-      console.debug("showRatingCaller: We have a rating.");
-      shownRating = rating;
-      showRating(Math.round((rating * 100) / 10));
-    } else {
-      console.debug("showRatingCaller: We have nothing.");
-      shownRating = undefined;
-      showRating(0);
-    }
-  }
 
   function setHoveredRatingFromPerc(perc: number) {
     let hovR = perc;
@@ -193,7 +175,35 @@
     }
   }
 
-  $: {
+
+  onMount(() => {
+    if (rating) showRating(Math.round((rating * 100) / 10));
+  });
+  let settings = $derived($userSettings);
+  let stars =
+    $derived(settings?.ratingSystem == RatingSystem.OutOf5
+      ? [5, 4, 3, 2, 1]
+      : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+  run(() => {
+    if (hoveredRating !== undefined && hoveredRating > 0) {
+      console.debug("showRatingCaller: We have a hoveredRating.");
+      shownRating = hoveredRating;
+      showRating(
+        Math.round(
+          (hoveredRating * 100) / (settings?.ratingSystem === RatingSystem.OutOf5 ? 5 : 10)
+        )
+      );
+    } else if (rating !== undefined) {
+      console.debug("showRatingCaller: We have a rating.");
+      shownRating = rating;
+      showRating(Math.round((rating * 100) / 10));
+    } else {
+      console.debug("showRatingCaller: We have nothing.");
+      shownRating = undefined;
+      showRating(0);
+    }
+  });
+  run(() => {
     // console.log("block", starStep, settings?.ratingStep, settings.ratingSystem);
     try {
       if (settings) {
@@ -249,10 +259,6 @@
     } catch (err) {
       console.error("Failed to set startStep from settings:", err);
     }
-  }
-
-  onMount(() => {
-    if (rating) showRating(Math.round((rating * 100) / 10));
   });
 </script>
 
@@ -292,9 +298,9 @@ shownPerc: {shownPerc}<br /> -->
   <div
     class="rating-wrap"
     bind:this={ratingWrapEl}
-    on:pointermove={(ev) => handleMouseOver(ev)}
-    on:touchmove={(ev) => handleMouseOver(ev)}
-    on:touchstart={(ev) => {
+    onpointermove={(ev) => handleMouseOver(ev)}
+    ontouchmove={(ev) => handleMouseOver(ev)}
+    ontouchstart={(ev) => {
       // Prevent `click` event from triggering.
       // Mainly for firefox mobile, these events dont work the same
       // there (as chromium mobile), so forcing touch devices to use
@@ -303,7 +309,7 @@ shownPerc: {shownPerc}<br /> -->
       ev.preventDefault();
       handleMouseOver(ev);
     }}
-    on:mouseleave={(ev) => {
+    onmouseleave={(ev) => {
       if (!ev.relatedTarget) {
         // When not focused on the browser, and then clicking a star directly
         // without first focusing the browser, this event can be triggered,
@@ -314,19 +320,19 @@ shownPerc: {shownPerc}<br /> -->
       console.debug("rating-wrap: mouseleave");
       handleRatingHoverEnd();
     }}
-    on:touchend={async () => {
+    ontouchend={async () => {
       console.debug("rating-wrap: touchend");
       await saveSelectedRating();
       handleRatingHoverEnd();
     }}
-    on:blur={() => {
+    onblur={() => {
       console.debug("rating-wrap: blur");
       handleRatingHoverEnd();
     }}
-    on:click={() => {
+    onclick={() => {
       saveSelectedRating();
     }}
-    on:keydown={(ev) => handleKeyDown(ev)}
+    onkeydown={(ev) => handleKeyDown(ev)}
     role="button"
     tabindex="0"
   >

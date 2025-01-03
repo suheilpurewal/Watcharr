@@ -1,9 +1,13 @@
 <script lang="ts">
   import type { Icon } from "@/types";
 
-  export let i: Icon;
-  export let wh: number | string = 24;
-  export let facing: "up" | "down" | "left" | "right" | undefined = undefined;
+  interface Props {
+    i: Icon;
+    wh?: number | string;
+    facing?: "up" | "down" | "left" | "right" | undefined;
+  }
+
+  let { i, wh = 24, facing = undefined }: Props = $props();
 </script>
 
 {#if i === "check"}

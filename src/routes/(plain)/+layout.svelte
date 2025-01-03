@@ -1,8 +1,16 @@
+<script lang="ts">
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
+
+  let { children }: Props = $props();
+</script>
+
 <nav>
   <a href="/"><h1>Watcharr</h1></a>
 </nav>
 
-<slot />
+{@render children?.()}
 
 <style lang="scss">
   nav {

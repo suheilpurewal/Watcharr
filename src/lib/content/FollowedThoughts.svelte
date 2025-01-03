@@ -15,11 +15,16 @@
     rating: number;
   }
 
-  export let mediaType: ContentType | "game";
-  // The tmdbId for movie/tv, igdbId for games.
-  export let mediaId: number;
+  
+  interface Props {
+    mediaType: ContentType | "game";
+    // The tmdbId for movie/tv, igdbId for games.
+    mediaId: number;
+  }
 
-  let modalShownFor: FollowThoughts | undefined = undefined;
+  let { mediaType, mediaId }: Props = $props();
+
+  let modalShownFor: FollowThoughts | undefined = $state(undefined);
 
   async function getFollowsThoughts() {
     return (await axios.get<FollowThoughts[]>(`/follow/thoughts/${mediaType}/${mediaId}`)).data;
@@ -34,7 +39,7 @@
       {#each fts as ft}
         <button
           class={["thoughts-card plain", ft.thoughts ? "" : "no-thoughts"].join(" ")}
-          on:click={() => (modalShownFor = ft)}
+          onclick={() => (modalShownFor = ft)}
         >
           <div>
             <h4 title={ft.followedUser.username}>{ft.followedUser.username}</h4>

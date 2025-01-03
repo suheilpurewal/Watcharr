@@ -1,12 +1,23 @@
 <script lang="ts">
-  export let name: string;
-  export let value: boolean = false;
-  export let toggled: (on: boolean) => void = () => {};
-  export let disabled = false;
+  import { run } from 'svelte/legacy';
 
-  let actualDisabled = false;
+  interface Props {
+    name: string;
+    value?: boolean;
+    toggled?: (on: boolean) => void;
+    disabled?: boolean;
+  }
 
-  $: {
+  let {
+    name,
+    value = $bindable(false),
+    toggled = () => {},
+    disabled = false
+  }: Props = $props();
+
+  let actualDisabled = $state(false);
+
+  run(() => {
     // In cases where we disable and enable the checkbox super fast
     // it ends up looking like a jittery mess. To circumvent this
     // issue, we add a small delay before undisabling.
@@ -18,7 +29,7 @@
         actualDisabled = disabled;
       }, 150);
     }
-  }
+  });
 
   function checkboxChange(e: Event) {
     toggled((e.target as HTMLInputElement).checked);
@@ -31,7 +42,7 @@
     disabled={actualDisabled}
     type="checkbox"
     id={name}
-    on:change={checkboxChange}
+    onchange={checkboxChange}
   />
   <label for={name}></label>
 </div>

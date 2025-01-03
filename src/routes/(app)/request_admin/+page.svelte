@@ -6,8 +6,8 @@
   import axios from "axios";
   import { get } from "svelte/store";
 
-  let page = 0;
-  let adminToken: string;
+  let page = $state(0);
+  let adminToken: string = $state();
 
   function generateAdminToken() {
     axios
@@ -49,11 +49,11 @@
     <h2>Request Admin</h2>
 
     {#if page == 0}
-      <button on:click={generateAdminToken}>Request</button>
+      <button onclick={generateAdminToken}>Request</button>
     {:else if page == 1}
       <p>Check your sever log to retrieve your token. Once you have it type it down below.</p>
       <input bind:value={adminToken} type="text" placeholder="Admin Token" />
-      <button on:click={useAdminToken}>Check Token</button>
+      <button onclick={useAdminToken}>Check Token</button>
     {/if}
   </div>
 </div>

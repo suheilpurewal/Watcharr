@@ -11,13 +11,17 @@
   import { onDestroy, onMount } from "svelte";
   import { watchedList } from "@/store";
 
-  export let type: "jellyfin" | "plex" = "jellyfin";
-  export let onClose: () => void;
+  interface Props {
+    type?: "jellyfin" | "plex";
+    onClose: () => void;
+  }
 
-  let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = "starting";
+  let { type = "jellyfin", onClose }: Props = $props();
+
+  let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = $state("starting");
   let jobId: string | undefined;
-  let currentTask: string | undefined;
-  let latestJobStatus: GetJobResponse | undefined;
+  let currentTask: string | undefined = $state();
+  let latestJobStatus: GetJobResponse | undefined = $state();
 
   async function startSync() {
     try {

@@ -2,9 +2,9 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
-  import { UserType, type Icon as Icons, type AvailableAuthProviders } from "@/types";
+  import { type AvailableAuthProviders } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
-  import { onMount, afterUpdate } from "svelte";
+  import { onMount } from "svelte";
   import { notify, unNotify } from "@/lib/util/notify";
 
   let error: string;
@@ -40,7 +40,7 @@
     });
   });
 
-  afterUpdate(() => {
+  $effect(() => {
     if (!error && $page.url.searchParams.get("again")) {
       error = "Please Login Again";
     }

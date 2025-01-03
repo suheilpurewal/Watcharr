@@ -4,26 +4,39 @@
   import tooltip from "../actions/tooltip";
   import { toUnderstandableStatus, watchedStatuses } from "../util/helpers";
 
-  export let status: WatchedStatus | undefined = undefined;
-  export let handleStatusClick: (status: WatchedStatus | "DELETE") => void;
-  export let direction: "top" | "bot" = "top";
-  export let width = "40%";
-  export let small = false;
-  export let btnTooltip: string = "";
-  export let disableInteraction: boolean = false;
-  export let isForGame = false;
+  interface Props {
+    status?: WatchedStatus | undefined;
+    handleStatusClick: (status: WatchedStatus | "DELETE") => void;
+    direction?: "top" | "bot";
+    width?: string;
+    small?: boolean;
+    btnTooltip?: string;
+    disableInteraction?: boolean;
+    isForGame?: boolean;
+  }
 
-  let statusesShown = false;
+  let {
+    status = undefined,
+    handleStatusClick,
+    direction = "top",
+    width = "40%",
+    small = false,
+    btnTooltip = "",
+    disableInteraction = false,
+    isForGame = false
+  }: Props = $props();
+
+  let statusesShown = $state(false);
 </script>
 
 <button
   class={["status", disableInteraction ? "interaction-disabled" : ""].join(" ")}
   style={`width: ${width};`}
-  on:click={(ev) => {
+  onclick={(ev) => {
     ev.stopPropagation();
     statusesShown = !statusesShown;
   }}
-  on:mouseleave={(ev) => {
+  onmouseleave={(ev) => {
     statusesShown = false;
   }}
   use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !statusesShown }}
@@ -44,7 +57,7 @@
     {#each Object.entries(watchedStatuses) as [statusName, icon]}
       <button
         class="plain{status && status !== statusName ? ' not-active' : ''}"
-        on:click={() => handleStatusClick(statusName)}
+        onclick={() => handleStatusClick(statusName)}
         use:tooltip={{
           text: toUnderstandableStatus(statusName, isForGame)
         }}
@@ -55,7 +68,7 @@
     {#if status}
       <button
         class="plain not-active"
-        on:click={() => handleStatusClick("DELETE")}
+        onclick={() => handleStatusClick("DELETE")}
         use:tooltip={{ text: "Delete" }}
       >
         <Icon i="trash" />

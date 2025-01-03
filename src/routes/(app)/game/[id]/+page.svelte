@@ -23,17 +23,17 @@
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
   import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
-  export let data;
+  let { data } = $props();
 
-  let trailer: string | undefined;
-  let trailerShown = false;
+  let trailer: string | undefined = $derived(`https://www.youtube.com/embed/${t?.video_id}`);
+  let trailerShown = $state(false);
 
-  $: wList = $watchedList;
-  $: wListItem = $watchedList.find((w) => w.game?.igdbId === data.gameId);
+  let wList = $derived($watchedList);
+  let wListItem = $derived($watchedList.find((w) => w.game?.igdbId === data.gameId));
 
-  let gameId: number | undefined;
-  let game: GameDetailsResponse | undefined;
-  let pageError: Error | undefined;
+  let gameId: number | undefined = $state();
+  let game: GameDetailsResponse | undefined = $state();
+  let pageError: Error | undefined = $state();
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -47,29 +47,7 @@
     return unsubscribe;
   });
 
-  $: {
-    (async () => {
-      try {
-        game = undefined;
-        pageError = undefined;
-        if (!gameId) {
-          return;
-        }
-        const data = (await axios.get(`/game/${gameId}`)).data as GameDetailsResponse;
-        if (data.videos?.length > 0) {
-          const t = data.videos.find((v) => v.name?.toLowerCase() === "trailer");
-          // Doc says the video_id is "usually youtube", so we are gonna go with that assumption too ( 0 _ 0 )
-          if (t?.video_id) {
-            trailer = `https://www.youtube.com/embed/${t?.video_id}`;
-          }
-        }
-        game = data;
-      } catch (err: any) {
-        game = undefined;
-        pageError = err;
-      }
-    })();
-  }
+  
 
   async function contentChanged(
     newStatus?: WatchedStatus,
@@ -112,7 +90,7 @@
           alt=""
         />
       {/if}
-      <div class="vignette" />
+      <div class="vignette"></div>
 
       <div class="details-container">
         <img
@@ -159,7 +137,7 @@
 
           <div class="btns">
             {#if trailer}
-              <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+              <button onclick={() => (trailerShown = !trailerShown)}>View Trailer</button>
               {#if trailerShown}
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
@@ -168,7 +146,7 @@
               <div class="other-side">
                 <AddToTagButton watchedItem={wListItem} />
                 <button
-                  on:click={() => {
+                  onclick={() => {
                     if (wListItem?.pinned) {
                       contentChanged(undefined, undefined, undefined, false);
                     } else {
@@ -184,7 +162,7 @@
                 </button>
                 <button
                   class="delete-btn"
-                  on:click={() =>
+                  onclick={() =>
                     wListItem
                       ? removeWatched(wListItem.id)
                       : console.error("no wlistItem.. can't delete")}

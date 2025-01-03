@@ -7,14 +7,14 @@
   import WatchedList from "@/lib/WatchedList.svelte";
   import { tags, watchedList } from "@/store.js";
 
-  export let data;
+  let { data } = $props();
 
-  let tagEditModalShown = false;
+  let tagEditModalShown = $state(false);
 
-  $: tag = $tags.find((t) => t.id === data.tagId);
-  $: watcheds = $watchedList.filter((w) =>
+  let tag = $derived($tags.find((t) => t.id === data.tagId));
+  let watcheds = $derived($watchedList.filter((w) =>
     w.tags ? (w.tags.find((t) => t.id === data.tagId) ? true : false) : false
-  );
+  ));
 </script>
 
 <svelte:head>

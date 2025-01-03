@@ -5,22 +5,35 @@
   import Icon from "../Icon.svelte";
   import { toShowableRating, toWhichThumb } from "../rating/helpers";
 
-  export let rating: number | undefined = undefined;
-  export let handleStarClick: (rating: number) => void;
-  export let disableInteraction: boolean = false;
-  /**
+  
+  interface Props {
+    rating?: number | undefined;
+    handleStarClick: (rating: number) => void;
+    disableInteraction?: boolean;
+    /**
    * When not minimal, we will use user settings to
    * display ratings as they want.
    */
-  export let minimal = false;
-  export let direction: "top" | "bot" = "top";
-  export let btnTooltip: string = "";
-  export let hideStarWhenRated = false;
+    minimal?: boolean;
+    direction?: "top" | "bot";
+    btnTooltip?: string;
+    hideStarWhenRated?: boolean;
+  }
 
-  let ratingsShown = false;
+  let {
+    rating = undefined,
+    handleStarClick,
+    disableInteraction = false,
+    minimal = false,
+    direction = "top",
+    btnTooltip = "",
+    hideStarWhenRated = false
+  }: Props = $props();
 
-  $: settings = $userSettings;
-  $: isUsingThumbs = settings && settings.ratingSystem === RatingSystem.Thumbs;
+  let ratingsShown = $state(false);
+
+  let settings = $derived($userSettings);
+  let isUsingThumbs = $derived(settings && settings.ratingSystem === RatingSystem.Thumbs);
 </script>
 
 <button
@@ -30,11 +43,11 @@
     disableInteraction ? "interaction-disabled" : "",
     minimal ? "is-minimal" : ""
   ].join(" ")}
-  on:click={(ev) => {
+  onclick={(ev) => {
     ev.stopPropagation();
     ratingsShown = !ratingsShown;
   }}
-  on:mouseleave={(ev) => {
+  onmouseleave={(ev) => {
     ratingsShown = false;
   }}
   use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !ratingsShown }}
@@ -80,14 +93,14 @@
   >
     {#if isUsingThumbs}
       <button
-        on:click={() => handleStarClick(1)}
+        onclick={() => handleStarClick(1)}
         class="plain{rating && rating > 0 && rating < 5 ? ' active' : ''}"
         style="display: flex; justify-content: center;"
       >
         <i style="display: flex; width: 35px;"><Icon i="thumb-down" /></i>
       </button>
       <button
-        on:click={() => handleStarClick(5)}
+        onclick={() => handleStarClick(5)}
         class="plain{rating && rating > 4 && rating < 9 ? ' active' : ''}"
         style="display: flex; justify-content: center;"
       >
@@ -98,7 +111,7 @@
         </span>
       </button>
       <button
-        on:click={() => handleStarClick(9)}
+        onclick={() => handleStarClick(9)}
         class="plain{rating && rating > 8 ? ' active' : ''}"
         style="display: flex; justify-content: center;"
       >
@@ -112,7 +125,7 @@
       {#each stars as v}
         <button
           class="plain{rating === v ? ' active' : ''}"
-          on:click={(ev) => {
+          onclick={(ev) => {
             ev.stopPropagation();
             handleStarClick(settings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
             ratingsShown = false;

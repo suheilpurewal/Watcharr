@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
@@ -16,14 +18,13 @@
   import { getLatestWatchedInTv } from "./util/helpers";
   import { notify } from "./util/notify";
 
-  export let list: Watched[];
-  export let isPublicList: boolean = false;
+  interface Props {
+    list: Watched[];
+    isPublicList?: boolean;
+  }
 
-  $: sort = $activeSort;
-  $: filters = $activeFilters;
-  $: watched = list;
-  $: settings = $userSettings;
-  $: features = $serverFeatures;
+  let { list, isPublicList = false }: Props = $props();
+
 
   /**
    * Checks if content has been watched previously
@@ -60,8 +61,6 @@
     return wp;
   }
 
-  // Monsterous code for filters. Soz.
-  $: (watched, filters, sort), filt();
 
   function filt() {
     try {
@@ -164,6 +163,18 @@
       notify({ text: "Failed to filter/sort list!", type: "error", time: 6000 });
     }
   }
+  let sort = $derived($activeSort);
+  let filters = $derived($activeFilters);
+  let watched;
+  run(() => {
+    watched = list;
+  });
+  let settings = $derived($userSettings);
+  let features = $derived($serverFeatures);
+  // Monsterous code for filters. Soz.
+  run(() => {
+    (watched, filters, sort), filt();
+  });
 </script>
 
 <PosterList>
@@ -223,7 +234,7 @@
         <Icon i="filter-circle" wh={80} />
         <h2 class="norm">Filters are hiding all results!</h2>
         <h4 class="norm">Try changing or removing your active filters.</h4>
-        <button on:click={() => clearActiveFilters()}>Clear Filters</button>
+        <button onclick={() => clearActiveFilters()}>Clear Filters</button>
       {:else}
         <Icon i="reel" wh={80} />
         {#if isPublicList}
@@ -232,7 +243,7 @@
         {:else}
           <h2 class="norm">Your watched list is empty!</h2>
           <h4 class="norm">Try searching for something you would like to add.</h4>
-          <button on:click={() => goto("/import")}>Import</button>
+          <button onclick={() => goto("/import")}>Import</button>
         {/if}
       {/if}
     </div>

@@ -2,37 +2,47 @@
   import { goto } from "$app/navigation";
   import { addClassToParent, calculateTransformOrigin } from "@/lib/util/helpers";
 
-  export let id: number | undefined;
-  export let name: string | undefined;
-  export let path: string | undefined;
-  export let role: string | undefined = undefined;
-  export let zoomOnHover: boolean = true;
+  interface Props {
+    id: number | undefined;
+    name: string | undefined;
+    path: string | undefined;
+    role?: string | undefined;
+    zoomOnHover?: boolean;
+  }
+
+  let {
+    id,
+    name,
+    path,
+    role = undefined,
+    zoomOnHover = true
+  }: Props = $props();
 
   const poster = path ? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}` : undefined;
   const link = id ? `/person/${id}` : undefined;
 </script>
 
 <!-- Quick fix to ignore error, should be fixed -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <li
-  on:mouseenter={(e) => calculateTransformOrigin(e)}
-  on:focusin={(e) => calculateTransformOrigin(e)}
-  on:click={() => {
+  onmouseenter={(e) => calculateTransformOrigin(e)}
+  onfocusin={(e) => calculateTransformOrigin(e)}
+  onclick={() => {
     if (link) goto(link);
   }}
-  on:keypress={() => console.log("on kpress")}
+  onkeypress={() => console.log("on kpress")}
 >
   <div class={`container${!poster ? " details-shown" : ""}${!zoomOnHover ? " no-zoom" : ""}`}>
     {#if poster}
-      <div class="img-loader" />
+      <div class="img-loader"></div>
       <img
         loading="lazy"
         src={poster}
         alt=""
-        on:load={(e) => {
+        onload={(e) => {
           addClassToParent(e, "img-loaded");
         }}
-        on:error={(e) => {
+        onerror={(e) => {
           console.log("on err");
           addClassToParent(e, "details-shown");
         }}
@@ -143,7 +153,7 @@
 
     &:not(.no-zoom) {
       &:hover,
-      &:has(:focus-visible) {
+      &:has(:global(:focus-visible)) {
         transform: scale(1.3);
         z-index: 99;
       }
@@ -151,13 +161,13 @@
 
     &:not(:not(.no-zoom)) {
       &:hover,
-      &:has(:focus-visible) {
+      &:has(:global(:focus-visible)) {
         outline: 3px solid $text-color;
       }
     }
 
     &:hover,
-    &:has(:focus-visible),
+    &:has(:global(:focus-visible)),
     &:global(.details-shown) {
       .inner {
         color: white;

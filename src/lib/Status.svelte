@@ -4,9 +4,13 @@
   import tooltip from "./actions/tooltip";
   import { toUnderstandableStatus } from "./util/helpers";
 
-  export let status: WatchedStatus | undefined;
-  export let isForGame: boolean = false;
-  export let onChange: (newStatus: WatchedStatus) => void;
+  interface Props {
+    status: WatchedStatus | undefined;
+    isForGame?: boolean;
+    onChange: (newStatus: WatchedStatus) => void;
+  }
+
+  let { status, isForGame = false, onChange }: Props = $props();
 
   function handleStatusClick(s: WatchedStatus) {
     if (s === status) return;
@@ -17,35 +21,35 @@
 <div class="status">
   <button
     class={status && status !== "PLANNED" ? "not-active" : ""}
-    on:click={() => handleStatusClick("PLANNED")}
+    onclick={() => handleStatusClick("PLANNED")}
     use:tooltip={{ text: toUnderstandableStatus("PLANNED", isForGame), pos: "top" }}
   >
     <Icon i="calendar" />
   </button>
   <button
     class={status && status !== "WATCHING" ? "not-active" : ""}
-    on:click={() => handleStatusClick("WATCHING")}
+    onclick={() => handleStatusClick("WATCHING")}
     use:tooltip={{ text: toUnderstandableStatus("WATCHING", isForGame), pos: "top" }}
   >
     <Icon i="clock" />
   </button>
   <button
     class={status && status !== "FINISHED" ? "not-active" : ""}
-    on:click={() => handleStatusClick("FINISHED")}
+    onclick={() => handleStatusClick("FINISHED")}
     use:tooltip={{ text: toUnderstandableStatus("FINISHED", isForGame), pos: "top" }}
   >
     <Icon i="check" />
   </button>
   <button
     class={status && status !== "HOLD" ? "not-active" : ""}
-    on:click={() => handleStatusClick("HOLD")}
+    onclick={() => handleStatusClick("HOLD")}
     use:tooltip={{ text: toUnderstandableStatus("HOLD", isForGame), pos: "top" }}
   >
     <Icon i="pause" />
   </button>
   <button
     class={status && status !== "DROPPED" ? "not-active" : ""}
-    on:click={() => handleStatusClick("DROPPED")}
+    onclick={() => handleStatusClick("DROPPED")}
     use:tooltip={{ text: toUnderstandableStatus("DROPPED", isForGame), pos: "top" }}
   >
     <Icon i="thumb-down" />

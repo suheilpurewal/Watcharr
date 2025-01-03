@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { preventDefault } from 'svelte/legacy';
+
   import { goto } from "$app/navigation";
   import type { AvailableAuthProviders } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
   import { onMount } from "svelte";
   import { notify, unNotify } from "@/lib/util/notify";
 
-  let error: string;
+  let error: string = $state();
 
   onMount(() => {
     if (localStorage.getItem("token")) {
@@ -72,7 +74,7 @@
       <span class="error">{error}!</span>
     {/if}
 
-    <form on:submit|preventDefault={handleLogin}>
+    <form onsubmit={preventDefault(handleLogin)}>
       <label for="username">Username</label>
       <input type="text" name="username" placeholder="Username" />
 

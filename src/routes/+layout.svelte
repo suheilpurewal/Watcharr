@@ -1,12 +1,17 @@
-<script>
+<script lang="ts">
   import Icon from "@/lib/Icon.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { unNotify } from "@/lib/util/notify";
   import { notifications } from "@/store";
   import { onMount } from "svelte";
   import { pwaInfo } from "virtual:pwa-info";
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
 
-  $: notifs = $notifications;
+  let { children }: Props = $props();
+
+  let notifs = $derived($notifications);
 
   console.log(
     `%cWATCHARR v${__WATCHARR_VERSION__}`,
@@ -37,7 +42,7 @@
   {/if}
 </svelte:head>
 
-<div id="tooltip" />
+<div id="tooltip"></div>
 <div id="notifications">
   {#each notifs as n}
     <div class={`${n.type} notif`}>
@@ -49,7 +54,7 @@
       <span>{@html n.text}</span>
       <button
         class="plain"
-        on:click={() => {
+        onclick={() => {
           unNotify(n.id);
         }}
       >
@@ -58,4 +63,4 @@
     </div>
   {/each}
 </div>
-<slot />
+{@render children?.()}

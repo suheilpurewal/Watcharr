@@ -1,17 +1,23 @@
 <script lang="ts">
+  import { preventDefault } from 'svelte/legacy';
+
   import Modal from "@/lib/Modal.svelte";
   import type { ChangePasswordForm } from "@/types";
   import { changeUserPassword } from "$lib/util/api";
 
-  export let userName: string | undefined;
-  export let onClose: () => void;
-  export let changepswd: ChangePasswordForm = {
+  interface Props {
+    userName: string | undefined;
+    onClose: () => void;
+    changepswd?: ChangePasswordForm;
+  }
+
+  let { userName, onClose, changepswd = $bindable({
     currentPassword: "",
     newPassword: "",
     reEnteredNewPassword: ""
-  };
+  }) }: Props = $props();
 
-  let error: string;
+  let error: string = $state();
   let errs: string[] = [];
 
   function checkForm() {
@@ -81,7 +87,7 @@
   {#if error}
     <span class="error">{error}!</span>
   {/if}
-  <form on:submit|preventDefault={handleSubmit}>
+  <form onsubmit={preventDefault(handleSubmit)}>
     <div class="form-input-container">
       <div class="form-input">
         <!--Hiding username info as it is still useful to password managers-->

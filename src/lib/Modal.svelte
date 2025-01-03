@@ -1,18 +1,30 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
 
-  export let title: string;
-  export let desc: string | undefined = undefined;
-  export let onClose: (() => void) | undefined = undefined;
-  export let maxWidth = "1000px";
-  export let error: string | undefined = undefined; // TODO This property is new, mimics what we do with other modals by showing an error at top.. we could migrate to use this in other places.
+  interface Props {
+    title: string;
+    desc?: string | undefined;
+    onClose?: (() => void) | undefined;
+    maxWidth?: string;
+    error?: string | undefined; // TODO This property is new, mimics what we do with other modals by showing an error at top.. we could migrate to use this in other places.
+    children?: import('svelte').Snippet;
+  }
+
+  let {
+    title,
+    desc = undefined,
+    onClose = undefined,
+    maxWidth = "1000px",
+    error = undefined,
+    children
+  }: Props = $props();
 </script>
 
 <div class="backdrop"></div>
 <div class="modal">
   <div style="max-width:{maxWidth};">
     {#if typeof onClose !== "undefined"}
-      <button class="close" on:click={onClose}><Icon i="close" wh="20" /></button>
+      <button class="close" onclick={onClose}><Icon i="close" wh="20" /></button>
     {/if}
     <h3 class="norm">{title}</h3>
     {#if desc}
@@ -21,7 +33,7 @@
     {#if error}
       <span class="error">{error}</span>
     {/if}
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

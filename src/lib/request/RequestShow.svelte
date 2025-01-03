@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import axios from "axios";
   import Modal from "../Modal.svelte";
   import type {
@@ -16,24 +18,33 @@
 
   const animeKeywordId = 210024;
 
-  export let content: TMDBShowDetails;
-  export let onClose: (r: ArrRequestResponse | undefined) => void;
 
-  export let approveMode = false;
-  export let originalRequest: ArrRequestResponse | undefined = undefined;
+  interface Props {
+    content: TMDBShowDetails;
+    onClose: (r: ArrRequestResponse | undefined) => void;
+    approveMode?: boolean;
+    originalRequest?: ArrRequestResponse | undefined;
+  }
 
-  let servarrs: SonarrSettings[];
-  let selectedServarrIndex: number;
+  let {
+    content,
+    onClose,
+    approveMode = false,
+    originalRequest = undefined
+  }: Props = $props();
+
+  let servarrs: SonarrSettings[] = $state();
+  let selectedServarrIndex: number = $state();
   let inputsDisabled = true;
-  let selectedServerCfg: SonarrTestResponse | undefined;
-  let seasonItems: ListBoxItem[] = content.seasons.map((s) => {
+  let selectedServerCfg: SonarrTestResponse | undefined = $state();
+  let seasonItems: ListBoxItem[] = $state(content.seasons.map((s) => {
     return {
       id: s.season_number,
       value: false,
       displayValue: s.name
     };
-  });
-  let addRequestRunning = false;
+  }));
+  let addRequestRunning = $state(false);
 
   async function getServers() {
     try {
@@ -169,7 +180,7 @@
     }
   }
 
-  $: {
+  run(() => {
     if (typeof selectedServarrIndex !== "undefined" && servarrs?.length > 0) {
       const s = servarrs[selectedServarrIndex];
       if (!s) {
@@ -178,7 +189,7 @@
         getConfig(s.name);
       }
     }
-  }
+  });
 
   getServers();
 </script>
@@ -210,7 +221,7 @@
         </Setting>
       {/if}
 
-      <button on:click={request} disabled={addRequestRunning}>
+      <button onclick={request} disabled={addRequestRunning}>
         {approveMode ? "Approve" : "Request"}
       </button>
     {:else}

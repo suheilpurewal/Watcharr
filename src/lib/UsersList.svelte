@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { PublicUser } from "@/types";
 
-  export let users: PublicUser[];
+  interface Props {
+    users: PublicUser[];
+  }
+
+  let { users }: Props = $props();
 </script>
 
 <div>

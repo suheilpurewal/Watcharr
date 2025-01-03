@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import type { PosterExtraDetails, Image, WatchedStatus } from "@/types";
   import {
     addClassToParent,
@@ -17,8 +19,10 @@
   import { decode } from "blurhash";
   import ExtraDetails from "./ExtraDetails.svelte";
 
-  export let id: number | undefined = undefined; // Watched list id
-  export let media: {
+  
+  interface Props {
+    id?: number | undefined; // Watched list id
+    media: {
     id: number;
     coverId: string;
     firstReleaseDate?: string | number;
@@ -26,26 +30,41 @@
     summary?: string;
     poster?: Image;
   };
-  export let rating: number | undefined = undefined;
-  export let status: WatchedStatus | undefined = undefined;
-  export let small = false;
-  export let disableInteraction = false;
-  export let hideButtons = false;
-  export let extraDetails: PosterExtraDetails | undefined = undefined;
-  export let fluidSize = false;
-  export let pinned = false;
-  // When provided, default click handlers will instead run this callback.
-  export let onClick: (() => void) | undefined = undefined;
+    rating?: number | undefined;
+    status?: WatchedStatus | undefined;
+    small?: boolean;
+    disableInteraction?: boolean;
+    hideButtons?: boolean;
+    extraDetails?: PosterExtraDetails | undefined;
+    fluidSize?: boolean;
+    pinned?: boolean;
+    // When provided, default click handlers will instead run this callback.
+    onClick?: (() => void) | undefined;
+  }
 
-  $: dve = $wlDetailedView;
+  let {
+    id = undefined,
+    media,
+    rating = undefined,
+    status = undefined,
+    small = false,
+    disableInteraction = false,
+    hideButtons = false,
+    extraDetails = undefined,
+    fluidSize = false,
+    pinned = false,
+    onClick = undefined
+  }: Props = $props();
+
+  let dve = $derived($wlDetailedView);
 
   // If poster is active (scaled up)
-  let posterActive = false;
+  let posterActive = $state(false);
   // If mouse in on poster. Added to fix #656.
-  let mouseOverPoster = false;
+  let mouseOverPoster = $state(false);
 
-  let containerEl: HTMLDivElement;
-  let bhCanvas: HTMLCanvasElement;
+  let containerEl: HTMLDivElement = $state();
+  let bhCanvas: HTMLCanvasElement = $state();
 
   const title = `${media.name}`;
   const poster = media.poster?.path
@@ -95,7 +114,7 @@
     ).substring(2, 4)}`;
   }
 
-  $: {
+  run(() => {
     if (media.poster?.path && media.poster?.blurHash && bhCanvas) {
       const pixels = decode(media.poster.blurHash, 170, 256);
       const ctx = bhCanvas.getContext("2d");
@@ -105,7 +124,7 @@
         ctx.putImageData(imageData, 0, 0);
       }
     }
-  }
+  });
 
   onMount(() => {
     if (containerEl) {
@@ -120,22 +139,22 @@
 </script>
 
 <!-- HACK: disabled this issue for now, it should probably be fixed properly -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <li
-  on:mouseenter={(e) => {
+  onmouseenter={(e) => {
     mouseOverPoster = true;
     if (!posterActive) calculateTransformOrigin(e);
     if (!isTouch()) {
       posterActive = true;
     }
   }}
-  on:focusin={(e) => {
+  onfocusin={(e) => {
     if (!posterActive) calculateTransformOrigin(e);
     if (!isTouch()) {
       posterActive = true;
     }
   }}
-  on:focusout={() => {
+  onfocusout={() => {
     if (!isTouch() && !mouseOverPoster) {
       // Only on !isTouch (to match focusin) to avoid breaking a tap and hold on link on mobile.
       // and only if mouse isn't still over the poster, fixes focusout on click of rating/status
@@ -143,7 +162,7 @@
       posterActive = false;
     }
   }}
-  on:mouseleave={() => {
+  onmouseleave={() => {
     mouseOverPoster = false;
     posterActive = false;
     const ae = document.activeElement;
@@ -161,13 +180,13 @@
       ae.blur();
     }
   }}
-  on:click={() => (posterActive = true)}
-  on:keyup={(e) => {
+  onclick={() => (posterActive = true)}
+  onkeyup={(e) => {
     if (e.key === "Tab") {
       e.currentTarget.scrollIntoView({ block: "center" });
     }
   }}
-  on:keypress={() => console.log("on kpress")}
+  onkeypress={() => console.log("on kpress")}
   class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}`}
 >
   <div
@@ -176,7 +195,7 @@
   >
     {#if poster && (media.coverId || media.poster?.path)}
       {#if media?.poster?.blurHash}
-        <canvas width="170" height="256" bind:this={bhCanvas} class="img-loader" />
+        <canvas width="170" height="256" bind:this={bhCanvas} class="img-loader"></canvas>
       {:else}
         <div class="img-loader"></div>
       {/if}
@@ -184,10 +203,10 @@
         loading="lazy"
         src={poster}
         alt=""
-        on:load={(e) => {
+        onload={(e) => {
           addClassToParent(e, "img-loaded");
         }}
-        on:error={(e) => {
+        onerror={(e) => {
           addClassToParent(e, "details-shown");
         }}
       />
@@ -197,7 +216,7 @@
       <ExtraDetails details={extraDetails} {status} {rating} />
     {/if}
     <div
-      on:click={(e) => {
+      onclick={(e) => {
         if (typeof onClick !== "undefined") {
           onClick();
           // Prevent the link inside this div from being clicked in this case.
@@ -206,7 +225,7 @@
         }
         if (posterActive && link) goto(link);
       }}
-      on:keyup={handleInnerKeyUp}
+      onkeyup={handleInnerKeyUp}
       id="ilikemoviessueme"
       class="inner"
       role="button"

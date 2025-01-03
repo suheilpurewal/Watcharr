@@ -7,22 +7,33 @@
   import DeleteTagModal from "./DeleteTagModal.svelte";
   import stayInView from "../actions/stayInView";
 
-  export let titleText: string | undefined = undefined;
-  export let classes: string | undefined = undefined;
-  export let onTagClick: (tag: TagT, remove: boolean) => void | undefined = undefined!;
-  export let selectedTags: TagT[] | undefined = undefined;
-  /**
+  
+  interface Props {
+    titleText?: string | undefined;
+    classes?: string | undefined;
+    onTagClick?: (tag: TagT, remove: boolean) => void | undefined;
+    selectedTags?: TagT[] | undefined;
+    /**
    * When `showManageBtn` is true, a manage icon will appear at top
    * of menu for the user to click. When toggled on, clicking a tag
    * will trigger a deletion instead of `onTagClick()`.
    */
-  export let showManageBtn = false;
+    showManageBtn?: boolean;
+  }
 
-  $: allTags = $tags;
+  let {
+    titleText = undefined,
+    classes = undefined,
+    onTagClick = undefined!,
+    selectedTags = undefined,
+    showManageBtn = false
+  }: Props = $props();
 
-  let tagModalOpen = false;
-  let inManageMode = false;
-  let tagToDelete: TagT | undefined = undefined;
+  let allTags = $derived($tags);
+
+  let tagModalOpen = $state(false);
+  let inManageMode = $state(false);
+  let tagToDelete: TagT | undefined = $state(undefined);
 
   function deleteTag(t: TagT) {
     // This will show the DeleteTagModal (look below).
@@ -38,12 +49,12 @@
       {#if showManageBtn}
         <button
           class={["plain", inManageMode ? "manage-on" : ""].join(" ")}
-          on:click={() => (inManageMode = !inManageMode)}
+          onclick={() => (inManageMode = !inManageMode)}
         >
           <Icon i="trash" wh={18} />
         </button>
       {/if}
-      <button class="plain" on:click={() => (tagModalOpen = !tagModalOpen)}>
+      <button class="plain" onclick={() => (tagModalOpen = !tagModalOpen)}>
         <Icon i="add" wh={22} />
       </button>
     </div>

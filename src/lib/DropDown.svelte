@@ -1,22 +1,38 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import type { DropDownItem } from "@/types";
   import Icon from "./Icon.svelte";
   import { onMount } from "svelte";
 
-  export let options: string[] | DropDownItem[];
-  // If we are using DropDownItems[] as options.
-  export let isDropDownItem = false;
-  export let active: string | number | undefined = undefined;
-  export let placeholder: string;
-  export let blendIn: boolean = false;
-  export let disabled = false;
-  export let onChange: () => void = () => {};
-  export let showActiveElementsInOptions: boolean = false;
+  
+  interface Props {
+    options: string[] | DropDownItem[];
+    // If we are using DropDownItems[] as options.
+    isDropDownItem?: boolean;
+    active?: string | number | undefined;
+    placeholder: string;
+    blendIn?: boolean;
+    disabled?: boolean;
+    onChange?: () => void;
+    showActiveElementsInOptions?: boolean;
+  }
 
-  let activeValue: string;
-  let open = false;
-  let ulElement: HTMLUListElement;
-  let mainElement: HTMLDivElement;
+  let {
+    options,
+    isDropDownItem = false,
+    active = $bindable(undefined),
+    placeholder,
+    blendIn = false,
+    disabled = false,
+    onChange = () => {},
+    showActiveElementsInOptions = false
+  }: Props = $props();
+
+  let activeValue: string = $state();
+  let open = $state(false);
+  let ulElement: HTMLUListElement = $state();
+  let mainElement: HTMLDivElement = $state();
 
   function handleKeyPress(event: KeyboardEvent) {
     if (!open || disabled) return; // Don't handle if closed or disabled
@@ -47,14 +63,14 @@
     }
   }
 
-  $: {
+  run(() => {
     if (typeof active === "string" && !isDropDownItem) {
       activeValue = active;
     } else {
       const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
       if (v && typeof v !== "string") activeValue = v.value;
     }
-  }
+  });
 
   onMount(() => {
     mainElement.addEventListener("keypress", handleKeyPress);
@@ -73,7 +89,7 @@
   ].join(" ")}
   bind:this={mainElement}
 >
-  <button on:click={() => (open = !open)} {disabled}>
+  <button onclick={() => (open = !open)} {disabled}>
     {activeValue ? activeValue : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
   </button>
@@ -82,7 +98,7 @@
       <li>
         <button
           class="plain"
-          on:click={() => {
+          onclick={() => {
             active = typeof o == "string" ? o : o.id;
             open = false;
             onChange();

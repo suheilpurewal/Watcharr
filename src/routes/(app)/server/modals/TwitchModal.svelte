@@ -6,10 +6,14 @@
   import type { TwitchSettings } from "@/types";
   import axios from "axios";
 
-  export let cfg: TwitchSettings;
-  export let onClose: () => void;
+  interface Props {
+    cfg: TwitchSettings;
+    onClose: () => void;
+  }
 
-  let error: string;
+  let { cfg = $bindable(), onClose }: Props = $props();
+
+  let error: string = $state();
   let formDisabled = false;
 
   function checkForm() {
@@ -82,7 +86,7 @@
       />
     </Setting>
     <div class="btns">
-      <button on:click={() => save()}>Save</button>
+      <button onclick={() => save()}>Save</button>
     </div>
   </SettingsList>
 </Modal>

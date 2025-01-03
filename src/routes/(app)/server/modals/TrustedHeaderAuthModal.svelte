@@ -10,14 +10,18 @@
   import axios from "axios";
   import { onMount } from "svelte";
 
-  export let onClose: () => void;
+  interface Props {
+    onClose: () => void;
+  }
 
-  let headerCfg: TrustedHeaderAuthSetting = {
+  let { onClose }: Props = $props();
+
+  let headerCfg: TrustedHeaderAuthSetting = $state({
     enabled: false,
     headerName: ""
-  };
+  });
   let formDisabled = false;
-  let loadingCfg = false;
+  let loadingCfg = $state(false);
   let error = "";
 
   async function getHeaderCfg() {
@@ -84,7 +88,7 @@
         <input
           type="text"
           placeholder="X-User"
-          on:blur={() => {}}
+          onblur={() => {}}
           disabled={formDisabled}
           bind:value={headerCfg.headerName}
         />
@@ -93,7 +97,7 @@
         <input
           type="text"
           placeholder="https://auth.example.com/logout"
-          on:blur={() => {}}
+          onblur={() => {}}
           disabled={formDisabled}
           bind:value={headerCfg.logoutUrl}
         />
@@ -117,7 +121,7 @@
         <Checkbox name="HeaderAuthEnabled" disabled={formDisabled} bind:value={headerCfg.enabled} />
       </Setting>
       <div class="btns">
-        <button on:click={() => save()}>Save</button>
+        <button onclick={() => save()}>Save</button>
       </div>
     </SettingsList>
   {/if}

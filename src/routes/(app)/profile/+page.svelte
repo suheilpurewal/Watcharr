@@ -18,21 +18,21 @@
   import RegionDropDown from "@/lib/RegionDropDown.svelte";
   import RatingSetting from "@/lib/rating/RatingSetting.svelte";
 
-  $: user = $userInfo;
-  $: settings = $userSettings;
-  $: selectedTheme = $appTheme;
+  let user = $derived($userInfo);
+  let settings = $derived($userSettings);
+  let selectedTheme = $derived($appTheme);
 
-  let privateDisabled = false;
-  let privateThoughtsDisabled = false;
-  let exportDisabled = false;
-  let hideSpoilersDisabled = false;
-  let countryDisabled = false;
-  let includePreviouslyWatchedDisabled = false;
-  let automateShowStatusesDisabled = false;
-  let pwChangeModalOpen = false;
-  let getProfilePromise = getProfile();
-  let jellyfinSyncModalOpen = false;
-  let plexSyncModalOpen = false;
+  let privateDisabled = $state(false);
+  let privateThoughtsDisabled = $state(false);
+  let exportDisabled = $state(false);
+  let hideSpoilersDisabled = $state(false);
+  let countryDisabled = $state(false);
+  let includePreviouslyWatchedDisabled = $state(false);
+  let automateShowStatusesDisabled = $state(false);
+  let pwChangeModalOpen = $state(false);
+  let getProfilePromise = $state(getProfile());
+  let jellyfinSyncModalOpen = $state(false);
+  let plexSyncModalOpen = $state(false);
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -173,7 +173,7 @@
           <span style="font-weight: normal; font-variant: all-small-caps;">Hey</span>
           {user?.username}
         </h2>
-        <textarea rows="1" placeholder="my bio" on:blur={updateBio} value={user?.bio} />
+        <textarea rows="1" placeholder="my bio" onblur={updateBio} value={user?.bio}></textarea>
       </div>
     </div>
 
@@ -204,14 +204,14 @@
           <button
             class={`plain${selectedTheme === "light" ? " selected" : ""}`}
             id="light"
-            on:click={() => toggleTheme("light")}
+            onclick={() => toggleTheme("light")}
           >
             light
           </button>
           <button
             class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
             id="dark"
-            on:click={() => toggleTheme("dark")}
+            onclick={() => toggleTheme("dark")}
           >
             dark
           </button>
@@ -324,22 +324,22 @@
       <RatingSetting />
 
       <div class="row btns">
-        <button on:click={() => goto("/import")}>Import</button>
-        <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>
+        <button onclick={() => goto("/import")}>Import</button>
+        <button onclick={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>
         {#if user?.type !== UserType.Plex && user?.type !== UserType.Jellyfin}
           <button
-            on:click={() => {
+            onclick={() => {
               pwChangeModalOpen = true;
             }}>Change Password</button
           >
         {/if}
         {#if user?.type === UserType?.Jellyfin}
-          <button on:click={() => (jellyfinSyncModalOpen = true)} disabled={exportDisabled}>
+          <button onclick={() => (jellyfinSyncModalOpen = true)} disabled={exportDisabled}>
             Sync With {localStorage.getItem("useEmby") ? "Emby" : "Jellyfin"}
           </button>
         {/if}
         {#if user?.type === UserType?.Plex}
-          <button on:click={() => (plexSyncModalOpen = true)} disabled={exportDisabled}>
+          <button onclick={() => (plexSyncModalOpen = true)} disabled={exportDisabled}>
             Sync With Plex
           </button>
         {/if}

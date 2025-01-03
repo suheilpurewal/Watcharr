@@ -2,15 +2,20 @@
   import type { ListBoxItem } from "@/types";
   import Checkbox from "./Checkbox.svelte";
 
-  export let options: ListBoxItem[];
 
-  /**
+  
+  interface Props {
+    options: ListBoxItem[];
+    /**
    * If a checkbox to select all checkboxes is wanted,
    * provide the text to display besides it.
    */
-  export let allCheckBox: string | undefined = undefined;
+    allCheckBox?: string | undefined;
+  }
 
-  let allCheckBoxValue: boolean = false;
+  let { options = $bindable(), allCheckBox = undefined }: Props = $props();
+
+  let allCheckBoxValue: boolean = $state(false);
 </script>
 
 <div>

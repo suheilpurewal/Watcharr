@@ -32,23 +32,23 @@
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
   import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
-  $: settings = $userSettings;
+  let settings = $derived($userSettings);
 
-  export let data;
+  let { data } = $props();
 
-  let trailer: string | undefined;
-  let trailerShown = false;
-  let requestModalShown = false;
-  let jellyfinUrl: string | undefined;
-  let arrRequestButtonComp: ArrRequestButton;
+  let trailer: string | undefined = $derived(`https://www.youtube.com/embed/${t?.key}`);
+  let trailerShown = $state(false);
+  let requestModalShown = $state(false);
+  let jellyfinUrl: string | undefined = $derived();
+  let arrRequestButtonComp: ArrRequestButton = $state();
 
-  $: wListItem = $watchedList.find(
+  let wListItem = $derived($watchedList.find(
     (w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId
-  );
+  ));
 
-  let showId: number | undefined;
-  let show: TMDBShowDetails | undefined;
-  let pageError: Error | undefined;
+  let showId: number | undefined = $state();
+  let show: TMDBShowDetails | undefined = $state();
+  let pageError: Error | undefined = $state();
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -61,37 +61,7 @@
     return unsubscribe;
   });
 
-  $: {
-    (async () => {
-      try {
-        show = undefined;
-        pageError = undefined;
-        if (!showId) {
-          return;
-        }
-        const data = (
-          await axios.get(`/content/tv/${showId}`, { params: { region: settings?.country } })
-        ).data as TMDBShowDetails;
-        if (data.videos?.results?.length > 0) {
-          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
-          if (t?.key) {
-            if (t?.site?.toLowerCase() === "youtube") {
-              trailer = `https://www.youtube.com/embed/${t?.key}`;
-            }
-          }
-        }
-        contentExistsOnJellyfin("tv", data.name, data.id).then((j) => {
-          if (j?.hasContent && j?.url !== "") {
-            jellyfinUrl = j.url;
-          }
-        });
-        show = data;
-      } catch (err: any) {
-        show = undefined;
-        pageError = err;
-      }
-    })();
-  }
+  
 
   async function getTvCredits() {
     const credits = (await axios.get(`/content/tv/${data.tvId}/credits`))
@@ -134,7 +104,7 @@
           alt=""
         />
       {/if}
-      <div class="vignette" />
+      <div class="vignette"></div>
 
       <div class="details-container">
         <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
@@ -165,7 +135,7 @@
 
           <div class="btns">
             {#if trailer}
-              <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+              <button onclick={() => (trailerShown = !trailerShown)}>View Trailer</button>
               {#if trailerShown}
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
@@ -191,7 +161,7 @@
               <div class="other-side">
                 <AddToTagButton watchedItem={wListItem} />
                 <button
-                  on:click={() => {
+                  onclick={() => {
                     if (wListItem?.pinned) {
                       contentChanged(undefined, undefined, undefined, false);
                     } else {
@@ -207,7 +177,7 @@
                 </button>
                 <button
                   class="delete-btn"
-                  on:click={() =>
+                  onclick={() =>
                     wListItem
                       ? removeWatched(wListItem.id)
                       : console.error("no wlistItem.. can't delete")}

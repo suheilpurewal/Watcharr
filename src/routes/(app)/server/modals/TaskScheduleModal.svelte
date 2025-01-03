@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Modal from "@/lib/Modal.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
@@ -9,12 +11,19 @@
   import axios from "axios";
   import { onMount } from "svelte";
 
-  export let onClose: () => void;
+  interface Props {
+    onClose: () => void;
+  }
 
-  $: now = Date.now();
+  let { onClose }: Props = $props();
 
-  let formDisabled = false;
-  let taskSchedule: AllTasksResponse[] = [];
+  let now;
+  run(() => {
+    now = Date.now();
+  });
+
+  let formDisabled = $state(false);
+  let taskSchedule: AllTasksResponse[] = $state([]);
 
   async function getAllTasks() {
     try {
@@ -92,7 +101,7 @@
             placeholder="60"
             bind:value={task.seconds}
             disabled={formDisabled}
-            on:blur={() => {
+            onblur={() => {
               rescheduleTask(task.name, task.seconds);
             }}
           />

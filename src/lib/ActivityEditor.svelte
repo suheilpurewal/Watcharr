@@ -4,23 +4,29 @@
   import type { Activity } from "@/types";
   import { notify } from "./util/notify";
 
-  export let watchedId: number;
-  export let activity: Activity;
-  export let activityMessage: string;
-  export let onClose: () => void;
+  interface Props {
+    watchedId: number;
+    activity: Activity;
+    activityMessage: string;
+    onClose: () => void;
+  }
 
-  let isDateTimeChanged: boolean;
-  let isDateTimeValid = true;
+  let {
+    watchedId,
+    activity,
+    activityMessage,
+    onClose
+  }: Props = $props();
+
+  let isDateTimeChanged: boolean = $derived(currentDateString != selectedDateString || currentTimeString != selectedTimeString);
+  let isDateTimeValid = $state(true);
   let currentDateObject = new Date(Date.parse(activity.customDate ?? activity.createdAt));
   let currentDateString = dateToInputDateString(currentDateObject);
   let currentTimeString = dateToInputTimeString(currentDateObject);
-  let selectedDateString = currentDateString;
-  let selectedTimeString = currentTimeString;
+  let selectedDateString = $state(currentDateString);
+  let selectedTimeString = $state(currentTimeString);
 
-  $: {
-    isDateTimeChanged =
-      currentDateString != selectedDateString || currentTimeString != selectedTimeString;
-  }
+  
 
   function dateToInputDateString(date: Date) {
     const year = date.getFullYear();
@@ -80,7 +86,7 @@
       id="activity-date"
       type="date"
       bind:value={selectedDateString}
-      on:change={validateNewDate}
+      onchange={validateNewDate}
       class:invalid={!isDateTimeValid}
     />
     <h3>Time</h3>
@@ -88,13 +94,13 @@
       id="activity-time"
       type="time"
       bind:value={selectedTimeString}
-      on:change={validateNewDate}
+      onchange={validateNewDate}
     />
 
     <div class="button-row">
-      <button class="danger" on:click={remove}>Delete</button>
+      <button class="danger" onclick={remove}>Delete</button>
       <div>
-        <button on:click={update} disabled={!(isDateTimeChanged && isDateTimeValid)}>Update</button>
+        <button onclick={update} disabled={!(isDateTimeChanged && isDateTimeValid)}>Update</button>
       </div>
     </div>
   </div>

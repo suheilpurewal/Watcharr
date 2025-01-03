@@ -1,9 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let type: "wrapped" | "vertical" = "wrapped";
+  interface Props {
+    type?: "wrapped" | "vertical";
+    children?: import('svelte').Snippet;
+  }
 
-  let ulEl: HTMLUListElement;
+  let { type = "wrapped", children }: Props = $props();
+
+  let ulEl: HTMLUListElement = $state();
 
   onMount(() => {
     if (ulEl) {
@@ -14,7 +19,7 @@
 
 <div>
   <ul bind:this={ulEl}>
-    <slot />
+    {@render children?.()}
   </ul>
 </div>
 

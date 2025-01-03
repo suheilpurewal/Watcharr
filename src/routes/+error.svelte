@@ -16,8 +16,8 @@
       <h4 class="norm">We couldn't load this page</h4>
     {/if}
     <div class="btns">
-      <button on:click={() => goto("/")}>Home</button>
-      <button on:click={() => location.reload()}>Refresh</button>
+      <button onclick={() => goto("/")}>Home</button>
+      <button onclick={() => location.reload()}>Refresh</button>
     </div>
   </div>
 </div>

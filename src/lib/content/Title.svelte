@@ -1,9 +1,19 @@
 <script lang="ts">
-  export let homepage: string | undefined;
-  export let title: string;
-  export let releaseYear: string | number;
-  export let voteAverage: number;
-  export let voteCount: number;
+  interface Props {
+    homepage: string | undefined;
+    title: string;
+    releaseYear: string | number;
+    voteAverage: number;
+    voteCount: number;
+  }
+
+  let {
+    homepage,
+    title,
+    releaseYear,
+    voteAverage,
+    voteCount
+  }: Props = $props();
 
   // if voteAvg bigger than 10, it is out of 100, so no need to * by 10
   const vote = Math.round(voteAverage > 10 ? voteAverage : voteAverage * 10) / 10;

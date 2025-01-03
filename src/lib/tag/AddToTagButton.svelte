@@ -6,9 +6,13 @@
   import { tagWatched, untagWatched } from "./api";
   import { onMount } from "svelte";
 
-  export let watchedItem: Watched;
+  interface Props {
+    watchedItem: Watched;
+  }
 
-  let menuOpen = false;
+  let { watchedItem }: Props = $props();
+
+  let menuOpen = $state(false);
 
   onMount(() => {
     const onScroll = () => {
@@ -25,7 +29,7 @@
 
 <div>
   <button
-    on:click={() => (menuOpen = !menuOpen)}
+    onclick={() => (menuOpen = !menuOpen)}
     use:tooltip={{
       text: `Add to a Tag`,
       pos: "bot"

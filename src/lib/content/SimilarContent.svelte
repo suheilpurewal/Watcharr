@@ -5,10 +5,14 @@
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import Poster from "../poster/Poster.svelte";
 
-  $: wList = $watchedList;
+  let wList = $derived($watchedList);
 
-  export let type: ContentType;
-  export let similar: TMDBShowSimilar | TMDBMovieSimilar;
+  interface Props {
+    type: ContentType;
+    similar: TMDBShowSimilar | TMDBMovieSimilar;
+  }
+
+  let { type, similar }: Props = $props();
 </script>
 
 {#if similar?.results?.length > 0}

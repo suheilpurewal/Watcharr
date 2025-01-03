@@ -28,7 +28,7 @@
   import Icon from "@/lib/Icon.svelte";
 
   let isDragOver = false;
-  let isLoading = false;
+  let isLoading = $state(false);
 
   function processFiles(files: FileList | null | undefined, type: "text-list" | "tmdb" | "imdb") {
     try {
@@ -670,7 +670,7 @@
           filesSelected={(f) => processFiles(f, "tmdb")}
         />
 
-        <button class="plain" on:click={() => goto("/import/trakt")}>
+        <button class="plain" onclick={() => goto("/import/trakt")}>
           <Icon i="trakt" wh="100%" />
           <h4 class="norm">Trakt Import</h4>
         </button>

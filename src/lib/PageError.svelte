@@ -1,6 +1,10 @@
 <script lang="ts">
-  export let pretty: string;
-  export let error: any;
+  interface Props {
+    pretty: string;
+    error: any;
+  }
+
+  let { pretty, error }: Props = $props();
 </script>
 
 <div>

@@ -4,7 +4,7 @@
   import { RatingStep, RatingSystem } from "@/types";
   import { updateUserSetting } from "../util/api";
 
-  $: settings = $userSettings;
+  let settings = $derived($userSettings);
 
   function update(v: RatingSystem) {
     if (!settings) {
@@ -31,7 +31,7 @@
   <div class="rat-wrap">
     <button
       class={["plain", settings?.ratingSystem === RatingSystem.OutOf5 ? "active" : ""].join(" ")}
-      on:click={() => update(RatingSystem.OutOf5)}
+      onclick={() => update(RatingSystem.OutOf5)}
     >
       0-5
     </button>
@@ -40,19 +40,19 @@
         "plain",
         settings?.ratingSystem === RatingSystem.OutOf10 || !settings?.ratingSystem ? "active" : ""
       ].join(" ")}
-      on:click={() => update(RatingSystem.OutOf10)}
+      onclick={() => update(RatingSystem.OutOf10)}
     >
       0-10
     </button>
     <button
       class={["plain", settings?.ratingSystem === RatingSystem.OutOf100 ? "active" : ""].join(" ")}
-      on:click={() => update(RatingSystem.OutOf100)}
+      onclick={() => update(RatingSystem.OutOf100)}
     >
       0-100
     </button>
     <button
       class={["plain", settings?.ratingSystem === RatingSystem.Thumbs ? "active" : ""].join(" ")}
-      on:click={() => update(RatingSystem.Thumbs)}
+      onclick={() => update(RatingSystem.Thumbs)}
     >
       Thumbs
     </button>
@@ -64,13 +64,13 @@
     <div class="rat-wrap">
       <button
         class={["plain", settings?.ratingStep === RatingStep.Point1 ? "active" : ""].join(" ")}
-        on:click={() => updateStep(RatingStep.Point1)}
+        onclick={() => updateStep(RatingStep.Point1)}
       >
         0.1
       </button>
       <button
         class={["plain", settings?.ratingStep === RatingStep.Point5 ? "active" : ""].join(" ")}
-        on:click={() => updateStep(RatingStep.Point5)}
+        onclick={() => updateStep(RatingStep.Point5)}
       >
         0.5
       </button>
@@ -79,7 +79,7 @@
           "plain",
           settings?.ratingStep === RatingStep.One || !settings?.ratingStep ? "active" : ""
         ].join(" ")}
-        on:click={() => updateStep(RatingStep.One)}
+        onclick={() => updateStep(RatingStep.One)}
       >
         1
       </button>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import axios from "axios";
   import Modal from "../Modal.svelte";
   import type {
@@ -12,17 +14,26 @@
   import Setting from "../settings/Setting.svelte";
   import Spinner from "../Spinner.svelte";
 
-  export let content: TMDBMovieDetails;
-  export let onClose: (r: ArrRequestResponse | undefined) => void;
 
-  export let approveMode = false;
-  export let originalRequest: ArrRequestResponse | undefined = undefined;
+  interface Props {
+    content: TMDBMovieDetails;
+    onClose: (r: ArrRequestResponse | undefined) => void;
+    approveMode?: boolean;
+    originalRequest?: ArrRequestResponse | undefined;
+  }
 
-  let servarrs: RadarrSettings[];
-  let selectedServarrIndex: number;
+  let {
+    content,
+    onClose,
+    approveMode = false,
+    originalRequest = undefined
+  }: Props = $props();
+
+  let servarrs: RadarrSettings[] = $state();
+  let selectedServarrIndex: number = $state();
   let inputsDisabled = true;
-  let selectedServerCfg: RadarrTestResponse | undefined;
-  let addRequestRunning = false;
+  let selectedServerCfg: RadarrTestResponse | undefined = $state();
+  let addRequestRunning = $state(false);
 
   async function getServers() {
     try {
@@ -133,7 +144,7 @@
     }
   }
 
-  $: {
+  run(() => {
     if (typeof selectedServarrIndex !== "undefined" && servarrs?.length > 0) {
       const s = servarrs[selectedServarrIndex];
       if (!s) {
@@ -142,7 +153,7 @@
         getConfig(s.name);
       }
     }
-  }
+  });
 
   getServers();
 </script>
@@ -170,7 +181,7 @@
         </Setting>
       {/if}
 
-      <button on:click={request} disabled={addRequestRunning}>
+      <button onclick={request} disabled={addRequestRunning}>
         {approveMode ? "Approve" : "Request"}
       </button>
     {:else}

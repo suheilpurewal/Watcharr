@@ -4,10 +4,14 @@
   import StarRating from "./StarRating.svelte";
   import ThumbRating from "./ThumbRating.svelte";
 
-  $: settings = $userSettings;
+  let settings = $derived($userSettings);
 
-  export let rating: number | undefined;
-  export let onChange: (newRating: number) => Promise<boolean>;
+  interface Props {
+    rating: number | undefined;
+    onChange: (newRating: number) => Promise<boolean>;
+  }
+
+  let { rating, onChange }: Props = $props();
 </script>
 
 <div class="wrap">

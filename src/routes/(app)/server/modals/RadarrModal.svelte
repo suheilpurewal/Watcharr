@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Checkbox from "@/lib/Checkbox.svelte";
   import DropDown from "@/lib/DropDown.svelte";
   import Modal from "@/lib/Modal.svelte";
@@ -8,21 +10,20 @@
   import type { DropDownItem, RadarrSettings, RadarrTestResponse } from "@/types";
   import axios from "axios";
 
-  export let servarr: RadarrSettings;
-  export let isEditing: boolean;
-  export let onClose: () => void;
-
-  let error: string;
-  let formDisabled = false;
-
-  let qualityProfiles: DropDownItem[] = [];
-  let rootFolders: DropDownItem[] = [];
-
-  $: {
-    if (isEditing) {
-      getSettingsData();
-    }
+  interface Props {
+    servarr: RadarrSettings;
+    isEditing: boolean;
+    onClose: () => void;
   }
+
+  let { servarr = $bindable(), isEditing, onClose }: Props = $props();
+
+  let error: string = $state();
+  let formDisabled = $state(false);
+
+  let qualityProfiles: DropDownItem[] = $state([]);
+  let rootFolders: DropDownItem[] = $state([]);
+
 
   function testIfHostAndKeySet() {
     if (servarr.host && servarr.key) {
@@ -123,6 +124,11 @@
       }
     }
   }
+  run(() => {
+    if (isEditing) {
+      getSettingsData();
+    }
+  });
 </script>
 
 <Modal
@@ -189,10 +195,10 @@
     </Setting>
     <div class="btns">
       {#if isEditing}
-        <button class="danger" on:click={() => remove()}>Delete</button>
+        <button class="danger" onclick={() => remove()}>Delete</button>
       {/if}
-      <button id="test" class="secondary" on:click={() => testIfHostAndKeySet()}>Test</button>
-      <button on:click={() => save()}>{isEditing ? "Save" : "Add Server"}</button>
+      <button id="test" class="secondary" onclick={() => testIfHostAndKeySet()}>Test</button>
+      <button onclick={() => save()}>{isEditing ? "Save" : "Add Server"}</button>
     </div>
   </SettingsList>
 </Modal>

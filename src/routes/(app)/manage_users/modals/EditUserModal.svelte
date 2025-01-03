@@ -14,10 +14,14 @@
     type?: UserType;
   }
 
-  export let user: ManagedUser;
-  export let onClose: () => void;
+  interface Props {
+    user: ManagedUser;
+    onClose: () => void;
+  }
 
-  let error: string;
+  let { user = $bindable(), onClose }: Props = $props();
+
+  let error: string = $state();
   let formDisabled = false;
 
   // Things we have changed
@@ -141,7 +145,7 @@
     </Setting>
 
     <div class="btns">
-      <button on:click={() => save()}>Save</button>
+      <button onclick={() => save()}>Save</button>
     </div>
   </SettingsList>
 </Modal>

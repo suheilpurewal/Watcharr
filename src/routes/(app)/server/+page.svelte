@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Checkbox from "@/lib/Checkbox.svelte";
   import DropDown from "@/lib/DropDown.svelte";
   import PageError from "@/lib/PageError.svelte";
@@ -26,24 +28,24 @@
   import TaskScheduleModal from "./modals/TaskScheduleModal.svelte";
   import TrustedHeaderAuthModal from "./modals/TrustedHeaderAuthModal.svelte";
 
-  let serverConfig: ServerConfig;
-  let sonarrModalOpen = false;
-  let sonarrServerEditing: SonarrSettings;
-  let sonarrModalEditing = false;
-  let radarrModalOpen = false;
-  let radarrServerEditing: RadarrSettings;
-  let radarrModalEditing = false;
-  let twitchModalOpen = false;
-  let taskScheduleModalOpen = false;
-  let headerSSOModalOpen = false;
+  let serverConfig: ServerConfig = $state();
+  let sonarrModalOpen = $state(false);
+  let sonarrServerEditing: SonarrSettings = $state();
+  let sonarrModalEditing = $state(false);
+  let radarrModalOpen = $state(false);
+  let radarrServerEditing: RadarrSettings = $state();
+  let radarrModalEditing = $state(false);
+  let twitchModalOpen = $state(false);
+  let taskScheduleModalOpen = $state(false);
+  let headerSSOModalOpen = $state(false);
   // Disabled vars for disabling inputs until api request completes
-  let signupDisabled = false;
-  let debugDisabled = false;
-  let jfDisabled = false;
-  let tmdbkDisabled = false;
-  let plexHostDisabled = false;
-  let countryDisabled = false;
-  let useEmbyDisabled = false;
+  let signupDisabled = $state(false);
+  let debugDisabled = $state(false);
+  let jfDisabled = $state(false);
+  let tmdbkDisabled = $state(false);
+  let plexHostDisabled = $state(false);
+  let countryDisabled = $state(false);
+  let useEmbyDisabled = $state(false);
   let selectedCountry: string;
   let countries: any;
   let countriesDropdown: DropDownItem[] = [];
@@ -98,10 +100,10 @@
     return (await axios.get("/server/stats")).data as ServerStats;
   }
 
-  let jellyfinOrEmby = "Jellyfin";
-  $: {
+  let jellyfinOrEmby = $state("Jellyfin");
+  run(() => {
     jellyfinOrEmby = serverConfig?.USE_EMBY ? "Emby" : "Jellyfin";
-  }
+  });
 </script>
 
 <div class="content">
@@ -166,7 +168,7 @@
             type="text"
             placeholder="https://{jellyfinOrEmby.toLowerCase()}.example.com"
             bind:value={serverConfig.JELLYFIN_HOST}
-            on:blur={() => {
+            onblur={() => {
               jfDisabled = true;
               updateServerConfig("JELLYFIN_HOST", serverConfig.JELLYFIN_HOST, () => {
                 jfDisabled = false;
@@ -201,7 +203,7 @@
             type="text"
             placeholder="https://plex.example.com"
             bind:value={serverConfig.PLEX_HOST}
-            on:blur={() => {
+            onblur={() => {
               plexHostDisabled = true;
               updateServerConfig("PLEX_HOST", serverConfig.PLEX_HOST, (rData) => {
                 plexHostDisabled = false;
@@ -219,7 +221,7 @@
             type="password"
             placeholder="TMDB Key"
             bind:value={serverConfig.TMDB_KEY}
-            on:blur={() => {
+            onblur={() => {
               tmdbkDisabled = true;
               updateServerConfig("TMDB_KEY", serverConfig.TMDB_KEY, () => {
                 tmdbkDisabled = false;

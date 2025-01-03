@@ -36,22 +36,22 @@
     | GameWithMediaType;
   type SearchFilterTypes = MediaType | "game";
 
-  export let data;
+  let { data } = $props();
 
   let allSearchResults: CombinedResult[] = [];
-  let searchResults: CombinedResult[] = [];
-  let activeSearchFilter: SearchFilterTypes | undefined;
+  let searchResults: CombinedResult[] = $state([]);
+  let activeSearchFilter: SearchFilterTypes | undefined = $state();
   let curPage = 0;
   let maxContentPage = 1;
-  let searchRunning = false;
-  let contentSearchErr: any;
+  let searchRunning = $state(false);
+  let contentSearchErr: any = $state();
 
   const infiniteScrollThreshold = 150;
   let reqController = new AbortController();
 
-  $: query = data?.query;
-  $: searchQ = $searchQuery;
-  $: wList = $watchedList;
+  let query = $derived(data?.query);
+  let searchQ = $derived($searchQuery);
+  let wList = $derived($watchedList);
 
   async function searchMovies(query: string, page: number) {
     try {
@@ -446,14 +446,14 @@
           <button
             class="plain"
             data-active={activeSearchFilter === "movie"}
-            on:click={() => setActiveSearchFilter("movie")}
+            onclick={() => setActiveSearchFilter("movie")}
           >
             <Icon i="film" wh={20} /> Movies
           </button>
           <button
             class="plain"
             data-active={activeSearchFilter === "tv"}
-            on:click={() => setActiveSearchFilter("tv")}
+            onclick={() => setActiveSearchFilter("tv")}
           >
             <Icon i="tv" wh={20} /> TV Shows
           </button>
@@ -461,7 +461,7 @@
             <button
               class="plain"
               data-active={activeSearchFilter === "game"}
-              on:click={() => setActiveSearchFilter("game")}
+              onclick={() => setActiveSearchFilter("game")}
             >
               <Icon i="gamepad" wh={20} /> Games
             </button>
@@ -469,7 +469,7 @@
           <button
             class="plain"
             data-active={activeSearchFilter === "person"}
-            on:click={() => setActiveSearchFilter("person")}
+            onclick={() => setActiveSearchFilter("person")}
           >
             <Icon i="people-nocircle" wh={20} /> People
           </button>

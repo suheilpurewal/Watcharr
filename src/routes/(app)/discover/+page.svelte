@@ -14,7 +14,7 @@
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import PosterList from "@/lib/poster/PosterList.svelte";
 
-  $: wList = $watchedList;
+  let wList = $derived($watchedList);
 
   async function allTrending() {
     return (await axios.get(`/content/trending`)).data as TMDBTrendingAll;

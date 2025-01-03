@@ -1,8 +1,12 @@
 <!-- Uses Native Color Input -->
 
 <script lang="ts">
-  export let value = "#000000";
-  export let style = "";
+  interface Props {
+    value?: string;
+    style?: string;
+  }
+
+  let { value = $bindable("#000000"), style = "" }: Props = $props();
 </script>
 
 <button class="plain" style={`background-color: ${value};${style}`}>

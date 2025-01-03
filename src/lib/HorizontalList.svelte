@@ -1,5 +1,10 @@
 <script lang="ts">
-  export let title: string | undefined;
+  interface Props {
+    title: string | undefined;
+    children?: import('svelte').Snippet;
+  }
+
+  let { title, children }: Props = $props();
 </script>
 
 <div>
@@ -7,7 +12,7 @@
     <h2>{title}</h2>
   {/if}
   <ul>
-    <slot />
+    {@render children?.()}
   </ul>
 </div>
 

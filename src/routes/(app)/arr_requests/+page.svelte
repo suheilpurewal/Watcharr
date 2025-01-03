@@ -9,10 +9,10 @@
   import { type ArrRequestResponse, type TMDBMovieDetails, type TMDBShowDetails } from "@/types";
   import axios from "axios";
 
-  let allRequests: ArrRequestResponse[];
-  let showBeingApproved: TMDBShowDetails | undefined;
-  let movieBeingApproved: TMDBMovieDetails | undefined;
-  let beingApprovedOriginalRequest: ArrRequestResponse | undefined;
+  let allRequests: ArrRequestResponse[] = $state();
+  let showBeingApproved: TMDBShowDetails | undefined = $state();
+  let movieBeingApproved: TMDBMovieDetails | undefined = $state();
+  let beingApprovedOriginalRequest: ArrRequestResponse | undefined = $state();
 
   async function getRequests() {
     try {
@@ -100,8 +100,8 @@
                   </span>
                 {/if}
                 {#if r.status === "PENDING"}
-                  <button class="decline" on:click={() => deny(r)}>Decline</button>
-                  <button class="approve" on:click={() => approve(r)}>Approve</button>
+                  <button class="decline" onclick={() => deny(r)}>Decline</button>
+                  <button class="approve" onclick={() => approve(r)}>Approve</button>
                 {:else}
                   <button disabled>{r.status}</button>
                 {/if}

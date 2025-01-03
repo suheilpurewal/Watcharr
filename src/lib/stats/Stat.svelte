@@ -1,11 +1,21 @@
 <script lang="ts">
   import tooltip from "../actions/tooltip";
 
-  export let name: string;
-  export let value: string | number;
-  export let large = false;
-  export let href: string | undefined = undefined;
-  export let disc: string | undefined = undefined;
+  interface Props {
+    name: string;
+    value: string | number;
+    large?: boolean;
+    href?: string | undefined;
+    disc?: string | undefined;
+  }
+
+  let {
+    name,
+    value,
+    large = false,
+    href = undefined,
+    disc = undefined
+  }: Props = $props();
 </script>
 
 <a {href}>

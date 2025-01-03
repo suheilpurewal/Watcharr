@@ -1,7 +1,11 @@
 <script lang="ts">
-  export let title: string;
-  export let desc: string;
-  export let type: "warn";
+  interface Props {
+    title: string;
+    desc: string;
+    type: "warn";
+  }
+
+  let { title, desc, type }: Props = $props();
 </script>
 
 <div class={type}>

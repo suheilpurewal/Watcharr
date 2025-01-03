@@ -3,14 +3,23 @@
   import type { Icon as IconT } from "@/types";
   import Icon from "./Icon.svelte";
 
-  export let text: string;
-  export let icon: IconT = "document";
-  export let filesSelected: (f?: FileList | null) => void;
-  export let allowSelectMultipleFiles = false;
+  interface Props {
+    text: string;
+    icon?: IconT;
+    filesSelected: (f?: FileList | null) => void;
+    allowSelectMultipleFiles?: boolean;
+  }
 
-  let fileInput: HTMLInputElement;
-  let dragEnterTarget: EventTarget | null;
-  let isDragOver = false;
+  let {
+    text,
+    icon = "document",
+    filesSelected,
+    allowSelectMultipleFiles = false
+  }: Props = $props();
+
+  let fileInput: HTMLInputElement = $state();
+  let dragEnterTarget: EventTarget | null = $state();
+  let isDragOver = $state(false);
 
   function importFile() {
     fileInput.click();
@@ -27,19 +36,19 @@
 
 <div class="drop-file-btn">
   <button
-    on:click={importFile}
-    on:dragover={(ev) => {
+    onclick={importFile}
+    ondragover={(ev) => {
       ev.preventDefault();
       ev.stopPropagation();
     }}
-    on:dragenter={(ev) => {
+    ondragenter={(ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       dragEnterTarget = ev.target;
       console.log("enter");
       isDragOver = true;
     }}
-    on:dragleave={(ev) => {
+    ondragleave={(ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       if (dragEnterTarget === ev.target) {
@@ -47,7 +56,7 @@
         isDragOver = false;
       }
     }}
-    on:drop={(ev) => {
+    ondrop={(ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       filesSelected(ev.dataTransfer?.files);

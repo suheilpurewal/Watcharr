@@ -1,10 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let embed: string;
-  export let closed: () => void;
+  interface Props {
+    embed: string;
+    closed: () => void;
+  }
 
-  let modalDiv: HTMLDivElement;
+  let { embed, closed }: Props = $props();
+
+  let modalDiv: HTMLDivElement = $state();
 
   onMount(() => {
     // For better experience on keyboard.
@@ -26,14 +30,14 @@
 <div
   bind:this={modalDiv}
   class="modal"
-  on:click={closed}
-  on:keydown={handleKeyDown}
+  onclick={closed}
+  onkeydown={handleKeyDown}
   role="button"
   tabindex="0"
 >
   {#if embed}
     <div class="wrapper">
-      <iframe title="Video Embed" src={embed} frameborder="0" width="100%" height="100%" />
+      <iframe title="Video Embed" src={embed} frameborder="0" width="100%" height="100%"></iframe>
     </div>
   {/if}
 </div>

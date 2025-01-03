@@ -5,16 +5,17 @@
   import Icon from "./Icon.svelte";
   import tooltip from "./actions/tooltip";
 
-  export let activity: Activity[] | undefined;
-  export let wListId: number;
-
-  let clickedActivity: Activity;
-  let groupedActivities: { [index: string]: any };
-  let isActivityEditorVisible: boolean;
-
-  $: {
-    groupedActivities = getGroupedActivity(activity);
+  interface Props {
+    activity: Activity[] | undefined;
+    wListId: number;
   }
+
+  let { activity, wListId }: Props = $props();
+
+  let clickedActivity: Activity = $state();
+  let groupedActivities: { [index: string]: any } = $derived(getGroupedActivity(activity));
+  let isActivityEditorVisible: boolean = $state();
+
 
   function getMsg(a: Activity) {
     switch (a?.type) {
@@ -192,6 +193,7 @@
       console.error("getActivityDataParsed: Failed!", err);
     }
   }
+  
 </script>
 
 {#if isActivityEditorVisible}
@@ -213,7 +215,7 @@
         {#each groupedActivities[k] as a}
           {@const d = new Date(getCreatedAtVis(a))}
           <li>
-            <button class="unset" on:click={() => openEditor(a)}>
+            <button class="unset" onclick={() => openEditor(a)}>
               <span title={d.toDateString()}>{toDayTime(d)}</span>
               <span>{getMsg(a)}</span>
             </button>

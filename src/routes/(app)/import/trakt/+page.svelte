@@ -10,10 +10,10 @@
   import type { JobCreatedResponse } from "@/types";
   import axios from "axios";
 
-  $: user = $userInfo;
+  let user = $derived($userInfo);
 
-  let modalOpen = false;
-  let traktUsername = "";
+  let modalOpen = $state(false);
+  let traktUsername = $state("");
 
   async function startJob(): Promise<{ jobId: string } | undefined> {
     const r = await axios.post<JobCreatedResponse>("/import/trakt", { username: traktUsername });
@@ -41,7 +41,7 @@
       placeholder={user?.username ?? "Trakt Username"}
       bind:value={traktUsername}
     />
-    <button on:click={() => (modalOpen = true)}>Start Import</button>
+    <button onclick={() => (modalOpen = true)}>Start Import</button>
   </div>
 
   {#if modalOpen}

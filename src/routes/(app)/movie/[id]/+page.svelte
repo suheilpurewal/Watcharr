@@ -8,7 +8,6 @@
   import { contentExistsOnJellyfin, removeWatched, updateWatched } from "@/lib/util/api";
   import { serverFeatures, userSettings, watchedList } from "@/store";
   import type {
-    ArrDetailsResponse,
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
@@ -22,8 +21,6 @@
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
   import Icon from "@/lib/Icon.svelte";
   import SimilarContent from "@/lib/content/SimilarContent.svelte";
-  import { onMount } from "svelte";
-  import { page } from "$app/stores";
   import RequestMovie from "@/lib/request/RequestMovie.svelte";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
@@ -32,68 +29,56 @@
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
   import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
-  $: settings = $userSettings;
+  let settings = $derived($userSettings);
 
-  export let data;
+  let { data } = $props();
 
-  let trailer: string | undefined;
-  let requestModalShown = false;
-  let trailerShown = false;
-  let jellyfinUrl: string | undefined;
-  let arrRequestButtonComp: ArrRequestButton;
+  let trailer: string | undefined = $state(undefined);
+  let requestModalShown = $state(false);
+  let trailerShown = $state(false);
+  let jellyfinUrl: string | undefined = $state(undefined);
+  let arrRequestButtonComp: ArrRequestButton | undefined = $state();
 
-  $: wListItem = $watchedList.find(
-    (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId
+  let wListItem = $derived(
+    $watchedList.find((w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId)
   );
 
-  let movieId: number | undefined;
-  let movie: TMDBMovieDetails | undefined;
-  let pageError: Error | undefined;
-  let arrStatus: ArrDetailsResponse | undefined;
+  let movie: TMDBMovieDetails | undefined = $state();
+  let pageError: Error | undefined = $state();
 
-  onMount(() => {
-    const unsubscribe = page.subscribe((value) => {
-      console.log(value);
-      const params = value.params;
-      if (params && params.id) {
-        movieId = Number(params.id);
-      }
-    });
-
-    return unsubscribe;
-  });
-
-  $: {
+  $effect(() => {
     (async () => {
       try {
         movie = undefined;
         pageError = undefined;
-        if (!movieId) {
+        if (!data.movieId) {
           return;
         }
-        const data = (
-          await axios.get(`/content/movie/${movieId}`, { params: { region: settings?.country } })
+        const resp = (
+          await axios.get(`/content/movie/${data.movieId}`, {
+            params: { region: settings?.country }
+          })
         ).data as TMDBMovieDetails;
-        if (data.videos?.results?.length > 0) {
-          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+        if (resp.videos?.results?.length > 0) {
+          const t = resp.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
           if (t?.key) {
             if (t?.site?.toLowerCase() === "youtube") {
               trailer = `https://www.youtube.com/embed/${t?.key}`;
             }
           }
         }
-        contentExistsOnJellyfin("movie", data.title, data.id).then((j) => {
+        contentExistsOnJellyfin("movie", resp.title, resp.id).then((j) => {
           if (j?.hasContent && j?.url !== "") {
             jellyfinUrl = j.url;
           }
         });
-        movie = data;
+        movie = resp;
       } catch (err: any) {
         movie = undefined;
         pageError = err;
       }
     })();
-  }
+  });
 
   async function getMovieCredits() {
     const credits = (await axios.get(`/content/movie/${data.movieId}/credits`))
@@ -136,7 +121,7 @@
           alt=""
         />
       {/if}
-      <div class="vignette" />
+      <div class="vignette"></div>
 
       <div class="details-container">
         <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
@@ -169,7 +154,7 @@
 
           <div class="btns">
             {#if trailer}
-              <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+              <button onclick={() => (trailerShown = !trailerShown)}>View Trailer</button>
               {#if trailerShown}
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
@@ -191,7 +176,7 @@
               <div class="other-side">
                 <AddToTagButton watchedItem={wListItem} />
                 <button
-                  on:click={() => {
+                  onclick={() => {
                     if (wListItem?.pinned) {
                       contentChanged(undefined, undefined, undefined, false);
                     } else {
@@ -207,7 +192,7 @@
                 </button>
                 <button
                   class="delete-btn"
-                  on:click={() =>
+                  onclick={() =>
                     wListItem
                       ? removeWatched(wListItem.id)
                       : console.error("no wlistItem.. can't delete")}
@@ -230,7 +215,7 @@
         onClose={(reqResp) => {
           requestModalShown = false;
           if (reqResp) {
-            arrRequestButtonComp.setExistingRequest(reqResp);
+            arrRequestButtonComp?.setExistingRequest(reqResp);
           }
         }}
       />
@@ -252,8 +237,8 @@
         {/if}
       </div>
 
-      {#if movieId}
-        <FollowedThoughts mediaType="movie" mediaId={movieId} />
+      {#if data.movieId}
+        <FollowedThoughts mediaType="movie" mediaId={data.movieId} />
       {/if}
 
       {#await getMovieCredits()}

@@ -14,7 +14,7 @@
     wlDetailedView.update((a) => (a = dv));
   }
 
-  $: dve = $wlDetailedView;
+  let dve = $derived($wlDetailedView);
 </script>
 
 <div class={`menu${$page.url?.pathname.startsWith("/search") ? " on-search-page" : ""}`}>
@@ -22,25 +22,25 @@
     <h4 class="norm sm-caps">Shown Details</h4>
     <button
       class={`plain ${dve?.includes("statusRating") ? "on" : ""}`}
-      on:click={() => detailClicked("statusRating")}
+      onclick={() => detailClicked("statusRating")}
     >
       Status & Rating
     </button>
     <button
       class={`plain ${dve?.includes("lastWatched") ? "on" : ""}`}
-      on:click={() => detailClicked("lastWatched")}
+      onclick={() => detailClicked("lastWatched")}
     >
       Watching Season
     </button>
     <button
       class={`plain ${dve?.includes("dateAdded") ? "on" : ""}`}
-      on:click={() => detailClicked("dateAdded")}
+      onclick={() => detailClicked("dateAdded")}
     >
       Date Added
     </button>
     <button
       class={`plain ${dve?.includes("dateModified") ? "on" : ""}`}
-      on:click={() => detailClicked("dateModified")}
+      onclick={() => detailClicked("dateModified")}
     >
       Date Modified
     </button>

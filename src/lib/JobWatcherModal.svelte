@@ -8,19 +8,29 @@
   import { onDestroy, onMount } from "svelte";
   import { watchedList } from "@/store";
 
-  export let modalTitle: string;
-  // Promise that returns the job id to watch.
-  export let getJobId: () => Promise<{ jobId: string } | undefined>;
-  export let onClose: () => void;
-  export let messages: {
+  
+  interface Props {
+    modalTitle: string;
+    // Promise that returns the job id to watch.
+    getJobId: () => Promise<{ jobId: string } | undefined>;
+    onClose: () => void;
+    messages: {
     starting: string;
   };
+  }
 
-  let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = "starting";
+  let {
+    modalTitle,
+    getJobId,
+    onClose,
+    messages
+  }: Props = $props();
+
+  let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = $state("starting");
   let jobId: string | undefined;
-  let currentTask: string | undefined;
-  let latestJobStatus: GetJobResponse | undefined;
-  let jobFailError: string | undefined;
+  let currentTask: string | undefined = $state();
+  let latestJobStatus: GetJobResponse | undefined = $state();
+  let jobFailError: string | undefined = $state();
 
   async function startSync() {
     try {

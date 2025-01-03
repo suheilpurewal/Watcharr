@@ -11,11 +11,15 @@
   import Tag from "./Tag.svelte";
   import { onMount } from "svelte";
 
-  export let tag: TagT;
-  export let onClose: () => void;
+  interface Props {
+    tag: TagT;
+    onClose: () => void;
+  }
 
-  let error = "";
-  let deleteDisabled = false;
+  let { tag, onClose }: Props = $props();
+
+  let error = $state("");
+  let deleteDisabled = $state(false);
 
   async function deleteTag() {
     console.debug("deleteTag:", tag);
@@ -74,7 +78,7 @@
 >
   <div class="inner">
     <Tag {tag} />
-    <button class="delete-tag-btn" on:click={() => deleteTag()} disabled={deleteDisabled}>
+    <button class="delete-tag-btn" onclick={() => deleteTag()} disabled={deleteDisabled}>
       Yes, fully delete (unrecoverable)
     </button>
   </div>

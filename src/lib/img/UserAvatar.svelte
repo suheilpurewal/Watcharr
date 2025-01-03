@@ -1,25 +1,32 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { decode } from "blurhash";
   import Icon from "../Icon.svelte";
   import { baseURL } from "../util/api";
   import { onMount } from "svelte";
   import type { Image } from "@/types";
 
-  /**
+  
+  interface Props {
+    /**
    * Users avatar.
    */
-  export let img: Image | undefined;
-  export let avatarDropped: ((ev: Event) => void) | undefined = undefined;
+    img: Image | undefined;
+    avatarDropped?: ((ev: Event) => void) | undefined;
+  }
 
-  let bhCanvas: HTMLCanvasElement;
-  let avatarInput: HTMLInputElement;
+  let { img, avatarDropped = undefined }: Props = $props();
+
+  let bhCanvas: HTMLCanvasElement = $state();
+  let avatarInput: HTMLInputElement = $state();
 
   function avatarLoaded() {
     console.log("avatar loaded.. removing canvas");
     bhCanvas?.remove();
   }
 
-  $: {
+  run(() => {
     if (img?.path && img?.blurHash && bhCanvas) {
       const pixels = decode(img.blurHash, 80, 80);
       const ctx = bhCanvas.getContext("2d");
@@ -29,7 +36,7 @@
         ctx.putImageData(imageData, 0, 0);
       }
     }
-  }
+  });
 
   onMount(() => {
     // Ignore rest if avatarDropped not defined
@@ -45,8 +52,8 @@
 
 <div class={["img-ctr", typeof avatarDropped === "function" ? "" : "no-click"].join(" ")}>
   {#if img?.path}
-    <canvas bind:this={bhCanvas} />
-    <img src={`${baseURL}/${img.path}`} alt="" on:load={avatarLoaded} />
+    <canvas bind:this={bhCanvas}></canvas>
+    <img src={`${baseURL}/${img.path}`} alt="" onload={avatarLoaded} />
   {:else}
     <Icon i="person" wh="100%" />
   {/if}

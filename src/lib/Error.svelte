@@ -1,7 +1,11 @@
 <script lang="ts">
-  export let pretty: string;
-  export let error: any;
-  export let onRetry: () => void | undefined = undefined!;
+  interface Props {
+    pretty: string;
+    error: any;
+    onRetry?: () => void | undefined;
+  }
+
+  let { pretty, error, onRetry = undefined! }: Props = $props();
 </script>
 
 <div>
@@ -16,7 +20,7 @@
       <p>{JSON.stringify(error)}</p>
     {/if}
     {#if onRetry}
-      <button on:click={onRetry}>Try Again</button>
+      <button onclick={onRetry}>Try Again</button>
     {/if}
   </div>
 </div>

@@ -7,13 +7,17 @@
   import { toShowableRating, toWhichThumb } from "../rating/helpers";
   import { page } from "$app/stores";
 
-  export let rating: number | undefined;
-  export let status: WatchedStatus | undefined;
-  export let details: PosterExtraDetails | undefined;
+  interface Props {
+    rating: number | undefined;
+    status: WatchedStatus | undefined;
+    details: PosterExtraDetails | undefined;
+  }
 
-  $: dve = $wlDetailedView;
-  $: settings = $userSettings;
-  $: isUsingThumbs = settings && settings.ratingSystem === RatingSystem.Thumbs;
+  let { rating, status, details }: Props = $props();
+
+  let dve = $derived($wlDetailedView);
+  let settings = $derived($userSettings);
+  let isUsingThumbs = $derived(settings && settings.ratingSystem === RatingSystem.Thumbs);
 
   function formatDate(e: number) {
     if (!e) {

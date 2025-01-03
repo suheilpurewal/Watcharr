@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
@@ -12,12 +14,12 @@
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
 
-  export let data;
+  let { data } = $props();
 
-  let followBtnDisabled = false;
-  let user: PublicUser | undefined;
+  let followBtnDisabled = $state(false);
+  let user: PublicUser | undefined = $state();
 
-  $: isFollowing = !!$follows?.find((f) => f.followedUser.id === Number(data.id));
+  let isFollowing = $derived(!!$follows?.find((f) => f.followedUser.id === Number(data.id)));
 
   async function getPublicWatchedList(id?: number, username?: string) {
     if (!id || !username) {
@@ -42,7 +44,7 @@
     followBtnDisabled = false;
   }
 
-  $: {
+  run(() => {
     user = undefined;
     if (data?.id && data?.username) {
       getPublicUser()
@@ -53,7 +55,7 @@
           console.error("getPublicUser failed!", err);
         });
     }
-  }
+  });
 </script>
 
 <svelte:head>
@@ -71,7 +73,7 @@
         <button
           class="plain"
           disabled={followBtnDisabled}
-          on:click={follow}
+          onclick={follow}
           use:tooltip={{ text: isFollowing ? "Unfollow" : "Follow" }}
         >
           <Icon i={isFollowing ? "person-minus" : "person-add"} />

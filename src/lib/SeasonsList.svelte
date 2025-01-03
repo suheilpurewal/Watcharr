@@ -16,13 +16,17 @@
   import { watchedList } from "@/store";
   import PosterRating from "./poster/PosterRating.svelte";
 
-  export let tvId: number;
-  export let seasons: TMDBShowSeason[];
-  export let watchedItem: Watched | undefined;
+  interface Props {
+    tvId: number;
+    seasons: TMDBShowSeason[];
+    watchedItem: Watched | undefined;
+  }
+
+  let { tvId, seasons, watchedItem = $bindable() }: Props = $props();
 
   let activeSeason =
-    typeof watchedItem?.lastViewedSeason === "number" ? watchedItem?.lastViewedSeason : 1;
-  let seasonDetailsReq: Promise<TMDBSeasonDetails>;
+    $state(typeof watchedItem?.lastViewedSeason === "number" ? watchedItem?.lastViewedSeason : 1);
+  let seasonDetailsReq: Promise<TMDBSeasonDetails> = $derived(sdr(activeSeason));
 
   async function sdr(seasonNum: number) {
     const resp = await axios.get(`/content/tv/${tvId}/season/${seasonNum}`, {
@@ -143,9 +147,7 @@
     updateWatchedSeason(seasonNumber, undefined, rating);
   }
 
-  $: {
-    seasonDetailsReq = sdr(activeSeason);
-  }
+  
 </script>
 
 <div class="ctr">
@@ -153,7 +155,7 @@
     {#each seasons as season}
       <button
         class={`plain${activeSeason === season.season_number ? " active" : ""}`}
-        on:click={() => {
+        onclick={() => {
           activeSeason = season.season_number;
         }}
       >
@@ -165,7 +167,7 @@
         {/if}
       </button>
     {/each}
-    <div class="last" />
+    <div class="last"></div>
   </ul>
 
   <div class="episodes">

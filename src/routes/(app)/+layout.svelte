@@ -30,20 +30,25 @@
   import { UserPermission, UserType } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
 
-  let navEl: HTMLElement;
-  let mainSearchEl: HTMLInputElement;
+  let { children }: Props = $props();
+
+  let navEl: HTMLElement = $state();
+  let mainSearchEl: HTMLInputElement = $state();
   let searchTimeout: NodeJS.Timeout;
-  let subMenuShown = false;
-  let filterMenuShown = false;
-  let sortMenuShown = false;
-  let followingMenuShown = false;
-  let detailedMenuShown = false;
-  let tagMenuShown = false;
-  let proxyUserLogoutShown = false;
+  let subMenuShown = $state(false);
+  let filterMenuShown = $state(false);
+  let sortMenuShown = $state(false);
+  let followingMenuShown = $state(false);
+  let detailedMenuShown = $state(false);
+  let tagMenuShown = $state(false);
+  let proxyUserLogoutShown = $state(false);
 
-  $: settings = $userSettings;
-  $: user = $userInfo;
+  let settings = $derived($userSettings);
+  let user = $derived($userInfo);
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -253,7 +258,7 @@
         type="text"
         placeholder="Search"
         bind:value={$searchQuery}
-        on:keydown={handleSearch}
+        onkeydown={handleSearch}
       />
       <Icon i="search" wh={19} />
     </div>
@@ -262,7 +267,7 @@
       {#if $page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")}
         <button
           class="plain other detailedView"
-          on:click={() => {
+          onclick={() => {
             closeAllSubMenus("detailed");
             detailedMenuShown = !detailedMenuShown;
           }}
@@ -281,7 +286,7 @@
       {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/") || $page.url?.pathname.includes("/tag/")}
         <button
           class="plain other sort"
-          on:click={() => {
+          onclick={() => {
             closeAllSubMenus("sort");
             sortMenuShown = !sortMenuShown;
           }}
@@ -295,7 +300,7 @@
         </button>
         <button
           class="plain other filter"
-          on:click={() => {
+          onclick={() => {
             closeAllSubMenus("filter");
             filterMenuShown = !filterMenuShown;
           }}
@@ -315,7 +320,7 @@
       {/if}
       <button
         class="plain other tag"
-        on:click={() => {
+        onclick={() => {
           closeAllSubMenus("tag");
           tagMenuShown = !tagMenuShown;
         }}
@@ -334,14 +339,14 @@
       {/if}
       <button
         class="plain other discover"
-        on:click={() => goto("/discover")}
+        onclick={() => goto("/discover")}
         use:tooltip={{ text: "Discover", pos: "bot" }}
       >
         <Icon i="compass" wh={26} />
       </button>
       <button
         class="plain other following"
-        on:click={() => {
+        onclick={() => {
           closeAllSubMenus("following");
           followingMenuShown = !followingMenuShown;
         }}
@@ -352,30 +357,30 @@
       {#if followingMenuShown}
         <FollowingMenu close={() => (followingMenuShown = false)} />
       {/if}
-      <button class="plain face" on:click={handleProfileClick}>:)</button>
+      <button class="plain face" onclick={handleProfileClick}>:)</button>
       {#if subMenuShown}
         <div class="menu face-menu">
           <div>
             {#if user?.username}
               <h5 title={user.username}>Hi {user.username}!</h5>
             {/if}
-            <button class="plain" on:click={() => profile()}>Profile</button>
+            <button class="plain" onclick={() => profile()}>Profile</button>
             {#if !settings?.private}
-              <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+              <button class="plain" onclick={() => shareWatchedList()}>Share List</button>
             {/if}
             {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-              <button class="plain" on:click={() => serverSettings()}>Settings</button>
-              <button class="plain" on:click={() => userManagement()}>Users</button>
+              <button class="plain" onclick={() => serverSettings()}>Settings</button>
+              <button class="plain" onclick={() => userManagement()}>Users</button>
               {#if $serverFeatures.sonarr || $serverFeatures.radarr}
                 <!-- At least one (sonarr/radarr) should be enabled for requests menu item to display. -->
-                <button class="plain" on:click={() => requestManagement()}>Requests</button>
+                <button class="plain" onclick={() => requestManagement()}>Requests</button>
               {/if}
             {/if}
-            <button class="plain" on:click={() => logout()}>Logout</button>
+            <button class="plain" onclick={() => logout()}>Logout</button>
             {#if proxyUserLogoutShown}
               <ProxyUserLogoutModal onClose={() => (proxyUserLogoutShown = false)} />
             {/if}
-            <!-- svelte-ignore missing-declaration -->
+            <!-- svelte-ignore missing_declaration -->
             <span>v{__WATCHARR_VERSION__}</span>
           </div>
         </div>
@@ -387,14 +392,14 @@
     type="text"
     placeholder="Search"
     bind:value={$searchQuery}
-    on:keydown={handleSearch}
+    onkeydown={handleSearch}
   />
 </nav>
 
 {#await getInitialData()}
   <Spinner />
 {:then}
-  <slot />
+  {@render children?.()}
 {:catch err}
   <PageError pretty="Failed to retrieve user data!" error={err} />
 {/await}

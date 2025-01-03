@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import type {
     TMDBSeasonDetailsEpisode,
     WatchedStatus,
@@ -14,16 +16,20 @@
   import { get } from "svelte/store";
   import { watchedList } from "@/store";
 
-  $: settings = $userSettings;
+  let settings = $derived($userSettings);
 
-  export let ep: TMDBSeasonDetailsEpisode;
-  export let watchedItem: Watched | undefined;
-
-  let isHidden = false;
-
-  $: {
-    if (settings) isHidden = settings.hideSpoilers;
+  interface Props {
+    ep: TMDBSeasonDetailsEpisode;
+    watchedItem: Watched | undefined;
   }
+
+  let { ep, watchedItem }: Props = $props();
+
+  let isHidden = $state(false);
+
+  run(() => {
+    if (settings) isHidden = settings.hideSpoilers;
+  });
 
   function updateWatchedEpisode(status?: WatchedStatus, rating?: number) {
     if (!watchedItem) {
@@ -169,7 +175,7 @@
   {#if ep.still_path}
     <img src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`} alt="" />
   {:else}
-    <div class="no-still" />
+    <div class="no-still"></div>
   {/if}
   <div class="info">
     <div>
@@ -220,7 +226,7 @@
     </div>
   {/if}
   {#if isHidden}
-    <button class="plain spoiler-text" on:click={() => (isHidden = false)}>
+    <button class="plain spoiler-text" onclick={() => (isHidden = false)}>
       <Icon i="eye-closed" wh={34} />
       <span>Click To Reveal</span>
     </button>

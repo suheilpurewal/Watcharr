@@ -13,15 +13,19 @@
   import { msToAmountsOfTime } from "../util/helpers";
   import { notify } from "../util/notify";
 
-  export let type: ContentType;
-  export let tmdbId: number;
-  export let openRequestModal: () => void;
+  interface Props {
+    type: ContentType;
+    tmdbId: number;
+    openRequestModal: () => void;
+  }
+
+  let { type, tmdbId, openRequestModal }: Props = $props();
 
   let existingRequest: ArrRequestResponse | undefined;
   let info: ArrInfoResponse | undefined;
   // The status, extra added string types are set in this file.
-  let status: ArrDetailsResponse | "available" | "requested" | ArrRequestStatus | undefined;
-  let estimatedCompletionIn: string | undefined;
+  let status: ArrDetailsResponse | "available" | "requested" | ArrRequestStatus | undefined = $state();
+  let estimatedCompletionIn: string | undefined = $state();
 
   async function getInfo() {
     try {
@@ -153,7 +157,7 @@
 
 {#if typeof status === "object" || status === "requested"}
   <button
-    on:click={getStatus}
+    onclick={getStatus}
     use:tooltip={{
       text:
         status === "requested"
@@ -189,7 +193,7 @@
 {:else if status === "DENIED"}
   <button disabled>Denied</button>
 {:else}
-  <button on:click={openRequestModal}>Request</button>
+  <button onclick={openRequestModal}>Request</button>
 {/if}
 
 <style lang="scss">

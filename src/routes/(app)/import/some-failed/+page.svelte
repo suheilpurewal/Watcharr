@@ -17,8 +17,8 @@
   import { onMount } from "svelte";
   import { get } from "svelte/store";
 
-  let failed: ImportedList[] = [];
-  let successCount = 0;
+  let failed: ImportedList[] = $state([]);
+  let successCount = $state(0);
 
   onMount(() => {
     let list = get(parsedImportedList);

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import PageError from "@/lib/PageError.svelte";
@@ -14,16 +16,15 @@
   import Checkbox from "@/lib/Checkbox.svelte";
   import Icon from "@/lib/Icon.svelte";
 
-  export let data;
+  let { data } = $props();
 
-  $: wList = $watchedList;
 
-  let personId: number | undefined;
-  let person: TMDBPersonDetails | undefined;
-  let pageError: Error | undefined;
-  let sortOption = "Vote count";
-  let credits: TMDBPersonCombinedCredits | undefined;
-  let onMyListFilter = false;
+  let personId: number | undefined = $state();
+  let person: TMDBPersonDetails | undefined = $state();
+  let pageError: Error | undefined = $state();
+  let sortOption = $state("Vote count");
+  let credits: TMDBPersonCombinedCredits | undefined = $state();
+  let onMyListFilter = $state(false);
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -36,13 +37,7 @@
     return unsubscribe;
   });
 
-  $: if (personId) {
-    fetchPersonData();
-  }
 
-  $: if (sortOption && credits) {
-    sortCredits(sortOption);
-  }
 
   async function fetchPersonData() {
     try {
@@ -103,6 +98,17 @@
     }
     credits.cast = credits.cast;
   }
+  let wList = $derived($watchedList);
+  run(() => {
+    if (personId) {
+      fetchPersonData();
+    }
+  });
+  run(() => {
+    if (sortOption && credits) {
+      sortCredits(sortOption);
+    }
+  });
 </script>
 
 <svelte:head>
@@ -122,7 +128,7 @@
           src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + person.profile_path}
           alt=""
         />
-        <div class="vignette" />
+        <div class="vignette"></div>
 
         <div class="details-container">
           <img
@@ -134,7 +140,7 @@
           <div class="details">
             <span class="title-container">
               <a href={person.homepage} target="_blank">{person.name}</a>
-              <span />
+              <span></span>
             </span>
 
             {#if person.biography}

@@ -2,7 +2,11 @@
   import type { TMDBContentWatchProviders } from "@/types";
   import ProviderIcon from "./ProviderIcon.svelte";
 
-  export let providers: TMDBContentWatchProviders;
+  interface Props {
+    providers: TMDBContentWatchProviders;
+  }
+
+  let { providers }: Props = $props();
 </script>
 
 {#if providers?.flatrate?.length > 0 || providers?.free?.length > 0}

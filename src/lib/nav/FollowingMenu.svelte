@@ -1,9 +1,13 @@
 <script lang="ts">
   import { follows } from "@/store";
 
-  export let close: () => {};
+  interface Props {
+    close: () => {};
+  }
 
-  $: following = $follows;
+  let { close }: Props = $props();
+
+  let following = $derived($follows);
 </script>
 
 <div class="menu">
@@ -12,7 +16,7 @@
       <h4 class="norm sm-caps">following</h4>
       <div class="list">
         {#each following as f}
-          <a href="/lists/{f.followedUser.id}/{f.followedUser.username}" on:click={() => close()}>
+          <a href="/lists/{f.followedUser.id}/{f.followedUser.username}" onclick={() => close()}>
             {f.followedUser.username}
           </a>
         {/each}

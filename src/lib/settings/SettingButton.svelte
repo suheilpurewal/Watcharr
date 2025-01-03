@@ -2,13 +2,22 @@
   import Icon from "../Icon.svelte";
   import type { Icon as IconT } from "@/types";
 
-  export let title: string;
-  export let desc: string;
-  export let icon: IconT = "arrow";
-  export let onClick: () => void;
+  interface Props {
+    title: string;
+    desc: string;
+    icon?: IconT;
+    onClick: () => void;
+  }
+
+  let {
+    title,
+    desc,
+    icon = "arrow",
+    onClick
+  }: Props = $props();
 </script>
 
-<button class="plain" on:click={onClick}>
+<button class="plain" onclick={onClick}>
   <div>
     <h4 class="norm">{title}</h4>
     <h5 class="norm">{desc}</h5>

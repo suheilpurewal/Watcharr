@@ -10,9 +10,14 @@
   import { get } from "svelte/store";
   import { onMount } from "svelte";
 
-  export let onClose: () => void;
-  // Passing an existing tag will enable 'Edit Tag' mode.
-  export let existingTag: Tag | undefined = undefined;
+  
+  interface Props {
+    onClose: () => void;
+    // Passing an existing tag will enable 'Edit Tag' mode.
+    existingTag?: Tag | undefined;
+  }
+
+  let { onClose, existingTag = undefined }: Props = $props();
 
   const colorPresets = [
     ["#36BA98", "#000"],
@@ -33,14 +38,14 @@
   }
 
   const defaultPreset = getRandomColorPreset();
-  let textColor = defaultPreset[1];
-  let bgColor = defaultPreset[0];
-  let tagName = "";
-  let error = "";
-  let submitDisabled = false;
-  let modalTitle = "Create A Tag";
-  let modalDesc = "Create a new tag";
-  let submitBtnText = "Create Tag";
+  let textColor = $state(defaultPreset[1]);
+  let bgColor = $state(defaultPreset[0]);
+  let tagName = $state("");
+  let error = $state("");
+  let submitDisabled = $state(false);
+  let modalTitle = $state("Create A Tag");
+  let modalDesc = $state("Create a new tag");
+  let submitBtnText = $state("Create Tag");
 
   async function addTag() {
     console.debug("addTag:", tagName, textColor, bgColor);
@@ -135,7 +140,7 @@
       <Setting title="Background Color" desc="Color for your tags background." row>
         <ColorSelector bind:value={bgColor} style="max-width: 150px;" />
       </Setting>
-      <button class="add-tag-btn" on:click={() => submitClicked()} disabled={submitDisabled}>
+      <button class="add-tag-btn" onclick={() => submitClicked()} disabled={submitDisabled}>
         {submitBtnText}
       </button>
     </SettingsList>

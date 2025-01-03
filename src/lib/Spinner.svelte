@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="spinner" />
+  <div class="spinner"></div>
 </div>
 
 <style lang="scss">

@@ -2,7 +2,11 @@
   import { UserType } from "@/types";
   import Icon from "../Icon.svelte";
 
-  export let type: UserType;
+  interface Props {
+    type: UserType;
+  }
+
+  let { type }: Props = $props();
 </script>
 
 {#if !type}
