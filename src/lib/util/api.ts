@@ -1,4 +1,4 @@
-import { follows, serverFeatures, userInfo, userSettings, watchedList } from "@/store";
+import { store } from "@/store.svelte";
 import {
   UserType,
   type JellyfinFoundContent,
@@ -11,10 +11,9 @@ import {
   type UserSettings,
   type Follow,
   type PlayedAddRequest,
-  type ActivityUpdateRequest
+  type ActivityUpdateRequest,
 } from "@/types";
 import axios from "axios";
-import { get } from "svelte/store";
 import { notify, unNotify } from "./notify";
 import { browser } from "$app/environment";
 const { MODE } = import.meta.env;
@@ -36,7 +35,7 @@ async function _updateWatched(
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string,
-  pinned?: boolean
+  pinned?: boolean,
 ): Promise<boolean> {
   if (!status && !rating && typeof thoughts === "undefined" && typeof pinned === "undefined") {
     console.warn("_updateWatched: Nothing was provided, so nothing can be updated!!!!");
@@ -67,7 +66,7 @@ async function _updateWatched(
         // We can piggy back from this data for now.
         wEntry.updatedAt = resp.data.newActivity.createdAt;
       }
-      watchedList.update((w) => w);
+      // watchedList.update((w) => w);
       notify({ id: nid, text: `Saved!`, type: "success" });
       return true;
     })
@@ -92,12 +91,11 @@ export async function updateWatched(
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string,
-  pinned?: boolean
+  pinned?: boolean,
 ): Promise<boolean> {
   // If item is already in watched store, run update request instead
-  const wList = get(watchedList);
-  const wEntry = wList.find(
-    (w) => w.content?.tmdbId === contentId && w.content?.type === contentType
+  const wEntry = store.watchedList.find(
+    (w) => w.content?.tmdbId === contentId && w.content?.type === contentType,
   );
   if (wEntry?.id) {
     return await _updateWatched(wEntry, status, rating, thoughts, pinned);
@@ -109,12 +107,11 @@ export async function updateWatched(
       contentId,
       contentType,
       rating,
-      status
+      status,
     } as WatchedAddRequest)
     .then((resp) => {
       console.log("Added watched:", resp.data);
-      wList.push(resp.data as Watched);
-      watchedList.update(() => wList);
+      store.watchedList.push(resp.data as Watched);
       notify({ id: nid, text: `Added!`, type: "success" });
       return true;
     })
@@ -131,8 +128,7 @@ export async function updateWatched(
  */
 export function removeWatched(id: number) {
   const nid = notify({ text: `Removing`, type: "loading" });
-  const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.id === id);
+  const wEntry = store.watchedList.find((w) => w.id === id);
   if (!wEntry) {
     console.log("Watched entry does not exist!");
     notify({ text: "Item Doesn't Exist On Watched List!", type: "error" });
@@ -142,8 +138,7 @@ export function removeWatched(id: number) {
     .delete(`/watched/${id}`)
     .then((resp) => {
       console.log("Removed watched:", resp.data);
-      const newList = wList.filter((w) => w.id !== id);
-      watchedList.update(() => newList);
+      store.watchedList = store.watchedList.filter((w) => w.id !== id);
       notify({ id: nid, text: "Removed!", type: "error" });
     })
     .catch((err) => {
@@ -157,11 +152,10 @@ export async function updatePlayed(
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string,
-  pinned?: boolean
+  pinned?: boolean,
 ): Promise<boolean> {
   // If item is already in watched store, run update request instead
-  const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.game?.igdbId === igdbId);
+  const wEntry = store.watchedList.find((w) => w.game?.igdbId === igdbId);
   if (wEntry?.id) {
     return await _updateWatched(wEntry, status, rating, thoughts, pinned);
   }
@@ -171,12 +165,11 @@ export async function updatePlayed(
     .post("/game/played", {
       igdbId,
       rating,
-      status
+      status,
     } as PlayedAddRequest)
     .then((resp) => {
       console.log("Added watched(played) game:", resp.data);
-      wList.push(resp.data as Watched);
-      watchedList.update(() => wList);
+      store.watchedList.push(resp.data as Watched);
       notify({ id: nid, text: `Added!`, type: "success" });
       return true;
     })
@@ -193,17 +186,15 @@ export function updateActivity(watchedId: number, activityId: number, date: Date
   try {
     axios
       .put("/activity/" + activityId, {
-        customDate: date.toISOString()
+        customDate: date.toISOString(),
       } as ActivityUpdateRequest)
       .then((resp) => {
         console.log("Updated activity timestamp:", resp.status);
-        const wList = get(watchedList);
-        const activity = wList
+        const activity = store.watchedList
           .find((w) => w.id === watchedId)
           ?.activity.find((a) => a.id === activityId);
         if (activity) {
           activity.customDate = date.toISOString();
-          watchedList.update(() => wList);
         }
         notify({ id: nid, text: "Updated!", type: "success" });
       })
@@ -222,11 +213,9 @@ export function removeActivity(watchedId: number, activityId: number) {
   axios
     .delete("/activity/" + activityId)
     .then((resp) => {
-      const wList = get(watchedList);
-      const wListItem = wList.find((w) => w.id === watchedId);
+      const wListItem = store.watchedList.find((w) => w.id === watchedId);
       if (wListItem) {
         wListItem.activity = wListItem.activity.filter((i) => i.id !== activityId);
-        watchedList.update(() => wList);
       }
       notify({ id: nid, text: "Deleted!", type: "success" });
     })
@@ -239,11 +228,10 @@ export function removeActivity(watchedId: number, activityId: number) {
 export async function contentExistsOnJellyfin(
   type: MediaType,
   name: string,
-  tmdbId: number
+  tmdbId: number,
 ): Promise<JellyfinFoundContent | undefined> {
   try {
-    const user = get(userInfo);
-    if (Number(user?.type) == UserType.Jellyfin) {
+    if (Number(store.userInfo?.type) == UserType.Jellyfin) {
       const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
       console.log("contentExistsOnJellyfin response:", resp.data);
       return resp.data as JellyfinFoundContent;
@@ -257,22 +245,20 @@ export async function contentExistsOnJellyfin(
 export function updateUserSetting<K extends keyof UserSettings>(
   name: K,
   value: UserSettings[K],
-  done?: () => void
+  done?: () => void,
 ) {
   console.log("Updating user setting", name, "to", value);
-  const uSettings = get(userSettings);
-  if (!uSettings) {
+  if (!store.userSettings) {
     console.log("updateUserSetting: userSettings not set..");
     return;
   }
-  const originalValue = uSettings[name];
+  const originalValue = store.userSettings[name];
   const nid = notify({ type: "loading", text: "Updating" });
   axios
     .post("/user/update", { [name]: value })
     .then((r) => {
       if (r.status === 200) {
-        uSettings[name] = value;
-        userSettings.update((u) => (u = uSettings));
+        if (store.userSettings) store.userSettings[name] = value;
         notify({ id: nid, type: "success", text: "Updated" });
         if (typeof done !== "undefined") done();
       }
@@ -280,8 +266,7 @@ export function updateUserSetting<K extends keyof UserSettings>(
     .catch((err) => {
       console.error("Failed to update user setting", err);
       notify({ id: nid, type: "error", text: "Couldn't Update" });
-      uSettings[name] = originalValue;
-      userSettings.update((u) => (u = uSettings));
+      if (store.userSettings) store.userSettings[name] = originalValue;
       if (typeof done !== "undefined") done();
     });
 }
@@ -289,7 +274,7 @@ export function updateUserSetting<K extends keyof UserSettings>(
 export function changeUserPassword(
   oldPassword: string,
   newPassword: string,
-  done?: (errMsg?: string) => void
+  done?: (errMsg?: string) => void,
 ) {
   const nid = notify({ type: "loading", text: "Changing Password" });
   axios
@@ -317,7 +302,7 @@ export async function getServerFeatures() {
   try {
     const f = await axios.get("/features");
     if (f?.data) {
-      serverFeatures.update((sf) => (sf = f.data));
+      store.serverFeatures = f.data;
     }
   } catch (err) {
     console.error("getServerFeatures failed!", err);
@@ -330,9 +315,7 @@ export async function followUser(id: number) {
     .post(`/follow/${id}`)
     .then((resp) => {
       console.log("Followed:", resp.data);
-      const f = get(follows);
-      f.push(resp.data as Follow);
-      follows.update(() => f);
+      store.follows.push(resp.data as Follow);
       notify({ id: nid, text: `Followed!`, type: "success" });
     })
     .catch((err) => {
@@ -347,8 +330,7 @@ export async function unfollowUser(id: number) {
     .delete(`/follow/${id}`)
     .then((resp) => {
       console.log("Unfollowed:", resp.data);
-      const f = get(follows);
-      follows.update(() => f.filter((fo) => fo.followedUser.id != id));
+      store.follows = store.follows.filter((fo) => fo.followedUser.id != id);
       notify({ id: nid, text: `Unfollowed!`, type: "success" });
     })
     .catch((err) => {
@@ -361,5 +343,5 @@ export async function unfollowUser(id: number) {
  * For use with routes that don't require authentication (eg login/register)
  */
 export const noAuthAxios = axios.create({
-  baseURL: baseURL
+  baseURL: baseURL,
 });

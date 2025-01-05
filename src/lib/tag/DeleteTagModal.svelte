@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tags, watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import Modal from "../Modal.svelte";
   import Setting from "../settings/Setting.svelte";
   import SettingsList from "../settings/SettingsList.svelte";
@@ -33,20 +33,19 @@
       const resp = await axios.delete(`/tag/${tag.id}`);
       console.log("deleteTag: Tag was deleted", resp.data);
       // 1. Remove tag from store.
-      const _tags = get(tags);
-      tags.update((t) => t);
-      const newList = _tags.filter((t) => t.id !== tag.id);
-      tags.update(() => newList);
+      // const _tags = get(tags);
+      // store.tags.update((t) => t);
+      store.tags = store.tags.filter((t) => t.id !== tag.id);
+      // tags.update(() => newList);
       // 2. Remove tag from all watched entries in store.
       try {
-        const wList = get(watchedList);
-        for (let i = 0; i < wList.length; i++) {
-          const wi = wList[i];
+        for (let i = 0; i < store.watchedList.length; i++) {
+          const wi = store.watchedList[i];
           if (wi.tags && wi.tags.length > 0) {
             wi.tags = wi.tags.filter((t) => t.id !== tag.id);
           }
         }
-        watchedList.update(() => wList);
+        // watchedList.update(() => wList);
       } catch (err) {
         console.error("deleteTag: Failed to remove tags from watched entries:", err);
       }

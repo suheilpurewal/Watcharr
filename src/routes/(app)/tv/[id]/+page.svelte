@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from "$app/stores";
   import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -16,15 +15,14 @@
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { contentExistsOnJellyfin, removeWatched, updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
-  import { serverFeatures, userSettings, watchedList } from "@/store";
+  import { store } from "@/store.svelte.js";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBShowDetails,
-    WatchedStatus
+    WatchedStatus,
   } from "@/types";
   import axios from "axios";
-  import { onMount } from "svelte";
   import RequestShow from "@/lib/request/RequestShow.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
@@ -32,36 +30,52 @@
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
   import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
-  let settings = $derived($userSettings);
-
   let { data } = $props();
 
-  let trailer: string | undefined = $derived(`https://www.youtube.com/embed/${t?.key}`);
+  let wListItem = $derived(
+    store.watchedList.find((w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId),
+  );
+  let trailer: string | undefined = $state();
   let trailerShown = $state(false);
   let requestModalShown = $state(false);
-  let jellyfinUrl: string | undefined = $derived();
-  let arrRequestButtonComp: ArrRequestButton = $state();
-
-  let wListItem = $derived($watchedList.find(
-    (w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId
-  ));
-
-  let showId: number | undefined = $state();
+  let jellyfinUrl: string | undefined = $state();
+  let arrRequestButtonComp: ArrRequestButton | undefined = $state();
   let show: TMDBShowDetails | undefined = $state();
   let pageError: Error | undefined = $state();
 
-  onMount(() => {
-    const unsubscribe = page.subscribe((value) => {
-      console.log(value);
-      const params = value.params;
-      if (params && params.id) {
-        showId = Number(params.id);
+  $effect(() => {
+    (async () => {
+      try {
+        show = undefined;
+        pageError = undefined;
+        if (!data.tvId) {
+          return;
+        }
+        const resp = (
+          await axios.get(`/content/tv/${data.tvId}`, {
+            params: { region: store.userSettings?.country },
+          })
+        ).data as TMDBShowDetails;
+        if (resp.videos?.results?.length > 0) {
+          const t = resp.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+          if (t?.key) {
+            if (t?.site?.toLowerCase() === "youtube") {
+              trailer = `https://www.youtube.com/embed/${t?.key}`;
+            }
+          }
+        }
+        contentExistsOnJellyfin("tv", resp.name, resp.id).then((j) => {
+          if (j?.hasContent && j?.url !== "") {
+            jellyfinUrl = j.url;
+          }
+        });
+        show = resp;
+      } catch (err: any) {
+        show = undefined;
+        pageError = err;
       }
-    });
-    return unsubscribe;
+    })();
   });
-
-  
 
   async function getTvCredits() {
     const credits = (await axios.get(`/content/tv/${data.tvId}/credits`))
@@ -76,7 +90,7 @@
     newStatus?: WatchedStatus,
     newRating?: number,
     newThoughts?: string,
-    pinned?: boolean
+    pinned?: boolean,
   ): Promise<boolean> {
     if (!data.tvId) {
       console.error("contentChanged: no tvId");
@@ -149,7 +163,7 @@
                 {/if}
               </a>
             {/if}
-            {#if $serverFeatures.sonarr && data.tvId}
+            {#if store.serverFeatures?.sonarr && data.tvId}
               <ArrRequestButton
                 type="tv"
                 tmdbId={data.tvId}
@@ -170,7 +184,7 @@
                   }}
                   use:tooltip={{
                     text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
-                    pos: "bot"
+                    pos: "bot",
                   }}
                 >
                   <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
@@ -200,7 +214,7 @@
         onClose={(reqResp) => {
           requestModalShown = false;
           if (reqResp) {
-            arrRequestButtonComp.setExistingRequest(reqResp);
+            arrRequestButtonComp?.setExistingRequest(reqResp);
           }
         }}
       />
@@ -222,8 +236,8 @@
         {/if}
       </div>
 
-      {#if showId}
-        <FollowedThoughts mediaType="tv" mediaId={showId} />
+      {#if data.tvId}
+        <FollowedThoughts mediaType="tv" mediaId={data.tvId} />
       {/if}
 
       {#await getTvCredits()}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import type { PosterExtraDetails, Image, WatchedStatus } from "@/types";
   import {
@@ -7,7 +7,7 @@
     calculateTransformOrigin,
     getOrdinalSuffix,
     isTouch,
-    monthsShort
+    monthsShort,
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
   import { baseURL, removeWatched, updatePlayed } from "../util/api";
@@ -15,21 +15,19 @@
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
   import PosterRating from "./PosterRating.svelte";
-  import { wlDetailedView } from "@/store";
   import { decode } from "blurhash";
   import ExtraDetails from "./ExtraDetails.svelte";
 
-  
   interface Props {
     id?: number | undefined; // Watched list id
     media: {
-    id: number;
-    coverId: string;
-    firstReleaseDate?: string | number;
-    name: string;
-    summary?: string;
-    poster?: Image;
-  };
+      id: number;
+      coverId: string;
+      firstReleaseDate?: string | number;
+      name: string;
+      summary?: string;
+      poster?: Image;
+    };
     rating?: number | undefined;
     status?: WatchedStatus | undefined;
     small?: boolean;
@@ -53,18 +51,16 @@
     extraDetails = undefined,
     fluidSize = false,
     pinned = false,
-    onClick = undefined
+    onClick = undefined,
   }: Props = $props();
-
-  let dve = $derived($wlDetailedView);
 
   // If poster is active (scaled up)
   let posterActive = $state(false);
   // If mouse in on poster. Added to fix #656.
   let mouseOverPoster = $state(false);
 
-  let containerEl: HTMLDivElement = $state();
-  let bhCanvas: HTMLCanvasElement = $state();
+  let containerEl: HTMLDivElement | undefined = $state();
+  let bhCanvas: HTMLCanvasElement | undefined = $state();
 
   const title = `${media.name}`;
   const poster = media.poster?.path
@@ -110,7 +106,7 @@
     }
     const d = new Date(e);
     return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} '${String(
-      d.getFullYear()
+      d.getFullYear(),
     ).substring(2, 4)}`;
   }
 

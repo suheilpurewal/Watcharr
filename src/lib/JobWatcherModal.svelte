@@ -6,25 +6,19 @@
   import { JobStatus, type GetJobResponse, type JobCreatedResponse } from "@/types";
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte";
 
-  
   interface Props {
     modalTitle: string;
     // Promise that returns the job id to watch.
     getJobId: () => Promise<{ jobId: string } | undefined>;
     onClose: () => void;
     messages: {
-    starting: string;
-  };
+      starting: string;
+    };
   }
 
-  let {
-    modalTitle,
-    getJobId,
-    onClose,
-    messages
-  }: Props = $props();
+  let { modalTitle, getJobId, onClose, messages }: Props = $props();
 
   let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = $state("starting");
   let jobId: string | undefined;
@@ -81,7 +75,7 @@
         notify({
           text: "Status checker has failed 10 times in a row!",
           type: "error",
-          time: 30000
+          time: 30000,
         });
         step = "errored";
         break;
@@ -94,7 +88,7 @@
       try {
         const w = await axios.get("/watched");
         if (w?.data?.length > 0) {
-          watchedList.update((wl) => (wl = w.data));
+          store.watchedList = w.data;
         }
         notify({ id: nid, text: "Fetched updated watched list.", type: "success" });
       } catch (err) {
@@ -108,7 +102,7 @@
     if (step === "job-running") {
       notify({
         text: "Sync will continue in the background.. please refresh the page periodically to view your updated list or come back later.",
-        time: 10000
+        time: 10000,
       });
     }
     step = "modal-closing";

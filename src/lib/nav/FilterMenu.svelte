@@ -1,29 +1,23 @@
 <script lang="ts">
-  import { activeFilters, clearActiveFilters, serverFeatures } from "@/store";
+  import { store, clearActiveFilters } from "@/store.svelte";
   import type { Filters } from "@/types";
-  import { get } from "svelte/store";
   import Icon from "../Icon.svelte";
   import tooltip from "../actions/tooltip";
 
   function filterClicked(type: keyof Filters, f: string) {
-    const af = get(activeFilters);
-    if (af[type]?.includes(f)) {
-      af[type] = af[type]?.filter((a) => a !== f);
+    if (store.activeFilters[type]?.includes(f)) {
+      store.activeFilters[type] = store.activeFilters[type]?.filter((a) => a !== f);
     } else {
-      af[type]?.push(f);
+      store.activeFilters[type]?.push(f);
     }
-    activeFilters.update((a) => (a = af));
   }
-
-  let filter = $derived($activeFilters);
-  let features = $derived($serverFeatures);
 </script>
 
 <div class="menu">
   <div class="inner">
     <div class="title">
       <h4 class="norm sm-caps">type</h4>
-      {#if filter?.type?.length > 0 || filter?.status?.length > 0}
+      {#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
         <button
           class="plain"
           use:tooltip={{ text: "Clear", pos: "left" }}
@@ -35,20 +29,20 @@
     </div>
     <div class="type-filter">
       <button
-        class={`${filter.type.includes("tv") ? "active" : ""}`}
+        class={`${store.activeFilters.type.includes("tv") ? "active" : ""}`}
         onclick={() => filterClicked("type", "tv")}
       >
         SHOW
       </button>
       <button
-        class={`${filter.type.includes("movie") ? "active" : ""}`}
+        class={`${store.activeFilters.type.includes("movie") ? "active" : ""}`}
         onclick={() => filterClicked("type", "movie")}
       >
         MOVIE
       </button>
-      {#if features.games}
+      {#if store.serverFeatures?.games}
         <button
-          class={`${filter.type.includes("game") ? "active" : ""}`}
+          class={`${store.activeFilters.type.includes("game") ? "active" : ""}`}
           onclick={() => filterClicked("type", "game")}
         >
           GAME
@@ -57,37 +51,37 @@
     </div>
     <h4 class="norm sm-caps">status</h4>
     <button
-      class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
+      class={`plain ${store.activeFilters.status.includes("planned") ? "on" : ""}`}
       onclick={() => filterClicked("status", "planned")}
     >
       planned
     </button>
     <button
-      class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
+      class={`plain ${store.activeFilters.status.includes("watching") ? "on" : ""}`}
       onclick={() => filterClicked("status", "watching")}
     >
       watching
-      {#if features.games}
+      {#if store.serverFeatures?.games}
         (playing)
       {/if}
     </button>
     <button
-      class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
+      class={`plain ${store.activeFilters.status.includes("finished") ? "on" : ""}`}
       onclick={() => filterClicked("status", "finished")}
     >
       finished
-      {#if features.games}
+      {#if store.serverFeatures?.games}
         (played)
       {/if}
     </button>
     <button
-      class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
+      class={`plain ${store.activeFilters.status.includes("hold") ? "on" : ""}`}
       onclick={() => filterClicked("status", "hold")}
     >
       on hold
     </button>
     <button
-      class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
+      class={`plain ${store.activeFilters.status.includes("dropped") ? "on" : ""}`}
       onclick={() => filterClicked("status", "dropped")}
     >
       dropped

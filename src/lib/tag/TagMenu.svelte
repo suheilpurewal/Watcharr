@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tags } from "@/store";
+  import { store } from "@/store.svelte";
   import Icon from "../Icon.svelte";
   import CreateTagModal from "./CreateTagModal.svelte";
   import type { Tag as TagT } from "@/types";
@@ -7,17 +7,16 @@
   import DeleteTagModal from "./DeleteTagModal.svelte";
   import stayInView from "../actions/stayInView";
 
-  
   interface Props {
     titleText?: string | undefined;
     classes?: string | undefined;
     onTagClick?: (tag: TagT, remove: boolean) => void | undefined;
     selectedTags?: TagT[] | undefined;
     /**
-   * When `showManageBtn` is true, a manage icon will appear at top
-   * of menu for the user to click. When toggled on, clicking a tag
-   * will trigger a deletion instead of `onTagClick()`.
-   */
+     * When `showManageBtn` is true, a manage icon will appear at top
+     * of menu for the user to click. When toggled on, clicking a tag
+     * will trigger a deletion instead of `onTagClick()`.
+     */
     showManageBtn?: boolean;
   }
 
@@ -26,10 +25,10 @@
     classes = undefined,
     onTagClick = undefined!,
     selectedTags = undefined,
-    showManageBtn = false
+    showManageBtn = false,
   }: Props = $props();
 
-  let allTags = $derived($tags);
+  let allTags = $derived(store.tags);
 
   let tagModalOpen = $state(false);
   let inManageMode = $state(false);

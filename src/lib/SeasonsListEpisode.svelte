@@ -1,22 +1,19 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import type {
     TMDBSeasonDetailsEpisode,
     WatchedStatus,
     WatchedEpisodeAddResponse,
-    Watched
+    Watched,
   } from "@/types";
   import Icon from "./Icon.svelte";
-  import { userSettings } from "@/store";
   import PosterRating from "./poster/PosterRating.svelte";
   import PosterStatus from "./poster/PosterStatus.svelte";
   import axios from "axios";
   import { notify } from "./util/notify";
   import { get } from "svelte/store";
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte";
 
-  let settings = $derived($userSettings);
+  // let settings = $derived($userSettings);
 
   interface Props {
     ep: TMDBSeasonDetailsEpisode;
@@ -25,11 +22,7 @@
 
   let { ep, watchedItem }: Props = $props();
 
-  let isHidden = $state(false);
-
-  run(() => {
-    if (settings) isHidden = settings.hideSpoilers;
-  });
+  let isHidden: boolean = $state(!!store?.userSettings?.hideSpoilers);
 
   function updateWatchedEpisode(status?: WatchedStatus, rating?: number) {
     if (!watchedItem) {
@@ -43,16 +36,15 @@
         seasonNumber: ep.season_number,
         episodeNumber: ep.episode_number,
         status,
-        rating
+        rating,
       })
       .then((r) => {
-        const wList = get(watchedList);
-        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        const wEntry = store.watchedList.find((w) => w.id === watchedItem.id);
         if (!wEntry) {
           notify({
             id: nid,
             text: `Request succeeded, but failed to find local data. Please refresh.`,
-            type: "error"
+            type: "error",
           });
           return;
         }
@@ -69,11 +61,11 @@
               if (epHookResp.errors && epHookResp.errors.length > 0) {
                 console.error(
                   "episodeStatusChangedHookResponse contained errors! All possible automations may not have been completed.",
-                  epHookResp.errors
+                  epHookResp.errors,
                 );
                 notify({
                   type: "error",
-                  text: "Some automations have failed, check console for more info."
+                  text: "Some automations have failed, check console for more info.",
                 });
               }
               if (epHookResp.addedActivities && epHookResp.addedActivities.length > 0) {
@@ -84,7 +76,7 @@
                   wEntry.watchedSeasons = [epHookResp.watchedSeason];
                 } else {
                   const watchedSeasonIdx = wEntry.watchedSeasons.findIndex(
-                    (s) => s.id === epHookResp.watchedSeason?.id
+                    (s) => s.id === epHookResp.watchedSeason?.id,
                   );
                   if (watchedSeasonIdx === -1) {
                     wEntry.watchedSeasons.push(epHookResp.watchedSeason);
@@ -101,10 +93,9 @@
             console.error("Failed to process episodeStatusChangedHookResponse", err);
             notify({
               type: "error",
-              text: "Failed to process automation response, check console for more info."
+              text: "Failed to process automation response, check console for more info.",
             });
           }
-          watchedList.update((w) => w);
           notify({ id: nid, text: `Saved!`, type: "success" });
         }
       })
@@ -121,12 +112,12 @@
     }
     if (type === "DELETE") {
       const ws = watchedItem.watchedEpisodes?.find(
-        (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number
+        (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number,
       );
       if (!ws) {
         notify({
           text: "Failed to find watched episode id. Please try refreshing.",
-          type: "error"
+          type: "error",
         });
         return;
       }
@@ -134,13 +125,12 @@
       axios
         .delete(`/watched/episode/${ws.id}`)
         .then((r) => {
-          const wList = get(watchedList);
-          const wEntry = wList.find((w) => w.id === watchedItem.id);
+          const wEntry = store.watchedList.find((w) => w.id === watchedItem.id);
           if (!wEntry) {
             notify({
               id: nid,
               text: `Request succeeded, but failed to find local data. Please refresh.`,
-              type: "error"
+              type: "error",
             });
             return;
           }
@@ -153,7 +143,6 @@
                 wEntry.activity = [r.data];
               }
             }
-            watchedList.update((w) => w);
             notify({ id: nid, text: `Removed!`, type: "success" });
           }
         })
@@ -200,7 +189,7 @@
   </div>
   {#if watchedItem}
     {@const we = watchedItem.watchedEpisodes?.find(
-      (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number
+      (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number,
     )}
     <div class="status-rating-ctr">
       <div class="rating" style={"width: 45px"}>

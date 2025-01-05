@@ -1,12 +1,11 @@
 <!-- To be used from Rating component -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
-  import { userSettings } from "@/store";
+  import { store } from "@/store.svelte";
   import { RatingStep, RatingSystem } from "@/types";
   import { onMount } from "svelte";
-
 
   interface Props {
     rating: number | undefined;
@@ -18,11 +17,11 @@
   let hoveredRating: number | undefined = $state();
   let shownRating: number | undefined = $state();
   let shownPerc: number | undefined = $state();
-  let ratingContainer: HTMLDivElement = $state();
-  let ratingWrapEl: HTMLDivElement = $state();
-  let ratingText: HTMLSpanElement = $state();
-  let highlightContainer: HTMLDivElement = $state();
-  let normalContainer: HTMLDivElement = $state();
+  let ratingContainer: HTMLDivElement | undefined = $state();
+  let ratingWrapEl: HTMLDivElement | undefined = $state();
+  let ratingText: HTMLSpanElement | undefined = $state();
+  let highlightContainer: HTMLDivElement | undefined = $state();
+  let normalContainer: HTMLDivElement | undefined = $state();
   /**
    * Percentage star step.
    */
@@ -38,7 +37,7 @@
     "Good",
     "Very Good",
     "Great",
-    "Masterpiece"
+    "Masterpiece",
   ];
 
   async function saveSelectedRating() {
@@ -57,10 +56,9 @@
     return await onChange(r);
   }
 
-
   function setHoveredRatingFromPerc(perc: number) {
     let hovR = perc;
-    if (settings?.ratingSystem === RatingSystem.OutOf5) {
+    if (store.userSettings?.ratingSystem === RatingSystem.OutOf5) {
       hovR = hovR / 20;
     } else {
       hovR = hovR / 10;
@@ -77,9 +75,14 @@
         handleRatingHoverEnd();
         return;
       }
+      if (!ratingContainer || !ratingWrapEl) {
+        console.error("moveRatingText: Required elements not found!");
+        handleRatingHoverEnd();
+        return;
+      }
       // Get star number we are putting text above
       let r: number;
-      if (settings?.ratingSystem === RatingSystem.OutOf5) {
+      if (store.userSettings?.ratingSystem === RatingSystem.OutOf5) {
         r = Math.ceil(hoveredRating);
       } else {
         r = Math.ceil(hoveredRating);
@@ -98,7 +101,7 @@
         // This should stop the first star text from going off left
         prospectLeft = prospectLeft + 30;
       }
-      ratingText.style.left = `${prospectLeft}px`;
+      if (ratingText) ratingText.style.left = `${prospectLeft}px`;
     } catch (err) {
       console.error("moveRatingText: Failed!", err);
     }
@@ -107,13 +110,15 @@
   function handleRatingHoverEnd() {
     console.debug("handleRatingHoverEnd");
     hoveredRating = undefined;
-    ratingText.style.left = "50%";
+    if (ratingText) {
+      ratingText.style.left = "50%";
+    }
   }
 
   function handleMouseOver(
     ev: (TouchEvent | MouseEvent) & {
       currentTarget: EventTarget & HTMLDivElement;
-    }
+    },
   ) {
     const rect = ev.currentTarget.getBoundingClientRect();
     const x = (ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX) - rect.left; // rel to start of container
@@ -125,7 +130,7 @@
   function handleKeyDown(
     ev: KeyboardEvent & {
       currentTarget: EventTarget & HTMLDivElement;
-    }
+    },
   ) {
     console.log("handleKeyDown:", ev);
     if (ev.code === "ArrowRight") {
@@ -175,23 +180,23 @@
     }
   }
 
-
   onMount(() => {
     if (rating) showRating(Math.round((rating * 100) / 10));
   });
-  let settings = $derived($userSettings);
-  let stars =
-    $derived(settings?.ratingSystem == RatingSystem.OutOf5
+  let stars = $derived(
+    store.userSettings?.ratingSystem == RatingSystem.OutOf5
       ? [5, 4, 3, 2, 1]
-      : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+      : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+  );
   run(() => {
     if (hoveredRating !== undefined && hoveredRating > 0) {
       console.debug("showRatingCaller: We have a hoveredRating.");
       shownRating = hoveredRating;
       showRating(
         Math.round(
-          (hoveredRating * 100) / (settings?.ratingSystem === RatingSystem.OutOf5 ? 5 : 10)
-        )
+          (hoveredRating * 100) /
+            (store.userSettings?.ratingSystem === RatingSystem.OutOf5 ? 5 : 10),
+        ),
       );
     } else if (rating !== undefined) {
       console.debug("showRatingCaller: We have a rating.");
@@ -206,10 +211,10 @@
   run(() => {
     // console.log("block", starStep, settings?.ratingStep, settings.ratingSystem);
     try {
-      if (settings) {
-        if (typeof settings.ratingSystem === "number") {
+      if (store.userSettings) {
+        if (typeof store.userSettings.ratingSystem === "number") {
           // Set default star step for system.
-          switch (settings.ratingSystem) {
+          switch (store.userSettings.ratingSystem) {
             case RatingSystem.OutOf100:
               starStep = 1;
               break;
@@ -225,32 +230,32 @@
           }
         }
         // Override default with user set step if supported by this system.
-        if (typeof settings.ratingStep === "number") {
+        if (typeof store.userSettings.ratingStep === "number") {
           if (
-            settings.ratingSystem === RatingSystem.OutOf5 ||
-            settings.ratingSystem === RatingSystem.OutOf10 ||
-            !settings.ratingSystem
+            store.userSettings.ratingSystem === RatingSystem.OutOf5 ||
+            store.userSettings.ratingSystem === RatingSystem.OutOf10 ||
+            !store.userSettings.ratingSystem
           ) {
             if (
-              settings.ratingStep === RatingStep.Point1 ||
-              settings.ratingStep === RatingStep.Point5 ||
-              settings.ratingStep === RatingStep.One
+              store.userSettings.ratingStep === RatingStep.Point1 ||
+              store.userSettings.ratingStep === RatingStep.Point5 ||
+              store.userSettings.ratingStep === RatingStep.One
             ) {
               // Turn enum value into an actual step value.
               const actualRatingStep =
-                settings.ratingStep === RatingStep.Point1
+                store.userSettings.ratingStep === RatingStep.Point1
                   ? 0.1
-                  : settings.ratingStep === RatingStep.Point5
+                  : store.userSettings.ratingStep === RatingStep.Point5
                     ? 0.5
                     : 1;
               console.log("actualRatingStep", actualRatingStep);
               starStep =
-                settings.ratingSystem === RatingSystem.OutOf5
+                store.userSettings.ratingSystem === RatingSystem.OutOf5
                   ? actualRatingStep * 20
                   : actualRatingStep * 10;
               console.debug("Set starStep from setting:", starStep);
             } else {
-              starStep = settings.ratingSystem === RatingSystem.OutOf5 ? 20 : 10;
+              starStep = store.userSettings.ratingSystem === RatingSystem.OutOf5 ? 20 : 10;
               console.debug("Set starStep using default:", starStep);
             }
           }
@@ -270,12 +275,12 @@ shownPerc: {shownPerc}<br /> -->
 <div class="rating-container" bind:this={ratingContainer}>
   <span bind:this={ratingText}>
     {#if hoveredRating}
-      {#if settings?.ratingSystem === RatingSystem.OutOf5 && shownPerc}
+      {#if store.userSettings?.ratingSystem === RatingSystem.OutOf5 && shownPerc}
         {ratingDesc[Math.ceil(shownPerc / 10) - 1]}
       {:else}
         {ratingDesc[Math.ceil(hoveredRating) - 1]}
       {/if}
-      {#if settings?.ratingSystem === RatingSystem.OutOf100}
+      {#if store.userSettings?.ratingSystem === RatingSystem.OutOf100}
         ({shownPerc})
       {:else}
         ({hoveredRating})
@@ -283,9 +288,9 @@ shownPerc: {shownPerc}<br /> -->
     {:else if typeof rating === "number" && rating > 0}
       {ratingDesc[Math.ceil(rating) - 1]}
       {#if shownPerc}
-        {#if settings?.ratingSystem === RatingSystem.OutOf100}
+        {#if store.userSettings?.ratingSystem === RatingSystem.OutOf100}
           ({shownPerc})
-        {:else if settings?.ratingSystem === RatingSystem.OutOf5}
+        {:else if store.userSettings?.ratingSystem === RatingSystem.OutOf5}
           ({shownPerc / 20})
         {:else}
           ({shownPerc / 10})

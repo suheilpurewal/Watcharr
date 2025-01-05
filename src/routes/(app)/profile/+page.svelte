@@ -8,7 +8,7 @@
   import Stats from "@/lib/stats/Stats.svelte";
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
-  import { appTheme, userInfo, userSettings } from "@/store";
+  import { store } from "@/store.svelte";
   import { UserType, type Image, type Profile } from "@/types";
   import axios from "axios";
   import { notify } from "@/lib/util/notify";
@@ -18,9 +18,9 @@
   import RegionDropDown from "@/lib/RegionDropDown.svelte";
   import RatingSetting from "@/lib/rating/RatingSetting.svelte";
 
-  let user = $derived($userInfo);
-  let settings = $derived($userSettings);
-  let selectedTheme = $derived($appTheme);
+  let user = $derived(store.userInfo);
+  let settings = $derived(store.userSettings);
+  let selectedTheme = $derived(store.appTheme);
 
   let privateDisabled = $state(false);
   let privateThoughtsDisabled = $state(false);
@@ -63,7 +63,7 @@
         notify({
           id: nid,
           text: err?.response?.data?.error ?? "Failed to update bio",
-          type: "error"
+          type: "error",
         });
       });
   }
@@ -81,9 +81,9 @@
         { avatar: files[0] },
         {
           headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
+            "Content-Type": "multipart/form-data",
+          },
+        },
       )
       .then((r) => {
         if (user) {
@@ -96,7 +96,7 @@
         notify({
           id: nid,
           text: err?.response?.data?.error ?? "Failed to upload avatar",
-          type: "error"
+          type: "error",
         });
       });
   }
@@ -113,13 +113,13 @@
           id: nid,
           text: "Can't export an empty watch list!",
           type: "error",
-          time: 10000
+          time: 10000,
         });
         exportDisabled = false;
         return;
       }
       const file = new Blob([JSON.stringify(r.data, undefined, 2)], {
-        type: "application/json"
+        type: "application/json",
       });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(file);
@@ -143,7 +143,7 @@
       ["month", 43200],
       ["week", 10080],
       ["day", 1440],
-      ["hour", 60]
+      ["hour", 60],
     ];
 
     let ansString = "";

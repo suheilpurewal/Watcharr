@@ -1,20 +1,20 @@
 <script lang="ts">
   import Icon from "@/lib/Icon.svelte";
-  import PageError from "@/lib/PageError.svelte";
-  import Spinner from "@/lib/Spinner.svelte";
   import CreateTagModal from "@/lib/tag/CreateTagModal.svelte";
   import Tag from "@/lib/tag/Tag.svelte";
   import WatchedList from "@/lib/WatchedList.svelte";
-  import { tags, watchedList } from "@/store.js";
+  import { store } from "@/store.svelte.js";
 
   let { data } = $props();
 
   let tagEditModalShown = $state(false);
 
-  let tag = $derived($tags.find((t) => t.id === data.tagId));
-  let watcheds = $derived($watchedList.filter((w) =>
-    w.tags ? (w.tags.find((t) => t.id === data.tagId) ? true : false) : false
-  ));
+  let tag = $derived(store.tags.find((t) => t.id === data.tagId));
+  let watcheds = $derived(
+    store.watchedList.filter((w) =>
+      w.tags ? (w.tags.find((t) => t.id === data.tagId) ? true : false) : false,
+    ),
+  );
 </script>
 
 <svelte:head>

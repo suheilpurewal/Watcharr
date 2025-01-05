@@ -1,21 +1,19 @@
 <script lang="ts">
-  import { follows } from "@/store";
+  import { store } from "@/store.svelte";
 
   interface Props {
     close: () => {};
   }
 
   let { close }: Props = $props();
-
-  let following = $derived($follows);
 </script>
 
 <div class="menu">
   <div>
-    {#if following?.length > 0}
+    {#if store.follows?.length > 0}
       <h4 class="norm sm-caps">following</h4>
       <div class="list">
-        {#each following as f}
+        {#each store.follows as f}
           <a href="/lists/{f.followedUser.id}/{f.followedUser.username}" onclick={() => close()}>
             {f.followedUser.username}
           </a>

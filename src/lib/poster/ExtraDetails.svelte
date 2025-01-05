@@ -1,6 +1,6 @@
 <!-- Extra Details View For Posters -->
 <script lang="ts">
-  import { userSettings, wlDetailedView } from "@/store";
+  import { store } from "@/store.svelte";
   import { RatingSystem, type PosterExtraDetails, type WatchedStatus } from "@/types";
   import { getOrdinalSuffix, monthsShort, watchedStatuses } from "../util/helpers";
   import Icon from "../Icon.svelte";
@@ -15,9 +15,9 @@
 
   let { rating, status, details }: Props = $props();
 
-  let dve = $derived($wlDetailedView);
-  let settings = $derived($userSettings);
-  let isUsingThumbs = $derived(settings && settings.ratingSystem === RatingSystem.Thumbs);
+  let isUsingThumbs = $derived(
+    store.userSettings && store.userSettings.ratingSystem === RatingSystem.Thumbs,
+  );
 
   function formatDate(e: number) {
     if (!e) {
@@ -25,12 +25,12 @@
     }
     const d = new Date(e);
     return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} '${String(
-      d.getFullYear()
+      d.getFullYear(),
     ).substring(2, 4)}`;
   }
 </script>
 
-{#if ($page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")) && details && dve && dve.length > 0}
+{#if ($page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")) && details && store.wlDetailedView && store.wlDetailedView.length > 0}
   <div class="extra-details">
     <!--
       The `if` statements can't be on their own line to look pretty
@@ -40,26 +40,26 @@
       OR when :empty tag is updated in browsers to new spec and counts whitespace as empty.
     -->
     <div>
-      {#if details.dateAdded && dve.includes("dateAdded")}
+      {#if details.dateAdded && store.wlDetailedView.includes("dateAdded")}
         <span title="Date added to watch list">
           <i><Icon i="calendar" /></i>
           <span>
             {formatDate(Date.parse(details.dateAdded))}
           </span>
         </span>
-      {/if}{#if details.dateModified && dve.includes("dateModified")}
+      {/if}{#if details.dateModified && store.wlDetailedView.includes("dateModified")}
         <span title="Date last modified">
           <i><Icon i="pencil" wh={15} /></i>
           <span>
             {formatDate(Date.parse(details.dateModified))}
           </span>
         </span>
-      {/if}{#if details.lastWatched && dve.includes("lastWatched")}
+      {/if}{#if details.lastWatched && store.wlDetailedView.includes("lastWatched")}
         <span title="Latest season watched">
           <i><Icon i="play" wh={15} /></i>
           <span>{details.lastWatched}</span>
         </span>
-      {/if}{#if dve.includes("statusRating")}
+      {/if}{#if store.wlDetailedView.includes("statusRating")}
         <span class="status-rating" title="Status and Rating">
           {#if !isUsingThumbs}
             <i><Icon i="star" /></i>

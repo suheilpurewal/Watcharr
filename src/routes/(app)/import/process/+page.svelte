@@ -16,22 +16,20 @@
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { sleep } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import { importedList, parsedImportedList, watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import {
     ImportResponseType,
     type ImportResponse,
     type ContentSearchTv,
     type ContentSearchMovie,
     type ImportedList,
-    type WatchedStatus
+    type WatchedStatus,
   } from "@/types";
   import axios from "axios";
   import { onDestroy } from "svelte";
   import { get } from "svelte/store";
   import papa from "papaparse";
   import Status from "@/lib/Status.svelte";
-
-  const wList = get(watchedList);
 
   interface ImportedListItemMultiProblem {
     original: ImportedList;
@@ -56,7 +54,7 @@
   let changeAllStatusesModalCb: ((newStatus?: WatchedStatus) => void) | undefined;
 
   async function getList() {
-    const list = get(importedList);
+    const list = store.importedList;
     if (!list) {
       console.log("import/process, no list, returning to /import");
       goto("/import");
@@ -117,7 +115,7 @@
           console.error("Failed to process an item!", err);
           notify({
             type: "error",
-            text: "Failed to process an item!"
+            text: "Failed to process an item!",
           });
         }
       }
@@ -189,18 +187,18 @@
           console.error("Failed to process an item!", err);
           notify({
             type: "error",
-            text: "Failed to process an item!"
+            text: "Failed to process an item!",
           });
         }
       }
       notify({
         text: "Any tv episodes will be added to the bottom of the table, don't change the Type on these!",
-        time: 20000
+        time: 20000,
       });
       if (anySkipped) {
         notify({
           type: "error",
-          text: "Some items with invalid data may have been skipped (check source data for missing ids/titles or look in console for more details)."
+          text: "Some items with invalid data may have been skipped (check source data for missing ids/titles or look in console for more details).",
         });
       }
     } else if (list?.type === "movary") {
@@ -213,7 +211,7 @@
         console.error("Movary import processing failed!", err);
         notify({
           type: "error",
-          text: "Processing failed!. Please report this issue if it persists."
+          text: "Processing failed!. Please report this issue if it persists.",
         });
       }
     } else if (list?.type === "watcharr") {
@@ -226,7 +224,7 @@
         console.error("Watcharr import processing failed!", err);
         notify({
           type: "error",
-          text: "Processing failed!. Please report this issue if it persists."
+          text: "Processing failed!. Please report this issue if it persists.",
         });
       }
     } else if (list?.type === "myanimelist") {
@@ -239,7 +237,7 @@
           console.error("MyAnimeList parse error:", errorNode);
           notify({
             type: "error",
-            text: "An error occurred while parsing your MyAnimeList export!"
+            text: "An error occurred while parsing your MyAnimeList export!",
           });
           return;
         }
@@ -249,7 +247,7 @@
           console.error("MyAnimeList: Found no anime nodes:", animeNodes);
           notify({
             type: "error",
-            text: "We found no Anime entries in your export file!"
+            text: "We found no Anime entries in your export file!",
           });
           return;
         }
@@ -261,7 +259,7 @@
             console.error("No title found for an anime!", animeNode, titleNode);
             notify({
               type: "error",
-              text: "An anime failed to import, a title was not found! Check console for more details."
+              text: "An anime failed to import, a title was not found! Check console for more details.",
             });
             continue;
           }
@@ -288,7 +286,7 @@
                 "Anime has no status or an unrecognized status:",
                 malStatus,
                 "anime_title:",
-                titleNode.textContent
+                titleNode.textContent,
               );
             }
           }
@@ -302,7 +300,7 @@
                 "Anime has no type or an unrecognized type:",
                 malSeriesType,
                 "anime_title:",
-                titleNode.textContent
+                titleNode.textContent,
               );
             }
           }
@@ -317,8 +315,8 @@
                 {
                   type: "STATUS_CHANGED",
                   data: "WATCHING",
-                  customDate: new Date(startDateNode.textContent)
-                }
+                  customDate: new Date(startDateNode.textContent),
+                },
               ] as any[];
             }
             if (finishDateNode?.textContent) {
@@ -328,7 +326,7 @@
             console.error("Processing start/finish times for anime failed!", err);
             notify({
               type: "error",
-              text: "Failed to process start/finish times for an anime! Check console for more details."
+              text: "Failed to process start/finish times for an anime! Check console for more details.",
             });
           }
           rList.push(l);
@@ -337,7 +335,7 @@
         console.error("MyAnimeList import failed!", err);
         notify({
           type: "error",
-          text: "Failed to process import data!"
+          text: "Failed to process import data!",
         });
       }
     } else if (list?.type === "ryot") {
@@ -350,7 +348,7 @@
         console.error("Ryot import processing failed!", err);
         notify({
           type: "error",
-          text: "Processing failed!. Please report this issue if it persists."
+          text: "Processing failed!. Please report this issue if it persists.",
         });
       }
     } else if (list?.type === "todomovies") {
@@ -363,7 +361,7 @@
         console.error("TodoMovies import processing failed!", err);
         notify({
           type: "error",
-          text: "Processing failed!. Please report this issue if it persists."
+          text: "Processing failed!. Please report this issue if it persists.",
         });
       }
     }
@@ -409,27 +407,27 @@
         notify({
           type: "error",
           text: "Failed to import an item! Check console for more info.",
-          time: Infinity
+          time: Infinity,
         });
       }
       await sleep(1500);
     }
-    importedList.set(undefined);
+    store.importedList = undefined;
     if (
       rList.some(
         (i) =>
           i.state == ImportResponseType.IMPORT_FAILED ||
-          i.state == ImportResponseType.IMPORT_NOTFOUND
+          i.state == ImportResponseType.IMPORT_NOTFOUND,
       )
     ) {
       // Some items failed.. go to some-failed
-      parsedImportedList.set(rList);
+      store.parsedImportedList = rList;
       goto("/import/some-failed");
     } else {
       notify({
         type: "success",
         text: "All content successfully imported! Try refreshing if you are missing data.",
-        time: 15000
+        time: 15000,
       });
       goto("/");
     }
@@ -472,7 +470,7 @@
             } else {
               res(0);
             }
-          }
+          },
         };
       } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
         item.state = ImportResponseType.IMPORT_SUCCESS;
@@ -482,8 +480,8 @@
             w.content?.type === "movie" ? w.content?.release_date : w.content?.first_air_date;
           if (release) item.year = String(new Date(Date.parse(release)).getFullYear());
           item.type = w.content?.type;
-          wList.push(w);
-          watchedList.update(() => wList);
+          store.watchedList.push(w);
+          // watchedList.update(() => wList);
         }
         rList = rList;
         res(0);
@@ -522,7 +520,7 @@
         console.error("changeAllStatusesModalCb: Failed!", err);
         notify({
           type: "error",
-          text: "Failed when updating all statuses. Please try again!"
+          text: "Failed when updating all statuses. Please try again!",
         });
       }
       changeAllStatusesModalCb = undefined;

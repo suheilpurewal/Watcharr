@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { onMount } from "svelte";
   import Modal from "../Modal.svelte";
   import Icon from "../Icon.svelte";
   import { notify } from "../util/notify";
@@ -26,8 +23,8 @@
     textarea.style.height = textarea.scrollHeight + "px";
   }
 
-  run(() => {
-    textarea, resizeTextarea();
+  $effect(() => {
+    if (textarea) resizeTextarea();
   });
 </script>
 
@@ -51,7 +48,7 @@
     onClose={async () => {
       if (!textarea) {
         notify({
-          text: "Failed to find the text box! Please copy your changes to avoid losing them and try again!"
+          text: "Failed to find the text box! Please copy your changes to avoid losing them and try again!",
         });
         return;
       }
@@ -68,7 +65,7 @@
       value={thoughts}
       bind:this={textarea}
       oninput={resizeTextarea}
-></textarea>
+    ></textarea>
   </Modal>
 {/if}
 

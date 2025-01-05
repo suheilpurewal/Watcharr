@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
@@ -8,13 +8,13 @@
     TMDBDiscoverShows,
     TMDBTrendingAll,
     TMDBUpcomingMovies,
-    TMDBUpcomingShows
+    TMDBUpcomingShows,
   } from "@/types";
   import Poster from "@/lib/poster/Poster.svelte";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import PosterList from "@/lib/poster/PosterList.svelte";
 
-  let wList = $derived($watchedList);
+  let wList = $derived(store.watchedList);
 
   async function allTrending() {
     return (await axios.get(`/content/trending`)).data as TMDBTrendingAll;

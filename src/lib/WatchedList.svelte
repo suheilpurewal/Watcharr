@@ -1,20 +1,11 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import {
-    activeFilters,
-    activeSort,
-    clearActiveFilters,
-    serverFeatures,
-    userSettings
-  } from "@/store";
+  import { store, clearActiveFilters } from "@/store.svelte";
   import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
-  import { get } from "svelte/store";
   import { getLatestWatchedInTv } from "./util/helpers";
   import { notify } from "./util/notify";
 
@@ -25,6 +16,18 @@
 
   let { list, isPublicList = false }: Props = $props();
 
+  let sort = $derived(store.activeSort);
+  let filters = $derived(store.activeFilters);
+  let settings = $derived(store.userSettings);
+  let watched: Watched[] = $state([]);
+
+  $effect(() => {
+    if (list) watched = list;
+  });
+
+  $effect(() => {
+    if (list && filters && sort) filt();
+  });
 
   /**
    * Checks if content has been watched previously
@@ -38,7 +41,7 @@
         a.type === "ADDED_WATCHED" ||
         a.type === "IMPORTED_ADDED_WATCHED" ||
         a.type === "IMPORTED_WATCHED" ||
-        a.type === "STATUS_CHANGED"
+        a.type === "STATUS_CHANGED",
     );
     for (let i = 0; i < relatedActivity.length; i++) {
       const ra = relatedActivity[i];
@@ -61,7 +64,7 @@
     return wp;
   }
 
-
+  // Monsterous code for filters. Soz.
   function filt() {
     try {
       // Set watched to list and sort it.
@@ -85,23 +88,23 @@
               ?.sort(
                 (aa, bb) =>
                   Date.parse(bb.customDate ?? bb.updatedAt) -
-                  Date.parse(aa.customDate ?? aa.updatedAt)
+                  Date.parse(aa.customDate ?? aa.updatedAt),
               )
               ?.find(
                 (aa) =>
                   (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED")),
               );
             const bLastFinishActivity = b.activity
               ?.sort(
                 (aa, bb) =>
                   Date.parse(bb.customDate ?? bb.updatedAt) -
-                  Date.parse(aa.customDate ?? aa.updatedAt)
+                  Date.parse(aa.customDate ?? aa.updatedAt),
               )
               ?.find(
                 (aa) =>
                   (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED")),
               );
             if (!aLastFinishActivity) return 1;
             if (!bLastFinishActivity) return -1;
@@ -122,9 +125,8 @@
           return 0;
         });
       // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
-      if (!features.games) {
-        const af = get(activeFilters);
-        af.type = af.type?.filter((a) => a !== "game");
+      if (!store.serverFeatures?.games) {
+        store.activeFilters.type = store.activeFilters.type?.filter((a) => a !== "game");
         filters.type = filters.type.filter((f) => f !== "game");
       }
       // Now apply filters to watch list.
@@ -134,25 +136,25 @@
           watched = watched.filter(
             (w) =>
               (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
-              filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+              filters.type.includes(w.content ? w.content.type : w.game ? "game" : ""),
           );
         } else {
           watched = watched.filter(
             (w) =>
               filters.status.includes(w.status?.toLowerCase()) &&
-              filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+              filters.type.includes(w.content ? w.content.type : w.game ? "game" : ""),
           );
         }
       } else if (filters.type.length > 0) {
         // Only filter type
         watched = watched.filter((w) =>
-          filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+          filters.type.includes(w.content ? w.content.type : w.game ? "game" : ""),
         );
       } else if (filters.status.length > 0) {
         // Only filter status
         if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
           watched = watched.filter(
-            (w) => filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)
+            (w) => filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w),
           );
         } else {
           watched = watched.filter((w) => filters.status.includes(w.status?.toLowerCase()));
@@ -163,18 +165,6 @@
       notify({ text: "Failed to filter/sort list!", type: "error", time: 6000 });
     }
   }
-  let sort = $derived($activeSort);
-  let filters = $derived($activeFilters);
-  let watched;
-  run(() => {
-    watched = list;
-  });
-  let settings = $derived($userSettings);
-  let features = $derived($serverFeatures);
-  // Monsterous code for filters. Soz.
-  run(() => {
-    (watched, filters, sort), filt();
-  });
 </script>
 
 <PosterList>
@@ -191,12 +181,12 @@
             name: w.game.name,
             summary: w.game.summary,
             firstReleaseDate: w.game.releaseDate,
-            poster: w.game.poster
+            poster: w.game.poster,
           }}
           disableInteraction={isPublicList}
           extraDetails={{
             dateAdded: w.createdAt,
-            dateModified: w.updatedAt
+            dateModified: w.updatedAt,
           }}
           fluidSize={true}
           pinned={w.pinned}
@@ -211,7 +201,7 @@
             overview: w.content.overview,
             media_type: w.content.type,
             release_date: w.content.release_date,
-            first_air_date: w.content.first_air_date
+            first_air_date: w.content.first_air_date,
           }}
           rating={w.rating}
           status={w.status}
@@ -219,7 +209,7 @@
           extraDetails={{
             dateAdded: w.createdAt,
             dateModified: w.updatedAt,
-            lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes)
+            lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes),
           }}
           fluidSize={true}
           pinned={w.pinned}

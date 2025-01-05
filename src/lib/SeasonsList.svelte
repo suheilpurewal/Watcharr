@@ -4,7 +4,7 @@
     TMDBShowSeason,
     Watched,
     WatchedSeasonAddResponse,
-    WatchedStatus
+    WatchedStatus,
   } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
@@ -13,7 +13,7 @@
   import PosterStatus from "./poster/PosterStatus.svelte";
   import { notify } from "./util/notify";
   import { get } from "svelte/store";
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import PosterRating from "./poster/PosterRating.svelte";
 
   interface Props {
@@ -24,15 +24,16 @@
 
   let { tvId, seasons, watchedItem = $bindable() }: Props = $props();
 
-  let activeSeason =
-    $state(typeof watchedItem?.lastViewedSeason === "number" ? watchedItem?.lastViewedSeason : 1);
+  let activeSeason = $state(
+    typeof watchedItem?.lastViewedSeason === "number" ? watchedItem?.lastViewedSeason : 1,
+  );
   let seasonDetailsReq: Promise<TMDBSeasonDetails> = $derived(sdr(activeSeason));
 
   async function sdr(seasonNum: number) {
     const resp = await axios.get(`/content/tv/${tvId}/season/${seasonNum}`, {
       params: {
-        watchedId: watchedItem?.id
-      }
+        watchedId: watchedItem?.id,
+      },
     });
     try {
       if (watchedItem?.id) {
@@ -40,10 +41,10 @@
         const hVal = resp.headers["watcharr-lastviewedseason-saved"];
         if (hVal) {
           watchedItem.lastViewedSeason = seasonNum;
-          watchedList.update((w) => w);
+          // watchedList.update((w) => w);
         } else {
           console.error(
-            "SeasonList: sdr: No header in response indicating that the lastviewedseason was saved."
+            "SeasonList: sdr: No header in response indicating that the lastviewedseason was saved.",
           );
           notify({ type: "error", text: "Failed when saving last viewed season" });
         }
@@ -66,16 +67,16 @@
         watchedId: watchedItem.id,
         seasonNumber: seasonNumber,
         status,
-        rating
+        rating,
       })
       .then((r) => {
-        const wList = get(watchedList);
-        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        // const wList = get(watchedList);
+        const wEntry = store.watchedList.find((w) => w.id === watchedItem.id);
         if (!wEntry) {
           notify({
             id: nid,
             text: `Request succeeded, but failed to find local data. Please refresh.`,
-            type: "error"
+            type: "error",
           });
           return;
         }
@@ -86,7 +87,6 @@
           } else {
             wEntry.activity = [r.data.addedActivity];
           }
-          watchedList.update((w) => w);
           notify({ id: nid, text: `Saved!`, type: "success" });
         }
       })
@@ -111,13 +111,12 @@
       axios
         .delete(`/watched/season/${ws.id}`)
         .then((r) => {
-          const wList = get(watchedList);
-          const wEntry = wList.find((w) => w.id === watchedItem.id);
+          const wEntry = store.watchedList.find((w) => w.id === watchedItem.id);
           if (!wEntry) {
             notify({
               id: nid,
               text: `Request succeeded, but failed to find local data. Please refresh.`,
-              type: "error"
+              type: "error",
             });
             return;
           }
@@ -130,7 +129,6 @@
                 wEntry.activity = [r.data];
               }
             }
-            watchedList.update((w) => w);
             notify({ id: nid, text: `Removed!`, type: "success" });
           }
         })
@@ -146,8 +144,6 @@
   function handleStarClick(rating: number, seasonNumber: number) {
     updateWatchedSeason(seasonNumber, undefined, rating);
   }
-
-  
 </script>
 
 <div class="ctr">
@@ -178,7 +174,7 @@
         <h3>{season.name}</h3>
         {#if watchedItem}
           {@const ws = watchedItem?.watchedSeasons?.find(
-            (s) => s.seasonNumber === season.season_number
+            (s) => s.seasonNumber === season.season_number,
           )}
           {#if ws}
             <div class="rating">

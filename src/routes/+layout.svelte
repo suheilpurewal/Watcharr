@@ -2,20 +2,18 @@
   import Icon from "@/lib/Icon.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { unNotify } from "@/lib/util/notify";
-  import { notifications } from "@/store";
+  import { startStoreSaver, store } from "@/store.svelte";
   import { onMount } from "svelte";
   import { pwaInfo } from "virtual:pwa-info";
   interface Props {
-    children?: import('svelte').Snippet;
+    children?: import("svelte").Snippet;
   }
 
   let { children }: Props = $props();
 
-  let notifs = $derived($notifications);
-
   console.log(
     `%cWATCHARR v${__WATCHARR_VERSION__}`,
-    "background: white;color: black;font-size: large;padding: 3px 5px;"
+    "background: white;color: black;font-size: large;padding: 3px 5px;",
   );
 
   function resetTooltipPos() {
@@ -27,6 +25,7 @@
   }
 
   onMount(() => {
+    startStoreSaver();
     window.addEventListener("resize", resetTooltipPos);
 
     return () => {
@@ -44,7 +43,7 @@
 
 <div id="tooltip"></div>
 <div id="notifications">
-  {#each notifs as n}
+  {#each store.notifications as n}
     <div class={`${n.type} notif`}>
       {#if n.type === "loading"}
         <SpinnerTiny />

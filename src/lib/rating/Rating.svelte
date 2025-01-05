@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { userSettings } from "@/store";
+  import { store } from "@/store.svelte";
   import { RatingSystem } from "@/types";
   import StarRating from "./StarRating.svelte";
   import ThumbRating from "./ThumbRating.svelte";
-
-  let settings = $derived($userSettings);
 
   interface Props {
     rating: number | undefined;
@@ -15,7 +13,7 @@
 </script>
 
 <div class="wrap">
-  {#if settings?.ratingSystem === RatingSystem.Thumbs}
+  {#if store.userSettings?.ratingSystem === RatingSystem.Thumbs}
     <ThumbRating {rating} {onChange} />
   {:else}
     <!-- All other systems work with the stars -->

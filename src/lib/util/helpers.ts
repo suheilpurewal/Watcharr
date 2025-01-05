@@ -1,4 +1,4 @@
-import { appTheme } from "@/store";
+import { store } from "@/store.svelte";
 import {
   UserPermission,
   type Icon,
@@ -9,7 +9,7 @@ import {
   type Watched,
   type WatchedStatus,
   type WatchedEpisode,
-  type WatchedSeason
+  type WatchedSeason,
 } from "@/types";
 
 export const watchedStatuses: {
@@ -19,7 +19,7 @@ export const watchedStatuses: {
   WATCHING: "clock",
   FINISHED: "check",
   HOLD: "pause",
-  DROPPED: "thumb-down"
+  DROPPED: "thumb-down",
 };
 
 export const months = [
@@ -34,7 +34,7 @@ export const months = [
   "September",
   "October",
   "November",
-  "December"
+  "December",
 ];
 
 export const monthsShort = [
@@ -49,7 +49,7 @@ export const monthsShort = [
   "Sept",
   "Oct",
   "Nov",
-  "Dec"
+  "Dec",
 ];
 
 export function isTouch() {
@@ -69,8 +69,8 @@ export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Wat
     extraDetails: {
       dateAdded: wel.createdAt,
       dateModified: wel.updatedAt,
-      lastWatched: getLatestWatchedInTv(wel.watchedSeasons, wel.watchedEpisodes)
-    }
+      lastWatched: getLatestWatchedInTv(wel.watchedSeasons, wel.watchedEpisodes),
+    },
   };
 }
 
@@ -83,8 +83,8 @@ export function getPlayedDependedProps(wid: number, list: Watched[]) {
     rating: wel.rating,
     extraDetails: {
       dateAdded: wel.createdAt,
-      dateModified: wel.updatedAt
-    }
+      dateModified: wel.updatedAt,
+    },
   };
 }
 
@@ -92,7 +92,7 @@ export function getPlayedDependedProps(wid: number, list: Watched[]) {
 // This could probably be simpler but -_-
 export function getLatestWatchedInTv(
   ws: WatchedSeason[] | undefined,
-  we: WatchedEpisode[] | undefined
+  we: WatchedEpisode[] | undefined,
 ): string {
   if ((!ws || ws.length <= 0) && (!we || we.length <= 0)) {
     return "";
@@ -205,7 +205,7 @@ export function addClassToParent(
   e: Event & {
     currentTarget: EventTarget & Element;
   },
-  c: string
+  c: string,
 ) {
   (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
 }
@@ -217,7 +217,8 @@ export function addClassToParent(
  */
 export function getTopCrew(crew: TMDBContentCreditsCrew[]) {
   return crew.filter(
-    (c) => c.job === "Director" || c.job === "Writer" || c.job === "Characters" || c.job === "Story"
+    (c) =>
+      c.job === "Director" || c.job === "Writer" || c.job === "Characters" || c.job === "Story",
   );
 }
 
@@ -230,7 +231,7 @@ export function getTopCrew(crew: TMDBContentCreditsCrew[]) {
 export function calculateTransformOrigin(
   e: Event & {
     currentTarget: EventTarget & HTMLLIElement;
-  }
+  },
 ) {
   const magicNumber = 26;
   const ctr = e.currentTarget.querySelector(".container") as HTMLElement;
@@ -285,10 +286,10 @@ export function getOrdinalSuffix(i: number) {
 export function toggleTheme(theme: Theme) {
   if (theme === "dark") {
     document.documentElement.classList.add("theme-dark");
-    appTheme.update((t) => (t = "dark"));
+    store.appTheme = "dark";
   } else {
     document.documentElement.classList.remove("theme-dark");
-    appTheme.update((t) => (t = "light"));
+    store.appTheme = "light";
   }
 }
 
@@ -306,7 +307,7 @@ export async function sleep(ms: number) {
   return new Promise<void>((r) =>
     setTimeout(() => {
       r();
-    }, ms)
+    }, ms),
   );
 }
 

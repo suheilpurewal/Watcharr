@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { userSettings } from "@/store";
+  import { store } from "@/store.svelte";
   import tooltip from "../actions/tooltip";
   import { RatingStep, RatingSystem } from "@/types";
   import Icon from "../Icon.svelte";
   import { toShowableRating, toWhichThumb } from "../rating/helpers";
 
-  
   interface Props {
     rating?: number | undefined;
     handleStarClick: (rating: number) => void;
     disableInteraction?: boolean;
     /**
-   * When not minimal, we will use user settings to
-   * display ratings as they want.
-   */
+     * When not minimal, we will use user settings to
+     * display ratings as they want.
+     */
     minimal?: boolean;
     direction?: "top" | "bot";
     btnTooltip?: string;
@@ -27,13 +26,15 @@
     minimal = false,
     direction = "top",
     btnTooltip = "",
-    hideStarWhenRated = false
+    hideStarWhenRated = false,
   }: Props = $props();
 
   let ratingsShown = $state(false);
 
-  let settings = $derived($userSettings);
-  let isUsingThumbs = $derived(settings && settings.ratingSystem === RatingSystem.Thumbs);
+  // let settings = $derived($userSettings);
+  let isUsingThumbs = $derived(
+    store.userSettings && store.userSettings.ratingSystem === RatingSystem.Thumbs,
+  );
 </script>
 
 <button
@@ -41,7 +42,7 @@
     "rating",
     minimal ? (!rating ? "minimal" : "minimal-space") : "",
     disableInteraction ? "interaction-disabled" : "",
-    minimal ? "is-minimal" : ""
+    minimal ? "is-minimal" : "",
   ].join(" ")}
   onclick={(ev) => {
     ev.stopPropagation();
@@ -88,7 +89,7 @@
       "small-scrollbar",
       direction,
       isUsingThumbs ? "is-using-thumbs" : "",
-      minimal ? "is-minimal" : ""
+      minimal ? "is-minimal" : "",
     ].join(" ")}
   >
     {#if isUsingThumbs}
@@ -119,7 +120,7 @@
       </button>
     {:else}
       {@const stars =
-        settings?.ratingSystem == RatingSystem.OutOf5
+        store.userSettings?.ratingSystem == RatingSystem.OutOf5
           ? [5, 4, 3, 2, 1]
           : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}
       {#each stars as v}
@@ -127,13 +128,13 @@
           class="plain{rating === v ? ' active' : ''}"
           onclick={(ev) => {
             ev.stopPropagation();
-            handleStarClick(settings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
+            handleStarClick(store.userSettings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
             ratingsShown = false;
           }}
         >
-          {#if settings?.ratingSystem === RatingSystem.OutOf100}
+          {#if store.userSettings?.ratingSystem === RatingSystem.OutOf100}
             {v * 10}
-          {:else if settings?.ratingSystem === RatingSystem.OutOf5}
+          {:else if store.userSettings?.ratingSystem === RatingSystem.OutOf5}
             {v}
           {:else}
             {v}

@@ -1,6 +1,6 @@
 import adapter from "@sveltejs/adapter-node";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
+import { sveltePreprocess } from "svelte-preprocess";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -9,19 +9,19 @@ const config = {
   preprocess: [
     sveltePreprocess({
       scss: {
-        prependData: `@import "./src/norm.scss";`
-      }
+        prependData: `@import "./src/norm.scss";`,
+      },
     }),
-    vitePreprocess()
+    vitePreprocess(),
   ],
 
   kit: {
     adapter: adapter(),
 
     alias: {
-      "@": "src"
-    }
-  }
+      "@": "src",
+    },
+  },
 };
 
 export default config;

@@ -1,5 +1,4 @@
-import { notifications } from "@/store";
-import { get } from "svelte/store";
+import { store } from "@/store.svelte";
 
 export interface Notification {
   /**
@@ -27,20 +26,17 @@ export interface Notification {
 }
 
 export function notify(n: Notification) {
-  const notifs = get(notifications);
   if (n.id) {
-    const notif = notifs.find((not) => not.id === n.id);
+    const notif = store.notifications.find((not) => not.id === n.id);
     if (notif) {
       notif.type = n.type;
       notif.text = n.text;
-      notifications.update(() => notifs);
     } else {
       console.error("Can't update notif that doesnt exist", n);
     }
   } else {
     n.id = Math.random();
-    notifs.push({ ...n });
-    notifications.update(() => notifs);
+    store.notifications.push({ ...n });
   }
   if (n.type !== "loading" && n.time !== Infinity) {
     setTimeout(() => unNotify(n.id!), n.time ?? 2500);
@@ -48,8 +44,10 @@ export function notify(n: Notification) {
   return n.id;
 }
 
-export function unNotify(id: number) {
-  const ns = get(notifications);
-  const dn = ns.filter((e) => e.id !== id);
-  notifications.update(() => dn);
+export function unNotify(id?: number) {
+  if (!id) {
+    console.warn("unNotify: Tried removing a notification without an id.");
+    return;
+  }
+  store.notifications = store.notifications.filter((e) => e.id !== id);
 }

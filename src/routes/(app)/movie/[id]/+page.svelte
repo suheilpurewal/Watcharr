@@ -6,12 +6,12 @@
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import { contentExistsOnJellyfin, removeWatched, updateWatched } from "@/lib/util/api";
-  import { serverFeatures, userSettings, watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
-    WatchedStatus
+    WatchedStatus,
   } from "@/types";
   import axios from "axios";
   import { getTopCrew } from "@/lib/util/helpers.js";
@@ -29,22 +29,20 @@
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
   import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
-  let settings = $derived($userSettings);
-
   let { data } = $props();
 
-  let trailer: string | undefined = $state(undefined);
+  let trailer: string | undefined = $state();
   let requestModalShown = $state(false);
   let trailerShown = $state(false);
-  let jellyfinUrl: string | undefined = $state(undefined);
+  let jellyfinUrl: string | undefined = $state();
   let arrRequestButtonComp: ArrRequestButton | undefined = $state();
-
-  let wListItem = $derived(
-    $watchedList.find((w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId)
-  );
-
   let movie: TMDBMovieDetails | undefined = $state();
   let pageError: Error | undefined = $state();
+  let wListItem = $derived(
+    store.watchedList.find(
+      (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
+    ),
+  );
 
   $effect(() => {
     (async () => {
@@ -56,7 +54,7 @@
         }
         const resp = (
           await axios.get(`/content/movie/${data.movieId}`, {
-            params: { region: settings?.country }
+            params: { region: store.userSettings?.country },
           })
         ).data as TMDBMovieDetails;
         if (resp.videos?.results?.length > 0) {
@@ -93,7 +91,7 @@
     newStatus?: WatchedStatus,
     newRating?: number,
     newThoughts?: string,
-    pinned?: boolean
+    pinned?: boolean,
   ): Promise<boolean> {
     if (!data.movieId) {
       console.error("contentChanged: no movieId");
@@ -164,7 +162,7 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
-            {#if $serverFeatures.radarr && data.movieId}
+            {#if store.serverFeatures?.radarr && data.movieId}
               <ArrRequestButton
                 type="movie"
                 tmdbId={data.movieId}
@@ -185,7 +183,7 @@
                   }}
                   use:tooltip={{
                     text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
-                    pos: "bot"
+                    pos: "bot",
                   }}
                 >
                   <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />

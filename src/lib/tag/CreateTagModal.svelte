@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tags } from "@/store";
+  import { store } from "@/store.svelte";
   import Modal from "../Modal.svelte";
   import Setting from "../settings/Setting.svelte";
   import SettingsList from "../settings/SettingsList.svelte";
@@ -10,7 +10,6 @@
   import { get } from "svelte/store";
   import { onMount } from "svelte";
 
-  
   interface Props {
     onClose: () => void;
     // Passing an existing tag will enable 'Edit Tag' mode.
@@ -30,7 +29,7 @@
     ["#F5FFC6", "#5126B5"],
     ["#6D213C", "#FAFF70"],
     ["#F7C4A5", "#2f0082"],
-    ["#F7EFE5", "#63338c"]
+    ["#F7EFE5", "#63338c"],
   ];
 
   function getRandomColorPreset() {
@@ -58,12 +57,12 @@
       const resp = await axios.post<Tag>("/tag", {
         name: tagName,
         color: textColor,
-        bgColor
+        bgColor,
       } as TagAddRequest);
       console.log("addTag: Tag was created", resp.data);
-      const _tags = get(tags);
-      _tags.push(resp.data);
-      tags.update((t) => t);
+      // const _tags = get(tags);
+      store.tags.push(resp.data);
+      // tags.update((t) => t);
       notify({ id: nid, text: "Tag Created!", type: "success" });
       onClose();
     } catch (err) {
@@ -84,14 +83,14 @@
       const resp = await axios.put<Tag>(`/tag/${existingTag!.id}`, {
         name: tagName,
         color: textColor,
-        bgColor
+        bgColor,
       } as TagAddRequest);
       console.log("updateTag: Tag was edited", resp.data);
       existingTag!.name = tagName;
       existingTag!.color = textColor;
       existingTag!.bgColor = bgColor;
       // Doesn't update `updatedAt`... may need to in the future if we need to sort by it, etc
-      tags.update((t) => t);
+      // tags.update((t) => t);
       notify({ id: nid, text: "Tag Modified!", type: "success" });
       onClose();
     } catch (err) {

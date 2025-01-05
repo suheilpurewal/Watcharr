@@ -12,7 +12,7 @@
 
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { parsedImportedList } from "@/store";
+  import { store } from "@/store.svelte";
   import { ImportResponseType, type ImportedList } from "@/types";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
@@ -21,10 +21,9 @@
   let successCount = $state(0);
 
   onMount(() => {
-    let list = get(parsedImportedList);
-    if (list) {
-      for (let i = 0; i < list.length; i++) {
-        const item = list[i];
+    if (store.parsedImportedList) {
+      for (let i = 0; i < store.parsedImportedList.length; i++) {
+        const item = store.parsedImportedList[i];
         console.log(item);
         if (
           item.state === ImportResponseType.IMPORT_FAILED ||

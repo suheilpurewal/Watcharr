@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import Error from "@/lib/Error.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
@@ -9,7 +7,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import DropDown from "@/lib/DropDown.svelte";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte.js";
   import type { TMDBPersonCombinedCredits, TMDBPersonDetails } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
@@ -18,35 +16,32 @@
 
   let { data } = $props();
 
-
-  let personId: number | undefined = $state();
   let person: TMDBPersonDetails | undefined = $state();
   let pageError: Error | undefined = $state();
   let sortOption = $state("Vote count");
   let credits: TMDBPersonCombinedCredits | undefined = $state();
   let onMyListFilter = $state(false);
 
-  onMount(() => {
-    const unsubscribe = page.subscribe((value) => {
-      const params = value.params;
-      if (params && params.id) {
-        personId = Number(params.id);
-      }
-    });
-
-    return unsubscribe;
+  $effect(() => {
+    if (data.personId) {
+      fetchPersonData();
+    }
   });
 
-
+  $effect(() => {
+    if (sortOption && credits) {
+      sortCredits(sortOption);
+    }
+  });
 
   async function fetchPersonData() {
     try {
       person = undefined;
       pageError = undefined;
-      if (!personId) {
+      if (!data.personId) {
         return;
       }
-      person = await getPerson(personId);
+      person = await getPerson(data.personId);
       await updatePersonCredits();
       sortCredits(sortOption);
     } catch (err: any) {
@@ -98,17 +93,6 @@
     }
     credits.cast = credits.cast;
   }
-  let wList = $derived($watchedList);
-  run(() => {
-    if (personId) {
-      fetchPersonData();
-    }
-  });
-  run(() => {
-    if (sortOption && credits) {
-      sortCredits(sortOption);
-    }
-  });
 </script>
 
 <svelte:head>
@@ -198,7 +182,7 @@
               {#each credits.cast as c (c.id)}
                 <Poster
                   media={c}
-                  {...getWatchedDependedProps(c.id, c.media_type, wList)}
+                  {...getWatchedDependedProps(c.id, c.media_type, store.watchedList)}
                   fluidSize
                   hideIfNotOnList={onMyListFilter}
                 />

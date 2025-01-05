@@ -5,14 +5,12 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
-  import { serverFeatures, watchedList } from "@/store";
+  import { store } from "@/store.svelte";
   import { GameWebsiteCategory, type GameDetailsResponse, type WatchedStatus } from "@/types";
   import axios from "axios";
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import { onMount } from "svelte";
-  import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import { removeWatched, updatePlayed } from "@/lib/util/api.js";
@@ -25,41 +23,47 @@
 
   let { data } = $props();
 
-  let trailer: string | undefined = $derived(`https://www.youtube.com/embed/${t?.video_id}`);
+  let wListItem = $derived(store.watchedList.find((w) => w.game?.igdbId === data.gameId));
+  let trailer: string | undefined = $state();
   let trailerShown = $state(false);
-
-  let wList = $derived($watchedList);
-  let wListItem = $derived($watchedList.find((w) => w.game?.igdbId === data.gameId));
-
-  let gameId: number | undefined = $state();
   let game: GameDetailsResponse | undefined = $state();
   let pageError: Error | undefined = $state();
 
-  onMount(() => {
-    const unsubscribe = page.subscribe((value) => {
-      console.log(value);
-      const params = value.params;
-      if (params && params.id) {
-        gameId = Number(params.id);
+  $effect(() => {
+    (async () => {
+      try {
+        game = undefined;
+        pageError = undefined;
+        if (!data.gameId) {
+          return;
+        }
+        const resp = (await axios.get(`/game/${data.gameId}`)).data as GameDetailsResponse;
+        if (resp.videos?.length > 0) {
+          const t = resp.videos.find((v) => v.name?.toLowerCase() === "trailer");
+          // Doc says the video_id is "usually youtube", so we are gonna go with that assumption too ( 0 _ 0 )
+          if (t?.video_id) {
+            trailer = `https://www.youtube.com/embed/${t?.video_id}`;
+          }
+        }
+        game = resp;
+      } catch (err: any) {
+        game = undefined;
+        pageError = err;
       }
-    });
-
-    return unsubscribe;
+    })();
   });
-
-  
 
   async function contentChanged(
     newStatus?: WatchedStatus,
     newRating?: number,
     newThoughts?: string,
-    pinned?: boolean
+    pinned?: boolean,
   ): Promise<boolean> {
-    if (!gameId) {
+    if (!data.gameId) {
       console.error("contentChanged: no gameId");
       return false;
     }
-    return await updatePlayed(gameId, newStatus, newRating, newThoughts, pinned);
+    return await updatePlayed(data.gameId, newStatus, newRating, newThoughts, pinned);
   }
 </script>
 
@@ -155,7 +159,7 @@
                   }}
                   use:tooltip={{
                     text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
-                    pos: "bot"
+                    pos: "bot",
                   }}
                 >
                   <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
@@ -194,8 +198,8 @@
         {/if}
       </div>
 
-      {#if gameId}
-        <FollowedThoughts mediaType="game" mediaId={gameId} />
+      {#if data.gameId}
+        <FollowedThoughts mediaType="game" mediaId={data.gameId} />
       {/if}
 
       {#if game.similar_games?.length > 0}
@@ -207,9 +211,9 @@
                 coverId: g.cover.image_id,
                 name: g.name,
                 summary: g.summary,
-                firstReleaseDate: g.first_release_date
+                firstReleaseDate: g.first_release_date,
               }}
-              {...getPlayedDependedProps(g.id, wList)}
+              {...getPlayedDependedProps(g.id, store.watchedList)}
               small={true}
             />
           {/each}

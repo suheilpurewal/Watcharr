@@ -1,45 +1,40 @@
 <script lang="ts">
-  import { wlDetailedView } from "@/store";
+  import { store } from "@/store.svelte";
   import type { WLDetailedViewOption } from "@/types";
-  import { get } from "svelte/store";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
 
   function detailClicked(d: WLDetailedViewOption) {
-    let dv = get(wlDetailedView);
-    if (dv.includes(d)) {
-      dv = dv.filter((a) => a !== d);
+    if (store.wlDetailedView.includes(d)) {
+      store.wlDetailedView = store.wlDetailedView.filter((a) => a !== d);
     } else {
-      dv.push(d);
+      store.wlDetailedView.push(d);
     }
-    wlDetailedView.update((a) => (a = dv));
   }
-
-  let dve = $derived($wlDetailedView);
 </script>
 
-<div class={`menu${$page.url?.pathname.startsWith("/search") ? " on-search-page" : ""}`}>
+<div class={`menu${page.url?.pathname.startsWith("/search") ? " on-search-page" : ""}`}>
   <div class="inner">
     <h4 class="norm sm-caps">Shown Details</h4>
     <button
-      class={`plain ${dve?.includes("statusRating") ? "on" : ""}`}
+      class={`plain ${store.wlDetailedView?.includes("statusRating") ? "on" : ""}`}
       onclick={() => detailClicked("statusRating")}
     >
       Status & Rating
     </button>
     <button
-      class={`plain ${dve?.includes("lastWatched") ? "on" : ""}`}
+      class={`plain ${store.wlDetailedView?.includes("lastWatched") ? "on" : ""}`}
       onclick={() => detailClicked("lastWatched")}
     >
       Watching Season
     </button>
     <button
-      class={`plain ${dve?.includes("dateAdded") ? "on" : ""}`}
+      class={`plain ${store.wlDetailedView?.includes("dateAdded") ? "on" : ""}`}
       onclick={() => detailClicked("dateAdded")}
     >
       Date Added
     </button>
     <button
-      class={`plain ${dve?.includes("dateModified") ? "on" : ""}`}
+      class={`plain ${store.wlDetailedView?.includes("dateModified") ? "on" : ""}`}
       onclick={() => detailClicked("dateModified")}
     >
       Date Modified

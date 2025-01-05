@@ -10,7 +10,7 @@
   import DropFileButton from "@/lib/DropFileButton.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import { importedList } from "@/store";
+  import { store } from "@/store.svelte";
   import { onMount } from "svelte";
   import papa from "papaparse";
   import type {
@@ -23,7 +23,7 @@
     TodoMoviesExport,
     TagAddRequest,
     TodoMoviesCustomList,
-    TodoMoviesMovie
+    TodoMoviesMovie,
   } from "@/types";
   import Icon from "@/lib/Icon.svelte";
 
@@ -38,7 +38,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -48,7 +48,7 @@
         notify({
           type: "error",
           text: "Only one file at a time is supported. Continuing with the first.",
-          time: 6000
+          time: 6000,
         });
       }
       // Currently only support for importing one file at a time
@@ -56,7 +56,7 @@
       if (type === "text-list" && file.type !== "text/plain") {
         notify({
           type: "error",
-          text: "Text list export must be a .txt file!"
+          text: "Text list export must be a .txt file!",
         });
         isLoading = false;
         isDragOver = false;
@@ -65,7 +65,7 @@
       if ((type === "tmdb" || type === "imdb") && file.type !== "text/csv") {
         notify({
           type: "error",
-          text: `${type} export must be a .csv file!`
+          text: `${type} export must be a .csv file!`,
         });
         isLoading = false;
         isDragOver = false;
@@ -76,14 +76,14 @@
         "load",
         () => {
           if (r.result) {
-            importedList.set({
+            store.importedList = {
               data: r.result.toString(),
-              type
-            });
+              type,
+            };
             goto("/import/process");
           }
         },
-        false
+        false,
       );
       r.readAsText(file);
     } catch (err) {
@@ -135,7 +135,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -144,7 +144,7 @@
         notify({
           type: "error",
           text: "You must select or drop 3 files: history.csv, ratings.csv and watchlist.csv.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -169,7 +169,7 @@
         notify({
           type: "error",
           text: "Failed to read history, ratings or watchlist. Ensure you have attached 3 files: history.csv, ratings.csv and watchlist.csv.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         isLoading = false;
@@ -200,7 +200,7 @@
           status: "FINISHED",
           type: "movie", // movary only supports movies
           datesWatched: [],
-          thoughts: ""
+          thoughts: "",
         };
         // Movie can be watched more than once, get all entries to store all watch dates.
         const allEntries = historyJson.data.filter((he) => he.tmdbId === h.tmdbId);
@@ -236,14 +236,14 @@
           name: wl.title,
           tmdbId: Number(wl.tmdbId),
           status: "PLANNED",
-          type: "movie" // movary only supports movies
+          type: "movie", // movary only supports movies
         });
       }
       console.log("toImport:", toImport);
-      importedList.set({
+      store.importedList = {
         data: JSON.stringify(toImport),
-        type: "movary"
-      });
+        type: "movary",
+      };
       goto("/import/process");
     } catch (err) {
       isLoading = false;
@@ -260,7 +260,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -270,7 +270,7 @@
         notify({
           type: "error",
           text: "Only one file at a time is supported. Continuing with the first.",
-          time: 6000
+          time: 6000,
         });
       }
       // Currently only support for importing one file at a time
@@ -278,7 +278,7 @@
       if (file.type !== "application/json") {
         notify({
           type: "error",
-          text: "Must be a Watcharr JSON export file"
+          text: "Must be a Watcharr JSON export file",
         });
         isLoading = false;
         isDragOver = false;
@@ -292,11 +292,11 @@
         if (!v.content || !v.content.title) {
           notify({
             type: "error",
-            text: "Item in export has no content or a missing title! Look in console for more details."
+            text: "Item in export has no content or a missing title! Look in console for more details.",
           });
           console.error(
             "Can't add export item to import table! It has no content or a missing content.title! Item:",
-            v
+            v,
           );
           continue;
         }
@@ -311,15 +311,15 @@
           // datesWatched: [new Date(v.createdAt)], // Shouldn't need this, all activity will be imported, including ADDED_WATCHED activity
           activity: v.activity,
           watchedEpisodes: v.watchedEpisodes,
-          watchedSeasons: v.watchedSeasons
+          watchedSeasons: v.watchedSeasons,
         };
         toImport.push(t);
       }
       console.log("toImport:", toImport);
-      importedList.set({
+      store.importedList = {
         data: JSON.stringify(toImport),
-        type: "watcharr"
-      });
+        type: "watcharr",
+      };
       goto("/import/process");
     } catch (err) {
       isLoading = false;
@@ -336,7 +336,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -346,7 +346,7 @@
         notify({
           type: "error",
           text: "Only one file at a time is supported. Continuing with the first.",
-          time: 6000
+          time: 6000,
         });
       }
       // Currently only support for importing one file at a time
@@ -354,7 +354,7 @@
       if (file.type !== "text/xml") {
         notify({
           type: "error",
-          text: "Your MyAnimeList export should be a xml file."
+          text: "Your MyAnimeList export should be a xml file.",
         });
         isLoading = false;
         isDragOver = false;
@@ -365,14 +365,14 @@
         "load",
         () => {
           if (r.result) {
-            importedList.set({
+            store.importedList = {
               data: r.result.toString(),
-              type: "myanimelist"
-            });
+              type: "myanimelist",
+            };
             goto("/import/process");
           }
         },
-        false
+        false,
       );
       r.readAsText(file);
     } catch (err) {
@@ -390,7 +390,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -400,7 +400,7 @@
         notify({
           type: "error",
           text: "Only one file at a time is supported. Continuing with the first.",
-          time: 6000
+          time: 6000,
         });
       }
 
@@ -409,7 +409,7 @@
       if (file.type !== "application/json") {
         notify({
           type: "error",
-          text: "Must be a Ryot JSON export file"
+          text: "Must be a Ryot JSON export file",
         });
         isLoading = false;
         isDragOver = false;
@@ -424,11 +424,11 @@
         if (!v.source_id || !v.identifier || !(v.lot == "show" || v.lot == "movie")) {
           notify({
             type: "error",
-            text: "Item in export either has no title, TMDB identifier or is not a movie/tv show! Look in console for more details."
+            text: "Item in export either has no title, TMDB identifier or is not a movie/tv show! Look in console for more details.",
           });
           console.error(
             "Can't add export item to import table! It has title, TMDB identifier or is not a movie/tv show! Item:",
-            v
+            v,
           );
           continue;
         }
@@ -440,13 +440,13 @@
           ["Watchlist", "PLANNED"],
           ["Monitoring", "PLANNED"],
           ["In Progress", "WATCHING"],
-          ["Completed", "FINISHED"]
+          ["Completed", "FINISHED"],
         ];
         let rank = 0;
         for (const s of v.collections) {
           rank = Math.max(
             rank,
-            statusRanks.findIndex((pair) => pair[0] == s)
+            statusRanks.findIndex((pair) => pair[0] == s),
           );
         }
 
@@ -498,25 +498,25 @@
                           v.reviews?.find(
                             (review: any) =>
                               review.show_season_number === episode.show_season_number &&
-                              review.show_episode_number === episode.show_episode_number
+                              review.show_episode_number === episode.show_episode_number,
                           ) || {}
-                        )?.rating
-                      )
+                        )?.rating,
+                      ),
                     ) || null,
 
                   seasonNumber: episode.show_season_number,
                   episodeNumber: episode.show_episode_number,
-                  createdAt: episode.ended_on ? new Date(episode.ended_on) : undefined
+                  createdAt: episode.ended_on ? new Date(episode.ended_on) : undefined,
                 }))
-              : undefined
+              : undefined,
         };
         toImport.push(t);
       }
       console.log("toImport:", toImport);
-      importedList.set({
+      store.importedList = {
         data: JSON.stringify(toImport),
-        type: "ryot"
-      });
+        type: "ryot",
+      };
       goto("/import/process");
     } catch (err) {
       isLoading = false;
@@ -533,7 +533,7 @@
         notify({
           type: "error",
           text: "File not found in dropped items. Please try again or refresh.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         return;
@@ -543,7 +543,7 @@
         notify({
           type: "error",
           text: "Only one file at a time is supported. Continuing with the first.",
-          time: 6000
+          time: 6000,
         });
       }
 
@@ -552,7 +552,7 @@
       if (file.type !== "" && !file.name.endsWith(".todomovieslist")) {
         notify({
           type: "error",
-          text: "Must be a TodoMovies backup file (.todomovieslist)"
+          text: "Must be a TodoMovies backup file (.todomovieslist)",
         });
         isLoading = false;
         isDragOver = false;
@@ -567,7 +567,7 @@
         notify({
           type: "error",
           text: "Failed to read export file. Ensure you have attached the correct file.",
-          time: 6000
+          time: 6000,
         });
         isDragOver = false;
         isLoading = false;
@@ -609,7 +609,7 @@
           return {
             name: "TodoMovies list: " + tag?.Attrs.name,
             color: "#000000",
-            bgColor: tag?.Attrs.colorInHex
+            bgColor: tag?.Attrs.colorInHex,
           } as TagAddRequest;
         });
         const t: ImportedList = {
@@ -620,16 +620,16 @@
           datesWatched: [date], // use activities instead
           thoughts: "", // no comments in TodoMovies
           rating: h.Attrs.myScore,
-          tags: tags
+          tags: tags,
         };
         toImport.push(t);
       }
 
       console.log("toImport:", toImport);
-      importedList.set({
+      store.importedList = {
         data: JSON.stringify(toImport),
-        type: "todomovies"
-      });
+        type: "todomovies",
+      };
 
       goto("/import/process");
     } catch (err) {

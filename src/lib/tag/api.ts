@@ -1,13 +1,11 @@
-import { watchedList } from "@/store";
+import { store } from "@/store.svelte";
 import axios from "axios";
-import { get } from "svelte/store";
 import { notify } from "../util/notify";
 import type { Tag } from "@/types";
 
 export async function tagWatched(watchedId: number, tag: Tag): Promise<boolean> {
   // If item is already in watched store, run update request instead
-  const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.id === watchedId);
+  const wEntry = store.watchedList.find((w) => w.id === watchedId);
   const nid = notify({ text: `Tagging`, type: "loading" });
   if (!wEntry) {
     notify({ id: nid, text: "Failed To Tag! Watched entry not found.", type: "error" });
@@ -22,7 +20,7 @@ export async function tagWatched(watchedId: number, tag: Tag): Promise<boolean> 
       } else {
         wEntry.tags.push(tag);
       }
-      watchedList.update(() => wList);
+      // watchedList.update(() => wList);
       notify({ id: nid, text: `Tagged!`, type: "success" });
       return true;
     })
@@ -35,8 +33,8 @@ export async function tagWatched(watchedId: number, tag: Tag): Promise<boolean> 
 
 export async function untagWatched(watchedId: number, tag: Tag): Promise<boolean> {
   // If item is already in watched store, run update request instead
-  const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.id === watchedId);
+  // const wList = get(watchedList);
+  const wEntry = store.watchedList.find((w) => w.id === watchedId);
   const nid = notify({ text: `Untagging`, type: "loading" });
   if (!wEntry) {
     notify({ id: nid, text: "Failed To Untag! Watched entry not found.", type: "error" });
@@ -49,7 +47,7 @@ export async function untagWatched(watchedId: number, tag: Tag): Promise<boolean
       if (wEntry.tags) {
         wEntry.tags = wEntry.tags.filter((t) => t.id !== tag.id);
       }
-      watchedList.update(() => wList);
+      // watchedList.update(() => wList);
       notify({ id: nid, text: `Untagged!`, type: "success" });
       return true;
     })

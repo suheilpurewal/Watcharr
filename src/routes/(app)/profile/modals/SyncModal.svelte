@@ -9,7 +9,7 @@
   import { JobStatus, type GetJobResponse, type JobCreatedResponse } from "@/types";
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
-  import { watchedList } from "@/store";
+  import { store } from "@/store.svelte";
 
   interface Props {
     type?: "jellyfin" | "plex";
@@ -26,7 +26,7 @@
   async function startSync() {
     try {
       const r = await axios.get<JobCreatedResponse>(
-        type === "jellyfin" ? "/jellyfin/sync" : "/plex/sync"
+        type === "jellyfin" ? "/jellyfin/sync" : "/plex/sync",
       );
       console.log("startSync: Response:", r.data);
       if (!r.data.jobId) {
@@ -73,7 +73,7 @@
         notify({
           text: "Status checker has failed 10 times in a row!",
           type: "error",
-          time: 30000
+          time: 30000,
         });
         step = "errored";
         break;
@@ -86,7 +86,7 @@
       try {
         const w = await axios.get("/watched");
         if (w?.data?.length > 0) {
-          watchedList.update((wl) => (wl = w.data));
+          store.watchedList = w.data;
         }
         notify({ id: nid, text: "Fetched updated watched list.", type: "success" });
       } catch (err) {
@@ -100,7 +100,7 @@
     if (step === "job-running") {
       notify({
         text: "Sync will continue in the background.. please refresh the page periodically to view your updated list or come back later.",
-        time: 10000
+        time: 10000,
       });
     }
     step = "modal-closing";

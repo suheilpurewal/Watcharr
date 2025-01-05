@@ -1,4 +1,4 @@
-import { clearAllStores } from "@/store";
+import { clearAllStores } from "@/store.svelte";
 
 /**
  * Helper to clear local data in client for logout

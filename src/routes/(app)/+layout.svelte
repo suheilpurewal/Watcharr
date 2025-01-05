@@ -14,30 +14,18 @@
   import TagMenu from "@/lib/tag/TagMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import {
-    activeFilters,
-    activeSort,
-    clearAllStores,
-    defaultSort,
-    follows,
-    searchQuery,
-    serverFeatures,
-    tags,
-    userInfo,
-    userSettings,
-    watchedList
-  } from "@/store";
+  import { store, clearAllStores, defaultSort } from "@/store.svelte";
   import { UserPermission, UserType } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   interface Props {
-    children?: import('svelte').Snippet;
+    children?: import("svelte").Snippet;
   }
 
   let { children }: Props = $props();
 
-  let navEl: HTMLElement = $state();
-  let mainSearchEl: HTMLInputElement = $state();
+  let navEl: HTMLElement | undefined = $state();
+  let mainSearchEl: HTMLInputElement | undefined = $state();
   let searchTimeout: NodeJS.Timeout;
   let subMenuShown = $state(false);
   let filterMenuShown = $state(false);
@@ -47,8 +35,8 @@
   let tagMenuShown = $state(false);
   let proxyUserLogoutShown = $state(false);
 
-  let settings = $derived($userSettings);
-  let user = $derived($userInfo);
+  let settings = $derived(store.userSettings);
+  let user = $derived(store.userInfo);
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -84,8 +72,8 @@
           target.autofocus = true;
           goto(`/search?q=${encodeURIComponent(query)}`).then(() => {
             // Use mainSearchEl if nav not split, otherwise use ev target.
-            if (!document.body.classList.contains("split-nav")) {
-              mainSearchEl?.focus();
+            if (!document.body.classList.contains("split-nav") && mainSearchEl) {
+              mainSearchEl.focus();
               mainSearchEl.autofocus = false;
             } else {
               target?.focus();
@@ -94,7 +82,7 @@
           });
         }
       },
-      isTouch() ? 800 : 400
+      isTouch() ? 800 : 400,
     );
   }
 
@@ -145,7 +133,7 @@
             id: nid,
             type: "error",
             text: `Failed to copy share link:<br/><a href="${shareLink}" target="_blank">${shareLink}</a>`,
-            time: 20000
+            time: 20000,
           });
         });
     } else {
@@ -161,25 +149,25 @@
         axios.get("/user/settings"),
         axios.get("/features"),
         axios.get("/follow"),
-        axios.get("/tag")
+        axios.get("/tag"),
       ]);
       if (w?.data?.length > 0) {
-        watchedList.update((wl) => (wl = w.data));
+        store.watchedList = w.data;
       }
       if (u?.data) {
-        userInfo.update((ui) => (ui = u.data));
+        store.userInfo = u.data;
       }
       if (s?.data) {
-        userSettings.update((us) => (us = s.data));
+        store.userSettings = s.data;
       }
       if (f?.data) {
-        serverFeatures.update((sf) => (sf = f.data));
+        store.serverFeatures = f.data;
       }
       if (fo?.data) {
-        follows.update((f) => (f = fo.data));
+        store.follows = fo.data;
       }
       if (ts?.data) {
-        tags.update((t) => (t = ts.data));
+        store.tags = ts.data;
       }
     } else {
       goto("/login?again=1");
@@ -257,7 +245,7 @@
         bind:this={mainSearchEl}
         type="text"
         placeholder="Search"
-        bind:value={$searchQuery}
+        bind:value={store.searchQuery}
         onkeydown={handleSearch}
       />
       <Icon i="search" wh={19} />
@@ -274,7 +262,7 @@
           use:tooltip={{ text: "Detailed View", pos: "bot", condition: !detailedMenuShown }}
         >
           <Icon i="eye" />
-          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+          {#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
             <div class="indicator"></div>
           {/if}
         </button>
@@ -294,7 +282,7 @@
         >
           <Icon i="sort" />
           <!-- Show indicator if not equal to default and second item in array is not falsy -->
-          {#if $activeSort?.length === 2 && $activeSort[1] && JSON.stringify($activeSort) !== JSON.stringify(defaultSort)}
+          {#if store.activeSort?.length === 2 && store.activeSort[1] && JSON.stringify(store.activeSort) !== JSON.stringify(defaultSort)}
             <div class="indicator"></div>
           {/if}
         </button>
@@ -307,7 +295,7 @@
           use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
         >
           <Icon i="filter" />
-          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+          {#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
             <div class="indicator"></div>
           {/if}
         </button>
@@ -371,7 +359,7 @@
             {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
               <button class="plain" onclick={() => serverSettings()}>Settings</button>
               <button class="plain" onclick={() => userManagement()}>Users</button>
-              {#if $serverFeatures.sonarr || $serverFeatures.radarr}
+              {#if store.serverFeatures?.sonarr || store.serverFeatures?.radarr}
                 <!-- At least one (sonarr/radarr) should be enabled for requests menu item to display. -->
                 <button class="plain" onclick={() => requestManagement()}>Requests</button>
               {/if}
@@ -391,7 +379,7 @@
     class="small"
     type="text"
     placeholder="Search"
-    bind:value={$searchQuery}
+    bind:value={store.searchQuery}
     onkeydown={handleSearch}
   />
 </nav>

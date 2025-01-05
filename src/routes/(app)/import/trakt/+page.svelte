@@ -6,11 +6,9 @@
 <script lang="ts">
   import JobWatcherModal from "@/lib/JobWatcherModal.svelte";
   import { notify } from "@/lib/util/notify";
-  import { userInfo } from "@/store";
+  import { store } from "@/store.svelte";
   import type { JobCreatedResponse } from "@/types";
   import axios from "axios";
-
-  let user = $derived($userInfo);
 
   let modalOpen = $state(false);
   let traktUsername = $state("");
@@ -21,7 +19,7 @@
     if (!r.data.jobId) {
       notify({
         type: "error",
-        text: "No job id was returned! Cannot watch job, if it even started."
+        text: "No job id was returned! Cannot watch job, if it even started.",
       });
       return;
     }
@@ -38,7 +36,7 @@
 
     <input
       type="text"
-      placeholder={user?.username ?? "Trakt Username"}
+      placeholder={store.userInfo?.username ?? "Trakt Username"}
       bind:value={traktUsername}
     />
     <button onclick={() => (modalOpen = true)}>Start Import</button>

@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Checkbox from "@/lib/Checkbox.svelte";
-  import DropDown from "@/lib/DropDown.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
@@ -11,7 +8,7 @@
     RadarrSettings,
     ServerConfig,
     SonarrSettings,
-    DropDownItem
+    DropDownItem,
   } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
@@ -28,12 +25,13 @@
   import TaskScheduleModal from "./modals/TaskScheduleModal.svelte";
   import TrustedHeaderAuthModal from "./modals/TrustedHeaderAuthModal.svelte";
 
-  let serverConfig: ServerConfig = $state();
+  let serverConfig: ServerConfig | undefined = $state();
+  let jellyfinOrEmby = $derived(serverConfig?.USE_EMBY ? "Emby" : "Jellyfin");
   let sonarrModalOpen = $state(false);
-  let sonarrServerEditing: SonarrSettings = $state();
+  let sonarrServerEditing: SonarrSettings | undefined = $state();
   let sonarrModalEditing = $state(false);
   let radarrModalOpen = $state(false);
-  let radarrServerEditing: RadarrSettings = $state();
+  let radarrServerEditing: RadarrSettings | undefined = $state();
   let radarrModalEditing = $state(false);
   let twitchModalOpen = $state(false);
   let taskScheduleModalOpen = $state(false);
@@ -46,9 +44,6 @@
   let plexHostDisabled = $state(false);
   let countryDisabled = $state(false);
   let useEmbyDisabled = $state(false);
-  let selectedCountry: string;
-  let countries: any;
-  let countriesDropdown: DropDownItem[] = [];
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -57,8 +52,13 @@
   export function updateServerConfig<K extends keyof ServerConfig>(
     name: K,
     value: ServerConfig[K],
-    done?: (respData?: any) => void
+    done?: (respData?: any) => void,
   ) {
+    if (!serverConfig) {
+      console.error("updateServerConfig: No server config to update!");
+      notify({ type: "error", text: "No server config to update!" });
+      return;
+    }
     console.log("Updating server setting", name, "to", value);
     const originalValue = serverConfig[name];
     const nid = notify({ type: "loading", text: "Updating" });
@@ -70,8 +70,7 @@
       .post(ep, { key: name, value: value })
       .then((r) => {
         if (r.status === 200) {
-          serverConfig[name] = value;
-          serverConfig = serverConfig;
+          serverConfig![name] = value;
           notify({ id: nid, type: "success", text: "Updated" });
           if (typeof done !== "undefined") done(r?.data);
         }
@@ -79,8 +78,7 @@
       .catch((err) => {
         console.error("Failed to update user setting", err);
         notify({ id: nid, type: "error", text: "Couldn't Update" });
-        serverConfig[name] = originalValue;
-        serverConfig = serverConfig;
+        serverConfig![name] = originalValue;
         if (typeof done !== "undefined") done();
       });
   }
@@ -99,11 +97,6 @@
   async function getServerStats() {
     return (await axios.get("/server/stats")).data as ServerStats;
   }
-
-  let jellyfinOrEmby = $state("Jellyfin");
-  run(() => {
-    jellyfinOrEmby = serverConfig?.USE_EMBY ? "Emby" : "Jellyfin";
-  });
 </script>
 
 <div class="content">
@@ -144,272 +137,276 @@
         <Spinner />
       {:then}
         <h3>General</h3>
-        <Setting
-          title="Default Country"
-          desc="Default country for new users. This can be changed per user and won't affect existing users."
-        >
-          <RegionDropDown
-            selectedCountry={serverConfig.DEFAULT_COUNTRY}
-            disabled={countryDisabled}
-            onChange={(c) => {
-              countryDisabled = true;
-              updateServerConfig("DEFAULT_COUNTRY", c, () => {
-                countryDisabled = false;
-              });
-            }}
-          />
-        </Setting>
-        <Setting
-          title="{jellyfinOrEmby} Host"
-          desc="Point to your {jellyfinOrEmby} server to enable related features. Don't change server after
+        {#if serverConfig}
+          <Setting
+            title="Default Country"
+            desc="Default country for new users. This can be changed per user and won't affect existing users."
+          >
+            <RegionDropDown
+              selectedCountry={serverConfig.DEFAULT_COUNTRY}
+              disabled={countryDisabled}
+              onChange={(c) => {
+                countryDisabled = true;
+                updateServerConfig("DEFAULT_COUNTRY", c, () => {
+                  countryDisabled = false;
+                });
+              }}
+            />
+          </Setting>
+          <Setting
+            title="{jellyfinOrEmby} Host"
+            desc="Point to your {jellyfinOrEmby} server to enable related features. Don't change server after
         already using another."
-        >
-          <input
-            type="text"
-            placeholder="https://{jellyfinOrEmby.toLowerCase()}.example.com"
-            bind:value={serverConfig.JELLYFIN_HOST}
-            onblur={() => {
-              jfDisabled = true;
-              updateServerConfig("JELLYFIN_HOST", serverConfig.JELLYFIN_HOST, () => {
-                jfDisabled = false;
-              });
-            }}
-            disabled={jfDisabled}
-          />
-        </Setting>
-        <Setting
-          title="Use Emby"
-          desc="Do you want to pretend you're using Emby instead of Jellyfin?"
-          row
-        >
-          <Checkbox
-            name="USE_EMBY"
-            disabled={useEmbyDisabled}
-            value={serverConfig.USE_EMBY}
-            toggled={(on) => {
-              useEmbyDisabled = true;
-              updateServerConfig("USE_EMBY", on, () => {
-                useEmbyDisabled = false;
-              });
-            }}
-          />
-        </Setting>
-        <Setting
-          title="Plex Host"
-          desc="Point to your Plex server to enable related features. Don't change server after
+          >
+            <input
+              type="text"
+              placeholder="https://{jellyfinOrEmby.toLowerCase()}.example.com"
+              bind:value={serverConfig.JELLYFIN_HOST}
+              onblur={() => {
+                jfDisabled = true;
+                updateServerConfig("JELLYFIN_HOST", serverConfig!.JELLYFIN_HOST, () => {
+                  jfDisabled = false;
+                });
+              }}
+              disabled={jfDisabled}
+            />
+          </Setting>
+          <Setting
+            title="Use Emby"
+            desc="Do you want to pretend you're using Emby instead of Jellyfin?"
+            row
+          >
+            <Checkbox
+              name="USE_EMBY"
+              disabled={useEmbyDisabled}
+              value={serverConfig.USE_EMBY}
+              toggled={(on) => {
+                useEmbyDisabled = true;
+                updateServerConfig("USE_EMBY", on, () => {
+                  useEmbyDisabled = false;
+                });
+              }}
+            />
+          </Setting>
+          <Setting
+            title="Plex Host"
+            desc="Point to your Plex server to enable related features. Don't change server after
         already using another."
-        >
-          <input
-            type="text"
-            placeholder="https://plex.example.com"
-            bind:value={serverConfig.PLEX_HOST}
-            onblur={() => {
-              plexHostDisabled = true;
-              updateServerConfig("PLEX_HOST", serverConfig.PLEX_HOST, (rData) => {
-                plexHostDisabled = false;
-                serverConfig.PLEX_MACHINE_ID = rData?.PLEX_MACHINE_ID;
-              });
-            }}
-            disabled={plexHostDisabled}
-          />
-          {#if serverConfig.PLEX_MACHINE_ID}
-            <span style="font-size: 10px">Machine Id: {serverConfig.PLEX_MACHINE_ID}</span>
+          >
+            <input
+              type="text"
+              placeholder="https://plex.example.com"
+              bind:value={serverConfig.PLEX_HOST}
+              onblur={() => {
+                plexHostDisabled = true;
+                updateServerConfig("PLEX_HOST", serverConfig!.PLEX_HOST, (rData) => {
+                  plexHostDisabled = false;
+                  serverConfig!.PLEX_MACHINE_ID = rData?.PLEX_MACHINE_ID;
+                });
+              }}
+              disabled={plexHostDisabled}
+            />
+            {#if serverConfig.PLEX_MACHINE_ID}
+              <span style="font-size: 10px">Machine Id: {serverConfig.PLEX_MACHINE_ID}</span>
+            {/if}
+          </Setting>
+          <Setting title="TMDB Key" desc="Provide your own TMDB API Key">
+            <input
+              type="password"
+              placeholder="TMDB Key"
+              bind:value={serverConfig.TMDB_KEY}
+              onblur={() => {
+                tmdbkDisabled = true;
+                updateServerConfig("TMDB_KEY", serverConfig!.TMDB_KEY, () => {
+                  tmdbkDisabled = false;
+                });
+              }}
+              disabled={tmdbkDisabled}
+            />
+          </Setting>
+          <Setting title="Signup" desc="Allow signing up with Watcharr credentials." row>
+            <Checkbox
+              name="SIGNUP_ENABLED"
+              disabled={signupDisabled}
+              value={serverConfig.SIGNUP_ENABLED}
+              toggled={(on) => {
+                signupDisabled = true;
+                updateServerConfig("SIGNUP_ENABLED", on, () => {
+                  signupDisabled = false;
+                });
+              }}
+            />
+          </Setting>
+          <Setting title="Debug" desc="Enable debug logging." row>
+            <Checkbox
+              name="DEBUG"
+              disabled={debugDisabled}
+              value={serverConfig.DEBUG}
+              toggled={(on) => {
+                debugDisabled = true;
+                updateServerConfig("DEBUG", on, () => {
+                  debugDisabled = false;
+                });
+              }}
+            />
+          </Setting>
+          <Setting>
+            <SettingButton
+              title="Task Schedule"
+              desc="View and configure server task schedule."
+              icon={"arrow"}
+              onClick={() => {
+                taskScheduleModalOpen = true;
+              }}
+            />
+          </Setting>
+          {#if taskScheduleModalOpen}
+            <TaskScheduleModal onClose={() => (taskScheduleModalOpen = false)}></TaskScheduleModal>
           {/if}
-        </Setting>
-        <Setting title="TMDB Key" desc="Provide your own TMDB API Key">
-          <input
-            type="password"
-            placeholder="TMDB Key"
-            bind:value={serverConfig.TMDB_KEY}
-            onblur={() => {
-              tmdbkDisabled = true;
-              updateServerConfig("TMDB_KEY", serverConfig.TMDB_KEY, () => {
-                tmdbkDisabled = false;
-              });
-            }}
-            disabled={tmdbkDisabled}
-          />
-        </Setting>
-        <Setting title="Signup" desc="Allow signing up with Watcharr credentials." row>
-          <Checkbox
-            name="SIGNUP_ENABLED"
-            disabled={signupDisabled}
-            value={serverConfig.SIGNUP_ENABLED}
-            toggled={(on) => {
-              signupDisabled = true;
-              updateServerConfig("SIGNUP_ENABLED", on, () => {
-                signupDisabled = false;
-              });
-            }}
-          />
-        </Setting>
-        <Setting title="Debug" desc="Enable debug logging." row>
-          <Checkbox
-            name="DEBUG"
-            disabled={debugDisabled}
-            value={serverConfig.DEBUG}
-            toggled={(on) => {
-              debugDisabled = true;
-              updateServerConfig("DEBUG", on, () => {
-                debugDisabled = false;
-              });
-            }}
-          />
-        </Setting>
-        <Setting>
-          <SettingButton
-            title="Task Schedule"
-            desc="View and configure server task schedule."
-            icon={"arrow"}
-            onClick={() => {
-              taskScheduleModalOpen = true;
-            }}
-          />
-        </Setting>
-        {#if taskScheduleModalOpen}
-          <TaskScheduleModal onClose={() => (taskScheduleModalOpen = false)}></TaskScheduleModal>
-        {/if}
-        <Setting>
-          <SettingButton
-            title="Trusted Header Authentication"
-            desc="Configure trusted header single sign-on."
-            icon={"arrow"}
-            onClick={() => {
-              headerSSOModalOpen = true;
-            }}
-          />
-        </Setting>
-        {#if headerSSOModalOpen}
-          <TrustedHeaderAuthModal onClose={() => (headerSSOModalOpen = false)}
-          ></TrustedHeaderAuthModal>
-        {/if}
-        <div>
-          <h3>Services</h3>
-          <h5 class="norm">
-            These integrations are not in their final stages. Consider them a preview/beta, if you
-            have any issues,
-            <a
-              style="text-decoration: underline;"
-              href="https://github.com/sbondCo/Watcharr/issues/new/choose"
-              target="_blank"
-            >
-              please report them.
-            </a>
-          </h5>
-        </div>
-
-        <Setting title="Twitch">
-          <SettingButton
-            title="Twitch"
-            desc="Twitch application credentials for enabling game support (via IGDB)."
-            icon={Object.keys(serverConfig.TWITCH).length > 0 ? "arrow" : "add"}
-            onClick={() => {
-              twitchModalOpen = true;
-            }}
-          />
-        </Setting>
-
-        <Setting title="Sonarr">
-          {#if serverConfig.SONARR?.length > 0}
-            {#each serverConfig.SONARR as server}
-              <SettingButton
-                title={server.name}
-                desc={`Configure server at ${server.host}`}
-                onClick={() => {
-                  sonarrServerEditing = server;
-                  sonarrModalEditing = true;
-                  sonarrModalOpen = true;
-                }}
-              />
-            {/each}
+          <Setting>
+            <SettingButton
+              title="Trusted Header Authentication"
+              desc="Configure trusted header single sign-on."
+              icon={"arrow"}
+              onClick={() => {
+                headerSSOModalOpen = true;
+              }}
+            />
+          </Setting>
+          {#if headerSSOModalOpen}
+            <TrustedHeaderAuthModal onClose={() => (headerSSOModalOpen = false)}
+            ></TrustedHeaderAuthModal>
           {/if}
-          <SettingButton
-            title="Sonarr"
-            desc="Add a Sonarr server."
-            icon="add"
-            onClick={() => {
-              let name = "Sonarr";
-              if (serverConfig.SONARR?.length > 0) {
-                // if this still exists ya on yur own
-                name = `Sonarr${serverConfig.SONARR.length + 1}`;
-              }
-              sonarrServerEditing = { name };
-              sonarrModalEditing = false;
-              sonarrModalOpen = true;
-            }}
-          />
-        </Setting>
+          <div>
+            <h3>Services</h3>
+            <h5 class="norm">
+              These integrations are not in their final stages. Consider them a preview/beta, if you
+              have any issues,
+              <a
+                style="text-decoration: underline;"
+                href="https://github.com/sbondCo/Watcharr/issues/new/choose"
+                target="_blank"
+              >
+                please report them.
+              </a>
+            </h5>
+          </div>
 
-        <Setting title="Radarr">
-          {#if serverConfig.RADARR?.length > 0}
-            {#each serverConfig.RADARR as server}
-              <SettingButton
-                title={server.name}
-                desc={`Configure server at ${server.host}`}
-                onClick={() => {
-                  radarrServerEditing = server;
-                  radarrModalEditing = true;
-                  radarrModalOpen = true;
-                }}
-              />
-            {/each}
+          <Setting title="Twitch">
+            <SettingButton
+              title="Twitch"
+              desc="Twitch application credentials for enabling game support (via IGDB)."
+              icon={Object.keys(serverConfig.TWITCH).length > 0 ? "arrow" : "add"}
+              onClick={() => {
+                twitchModalOpen = true;
+              }}
+            />
+          </Setting>
+
+          <Setting title="Sonarr">
+            {#if serverConfig.SONARR?.length > 0}
+              {#each serverConfig.SONARR as server}
+                <SettingButton
+                  title={server.name}
+                  desc={`Configure server at ${server.host}`}
+                  onClick={() => {
+                    sonarrServerEditing = server;
+                    sonarrModalEditing = true;
+                    sonarrModalOpen = true;
+                  }}
+                />
+              {/each}
+            {/if}
+            <SettingButton
+              title="Sonarr"
+              desc="Add a Sonarr server."
+              icon="add"
+              onClick={() => {
+                let name = "Sonarr";
+                if (serverConfig!.SONARR?.length > 0) {
+                  // if this still exists ya on yur own
+                  name = `Sonarr${serverConfig!.SONARR.length + 1}`;
+                }
+                sonarrServerEditing = { name };
+                sonarrModalEditing = false;
+                sonarrModalOpen = true;
+              }}
+            />
+          </Setting>
+
+          <Setting title="Radarr">
+            {#if serverConfig.RADARR?.length > 0}
+              {#each serverConfig.RADARR as server}
+                <SettingButton
+                  title={server.name}
+                  desc={`Configure server at ${server.host}`}
+                  onClick={() => {
+                    radarrServerEditing = server;
+                    radarrModalEditing = true;
+                    radarrModalOpen = true;
+                  }}
+                />
+              {/each}
+            {/if}
+            <SettingButton
+              title="Radarr"
+              desc="Add a Radarr server."
+              icon="add"
+              onClick={() => {
+                let name = "Radarr";
+                if (serverConfig!.RADARR?.length > 0) {
+                  // if this still exists ya on yur own
+                  name = `Radarr${serverConfig!.RADARR.length + 1}`;
+                }
+                radarrServerEditing = { name };
+                radarrModalEditing = false;
+                radarrModalOpen = true;
+              }}
+            />
+          </Setting>
+
+          {#if twitchModalOpen}
+            <TwitchModal
+              cfg={serverConfig.TWITCH}
+              onClose={() => {
+                // "temporary" solution to showing added servers
+                // and reloading data to revert modified but not saved changes.
+                getServerConfig();
+                getServerFeatures();
+                twitchModalOpen = false;
+              }}
+            />
           {/if}
-          <SettingButton
-            title="Radarr"
-            desc="Add a Radarr server."
-            icon="add"
-            onClick={() => {
-              let name = "Radarr";
-              if (serverConfig.RADARR?.length > 0) {
-                // if this still exists ya on yur own
-                name = `Radarr${serverConfig.RADARR.length + 1}`;
-              }
-              radarrServerEditing = { name };
-              radarrModalEditing = false;
-              radarrModalOpen = true;
-            }}
-          />
-        </Setting>
 
-        {#if twitchModalOpen}
-          <TwitchModal
-            cfg={serverConfig.TWITCH}
-            onClose={() => {
-              // "temporary" solution to showing added servers
-              // and reloading data to revert modified but not saved changes.
-              getServerConfig();
-              getServerFeatures();
-              twitchModalOpen = false;
-            }}
-          />
-        {/if}
+          {#if sonarrModalOpen && sonarrServerEditing}
+            <SonarrModal
+              servarr={sonarrServerEditing}
+              isEditing={sonarrModalEditing}
+              onClose={() => {
+                // "temporary" solution to showing added servers
+                // and reloading data to revert modified but not saved changes.
+                getServerConfig();
+                getServerFeatures();
+                sonarrModalOpen = false;
+                sonarrServerEditing = undefined;
+              }}
+            />
+          {/if}
 
-        {#if sonarrModalOpen}
-          <SonarrModal
-            servarr={sonarrServerEditing}
-            isEditing={sonarrModalEditing}
-            onClose={() => {
-              // "temporary" solution to showing added servers
-              // and reloading data to revert modified but not saved changes.
-              getServerConfig();
-              getServerFeatures();
-              sonarrModalOpen = false;
-            }}
-          />
-        {/if}
-
-        {#if radarrModalOpen}
-          <RadarrModal
-            servarr={radarrServerEditing}
-            isEditing={radarrModalEditing}
-            onClose={() => {
-              // "temporary" solution to showing added servers
-              // and reloading data to revert modified but not saved changes.
-              getServerConfig();
-              getServerFeatures();
-              radarrModalOpen = false;
-            }}
-          />
+          {#if radarrModalOpen && radarrServerEditing}
+            <RadarrModal
+              servarr={radarrServerEditing}
+              isEditing={radarrModalEditing}
+              onClose={() => {
+                // "temporary" solution to showing added servers
+                // and reloading data to revert modified but not saved changes.
+                getServerConfig();
+                getServerFeatures();
+                radarrModalOpen = false;
+                radarrServerEditing = undefined;
+              }}
+            />
+          {/if}
         {/if}
       {:catch err}
         <PageError error={err} pretty="Failed to load server config" />

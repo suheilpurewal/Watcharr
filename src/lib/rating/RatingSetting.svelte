@@ -1,28 +1,26 @@
 <script lang="ts">
-  import { userSettings } from "@/store";
+  import { store } from "@/store.svelte";
   import Setting from "../settings/Setting.svelte";
   import { RatingStep, RatingSystem } from "@/types";
   import { updateUserSetting } from "../util/api";
 
-  let settings = $derived($userSettings);
-
   function update(v: RatingSystem) {
-    if (!settings) {
+    if (!store.userSettings) {
       console.error("No settings.");
       return;
     }
     updateUserSetting("ratingSystem", v, () => {
-      settings.ratingSystem = v;
+      store.userSettings!.ratingSystem = v;
     });
   }
 
   function updateStep(v: number) {
-    if (!settings) {
+    if (!store.userSettings) {
       console.error("No settings.");
       return;
     }
     updateUserSetting("ratingStep", v, () => {
-      settings.ratingStep = v;
+      store.userSettings!.ratingStep = v;
     });
   }
 </script>
@@ -30,7 +28,10 @@
 <Setting title="Rating System" desc="How would you like to rate content?">
   <div class="rat-wrap">
     <button
-      class={["plain", settings?.ratingSystem === RatingSystem.OutOf5 ? "active" : ""].join(" ")}
+      class={[
+        "plain",
+        store.userSettings?.ratingSystem === RatingSystem.OutOf5 ? "active" : "",
+      ].join(" ")}
       onclick={() => update(RatingSystem.OutOf5)}
     >
       0-5
@@ -38,20 +39,29 @@
     <button
       class={[
         "plain",
-        settings?.ratingSystem === RatingSystem.OutOf10 || !settings?.ratingSystem ? "active" : ""
+        store.userSettings?.ratingSystem === RatingSystem.OutOf10 ||
+        !store.userSettings?.ratingSystem
+          ? "active"
+          : "",
       ].join(" ")}
       onclick={() => update(RatingSystem.OutOf10)}
     >
       0-10
     </button>
     <button
-      class={["plain", settings?.ratingSystem === RatingSystem.OutOf100 ? "active" : ""].join(" ")}
+      class={[
+        "plain",
+        store.userSettings?.ratingSystem === RatingSystem.OutOf100 ? "active" : "",
+      ].join(" ")}
       onclick={() => update(RatingSystem.OutOf100)}
     >
       0-100
     </button>
     <button
-      class={["plain", settings?.ratingSystem === RatingSystem.Thumbs ? "active" : ""].join(" ")}
+      class={[
+        "plain",
+        store.userSettings?.ratingSystem === RatingSystem.Thumbs ? "active" : "",
+      ].join(" ")}
       onclick={() => update(RatingSystem.Thumbs)}
     >
       Thumbs
@@ -59,17 +69,21 @@
   </div>
 </Setting>
 
-{#if settings?.ratingSystem === RatingSystem.OutOf10 || settings?.ratingSystem === RatingSystem.OutOf5 || !settings?.ratingSystem}
+{#if store.userSettings?.ratingSystem === RatingSystem.OutOf10 || store.userSettings?.ratingSystem === RatingSystem.OutOf5 || !store.userSettings?.ratingSystem}
   <Setting title="Rating Step" desc="How would you like to increment through the stars?">
     <div class="rat-wrap">
       <button
-        class={["plain", settings?.ratingStep === RatingStep.Point1 ? "active" : ""].join(" ")}
+        class={["plain", store.userSettings?.ratingStep === RatingStep.Point1 ? "active" : ""].join(
+          " ",
+        )}
         onclick={() => updateStep(RatingStep.Point1)}
       >
         0.1
       </button>
       <button
-        class={["plain", settings?.ratingStep === RatingStep.Point5 ? "active" : ""].join(" ")}
+        class={["plain", store.userSettings?.ratingStep === RatingStep.Point5 ? "active" : ""].join(
+          " ",
+        )}
         onclick={() => updateStep(RatingStep.Point5)}
       >
         0.5
@@ -77,7 +91,9 @@
       <button
         class={[
           "plain",
-          settings?.ratingStep === RatingStep.One || !settings?.ratingStep ? "active" : ""
+          store.userSettings?.ratingStep === RatingStep.One || !store.userSettings?.ratingStep
+            ? "active"
+            : "",
         ].join(" ")}
         onclick={() => updateStep(RatingStep.One)}
       >

@@ -70,7 +70,7 @@ export enum UserType {
   Watcharr = 0,
   Jellyfin = 1,
   Plex = 2,
-  Proxy = 3
+  Proxy = 3,
 }
 
 interface dbModel {
@@ -205,13 +205,13 @@ export enum RatingSystem {
   OutOf10, // default
   OutOf100,
   OutOf5,
-  Thumbs
+  Thumbs,
 }
 
 export enum RatingStep {
   One, // default
   Point5,
-  Point1
+  Point1,
 }
 
 export interface ChangePasswordForm {
@@ -241,7 +241,7 @@ export enum UserPermission {
   PERM_NONE = 1,
   PERM_ADMIN = 2,
   PERM_REQUEST_CONTENT = 4,
-  PERM_REQUEST_CONTENT_AUTO_APPROVE = 8
+  PERM_REQUEST_CONTENT_AUTO_APPROVE = 8,
 }
 
 export interface Image {
@@ -880,7 +880,7 @@ export enum ImportResponseType {
   IMPORT_FAILED = "IMPORT_FAILED",
   IMPORT_MULTI = "IMPORT_MULTI",
   IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
-  IMPORT_EXISTS = "IMPORT_EXISTS"
+  IMPORT_EXISTS = "IMPORT_EXISTS",
 }
 
 export interface ImportResponse {
@@ -1237,7 +1237,7 @@ export enum GameWebsiteCategory {
   Wikipedia = 3,
   Twitch = 6,
   Steam = 13,
-  Reddit = 14
+  Reddit = 14,
 }
 
 // General interface for all requests that return a job that was started.
@@ -1249,7 +1249,7 @@ export enum JobStatus {
   CREATED = "CREATED",
   RUNNING = "RUNNING",
   DONE = "DONE",
-  CANCELLED = "CANCELLED"
+  CANCELLED = "CANCELLED",
 }
 
 export interface GetJobResponse {

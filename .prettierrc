@@ -4,7 +4,7 @@
   "singleQuote": false,
   "printWidth": 100,
   "useTabs": false,
-  "trailingComma": "none",
+  "trailingComma": "all",
   "arrowParens": "always",
   "plugins": ["prettier-plugin-svelte"],
   "overrides": [

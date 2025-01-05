@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
@@ -9,7 +9,7 @@
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import { followUser, unfollowUser } from "@/lib/util/api.js";
   import { notify } from "@/lib/util/notify.js";
-  import { follows } from "@/store.js";
+  import { store } from "@/store.svelte.js";
   import type { PublicUser, Watched } from "@/types.js";
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
@@ -19,7 +19,7 @@
   let followBtnDisabled = $state(false);
   let user: PublicUser | undefined = $state();
 
-  let isFollowing = $derived(!!$follows?.find((f) => f.followedUser.id === Number(data.id)));
+  let isFollowing = $derived(!!store.follows?.find((f) => f.followedUser.id === Number(data.id)));
 
   async function getPublicWatchedList(id?: number, username?: string) {
     if (!id || !username) {
