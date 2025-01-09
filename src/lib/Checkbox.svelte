@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from "svelte/legacy";
-
 	interface Props {
 		name: string;
 		value?: boolean;
@@ -10,14 +8,14 @@
 
 	let {
 		name,
-		value = $bindable(false),
+		value = $bindable(),
 		toggled = () => {},
 		disabled = false,
 	}: Props = $props();
 
 	let actualDisabled = $state(false);
 
-	run(() => {
+	$effect(() => {
 		// In cases where we disable and enable the checkbox super fast
 		// it ends up looking like a jittery mess. To circumvent this
 		// issue, we add a small delay before undisabling.

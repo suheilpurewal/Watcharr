@@ -22,7 +22,7 @@
 
 	let { servarr = $bindable(), isEditing, onClose }: Props = $props();
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 	let formDisabled = $state(false);
 
 	let qualityProfiles: DropDownItem[] = $state([]);

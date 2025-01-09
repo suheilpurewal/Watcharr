@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from "svelte/legacy";
-
 	import type { DropDownItem } from "@/types";
 	import Icon from "./Icon.svelte";
 	import { onMount } from "svelte";
@@ -28,10 +26,10 @@
 		showActiveElementsInOptions = false,
 	}: Props = $props();
 
-	let activeValue: string = $state();
+	let activeValue: string | undefined = $state();
 	let open = $state(false);
-	let ulElement: HTMLUListElement = $state();
-	let mainElement: HTMLDivElement = $state();
+	let ulElement: HTMLUListElement | undefined = $state();
+	let mainElement: HTMLDivElement | undefined = $state();
 
 	function handleKeyPress(event: KeyboardEvent) {
 		if (!open || disabled) return; // Don't handle if closed or disabled
@@ -56,16 +54,18 @@
 
 		// Find first button with text content starting with letter pressed and scroll it into view.
 		const btns = ulElement?.querySelectorAll("button");
-		for (let i = 0; i < btns.length; i++) {
-			const btn = btns[i];
-			if (btn.textContent?.toLowerCase()?.startsWith(pressedLetter)) {
-				btn.scrollIntoView({ behavior: "smooth", block: "start" });
-				break;
+		if (btns) {
+			for (let i = 0; i < btns.length; i++) {
+				const btn = btns[i];
+				if (btn.textContent?.toLowerCase()?.startsWith(pressedLetter)) {
+					btn.scrollIntoView({ behavior: "smooth", block: "start" });
+					break;
+				}
 			}
 		}
 	}
 
-	run(() => {
+	$effect(() => {
 		if (typeof active === "string" && !isDropDownItem) {
 			activeValue = active;
 		} else {
@@ -77,10 +77,10 @@
 	});
 
 	onMount(() => {
-		mainElement.addEventListener("keypress", handleKeyPress);
+		mainElement?.addEventListener("keypress", handleKeyPress);
 
 		return () => {
-			mainElement.removeEventListener("keypress", handleKeyPress);
+			mainElement?.removeEventListener("keypress", handleKeyPress);
 		};
 	});
 </script>

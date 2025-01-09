@@ -19,6 +19,8 @@
 	let headerCfg: TrustedHeaderAuthSetting = $state({
 		enabled: false,
 		headerName: "",
+		logoutUrl: "",
+		autoLogin: false,
 	});
 	let formDisabled = false;
 	let loadingCfg = $state(false);

@@ -976,8 +976,8 @@ export interface TwitchSettings {
 export interface TrustedHeaderAuthSetting {
 	enabled: boolean;
 	headerName: string;
-	autoLogin?: boolean;
-	logoutUrl?: string;
+	autoLogin: boolean;
+	logoutUrl: string;
 }
 
 export interface TrustedHeaderAuthLogoutDetailsResponse {

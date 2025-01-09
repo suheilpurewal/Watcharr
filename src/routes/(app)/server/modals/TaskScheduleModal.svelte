@@ -17,11 +17,7 @@
 
 	let { onClose }: Props = $props();
 
-	let now;
-	run(() => {
-		now = Date.now();
-	});
-
+	let now = $state(Date.now());
 	let formDisabled = $state(false);
 	let taskSchedule: AllTasksResponse[] = $state([]);
 

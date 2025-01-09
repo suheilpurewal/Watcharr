@@ -30,7 +30,7 @@
 		font-size: 13.28px;
 	}
 
-	button {
+	button.plain {
 		display: flex;
 		flex-flow: row;
 		align-items: center;
