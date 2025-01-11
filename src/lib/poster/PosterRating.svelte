@@ -252,12 +252,13 @@
 				border-radius: 0 0 4px 4px;
 			}
 
-			button {
+			button.plain {
 				width: 100%;
 				color: $text-color;
 				fill: $text-color;
 				-webkit-text-stroke: 0.5px $text-color;
 				font-size: 20px;
+				font-family: "Rampart One";
 
 				& :global(svg) {
 					width: 100%;
@@ -277,9 +278,10 @@
 					top: calc(-100% - 120px);
 				}
 
-				button span {
+				button.plain span {
 					/* Overriding color so dash for thumbs ratings stays text-color */
 					color: $text-color;
+					font-family: "Rampart One";
 				}
 			}
 		}
