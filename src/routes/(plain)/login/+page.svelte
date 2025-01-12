@@ -7,14 +7,14 @@
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
 
-	let error: string;
-	let login = true;
-	let availableProviders: string[] = [];
-	let apHeader = false;
-	let apPlex = false;
-	let signupEnabled = true;
-	let useEmby = false;
-	let noAuto = false;
+	let error: string | undefined = $state();
+	let login = $state(true);
+	let availableProviders: string[] = $state([]);
+	let apHeader = $state(false);
+	let apPlex = $state(false);
+	let signupEnabled = $state(true);
+	let useEmby = $state(false);
+	let noAuto = $state(false);
 
 	onMount(() => {
 		if (localStorage.getItem("token")) {
