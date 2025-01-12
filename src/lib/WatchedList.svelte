@@ -8,6 +8,7 @@
 	import GamePoster from "./poster/GamePoster.svelte";
 	import { getLatestWatchedInTv } from "./util/helpers";
 	import { notify } from "./util/notify";
+	import { untrack } from "svelte";
 
 	interface Props {
 		list: Watched[];
@@ -26,7 +27,11 @@
 	});
 
 	$effect(() => {
-		if (list && filters && sort) filt();
+		if (list && filters.status && filters.type && sort) {
+			untrack(() => {
+				filt();
+			});
+		}
 	});
 
 	/**
@@ -69,6 +74,7 @@
 
 	// Monsterous code for filters. Soz.
 	function filt() {
+		console.debug("WatchedList: filt()");
 		try {
 			// Set watched to list and sort it.
 			watched = list
@@ -144,13 +150,6 @@
 					if (!a.pinned && b.pinned) return 1;
 					return 0;
 				});
-			// If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
-			if (!store.serverFeatures?.games) {
-				store.activeFilters.type = store.activeFilters.type?.filter(
-					(a) => a !== "game",
-				);
-				filters.type = filters.type.filter((f) => f !== "game");
-			}
 			// Now apply filters to watch list.
 			if (filters.status.length > 0 && filters.type.length > 0) {
 				// If status and type filters applied, combine both.

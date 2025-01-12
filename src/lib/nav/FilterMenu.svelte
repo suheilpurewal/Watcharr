@@ -10,7 +10,7 @@
 				(a) => a !== f,
 			);
 		} else {
-			store.activeFilters[type]?.push(f);
+			store.activeFilters[type] = [...store.activeFilters[type], f];
 		}
 	}
 </script>
