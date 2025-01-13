@@ -151,7 +151,6 @@
 			["day", 1440],
 			["hour", 60],
 		];
-
 		let ansString = "";
 		let tmp;
 		for (const c of countInMinutes) {
@@ -161,7 +160,9 @@
 			if (tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
 			m -= tmp * (c[1] as number);
 		}
-
+		if (!ansString) {
+			return "0 hours";
+		}
 		return ansString.slice(0, -2);
 	}
 </script>
