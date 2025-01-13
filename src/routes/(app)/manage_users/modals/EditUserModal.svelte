@@ -21,7 +21,7 @@
 
 	let { user = $bindable(), onClose }: Props = $props();
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 	let formDisabled = false;
 
 	// Things we have changed

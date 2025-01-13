@@ -74,7 +74,7 @@
 
 			{#if editingUser}
 				<EditUserModal
-					user={editingUser}
+					bind:user={editingUser}
 					onClose={() => {
 						editingUser = undefined;
 						getUsers(); // lazyness, but also scientifically doesn't matter
