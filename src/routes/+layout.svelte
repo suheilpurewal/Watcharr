@@ -2,7 +2,7 @@
 	import Icon from "@/lib/Icon.svelte";
 	import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
 	import { unNotify } from "@/lib/util/notify";
-	import { startStoreSaver, store } from "@/store.svelte";
+	import { store } from "@/store.svelte";
 	import { onMount } from "svelte";
 	import { pwaInfo } from "virtual:pwa-info";
 
@@ -11,8 +11,6 @@
 	}
 
 	let { children }: Props = $props();
-
-	startStoreSaver();
 
 	function resetTooltipPos() {
 		const t = document.getElementById("tooltip");
