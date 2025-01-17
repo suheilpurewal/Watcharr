@@ -19,16 +19,16 @@ type TrustedHeaderAuthSetting struct {
 	// easily without having to remove configuration.
 	// To be actually enabled, HEADER_NAME must also
 	// be set.
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 	// Required: What is the name of the trusted header
 	// that will contain the logged in users username?
-	HeaderName string `json:"headerName,omitempty"`
+	HeaderName string `json:"headerName"`
 	// Should the frontend attempt auto login if
 	// trusted header auth is enabled.
-	AutoLogin bool `json:"autoLogin,omitempty"`
+	AutoLogin bool `json:"autoLogin"`
 	// Where can we redirect the user to logout
 	// of the auth service?
-	LogoutUrl string `json:"logoutUrl,omitempty"`
+	LogoutUrl string `json:"logoutUrl"`
 }
 
 type TrustedHeaderAuthLogoutDetailsResponse struct {

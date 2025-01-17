@@ -1,30 +1,32 @@
 <script lang="ts">
-  import { userSettings } from "@/store";
-  import { RatingSystem } from "@/types";
-  import StarRating from "./StarRating.svelte";
-  import ThumbRating from "./ThumbRating.svelte";
+	import { store } from "@/store.svelte";
+	import { RatingSystem } from "@/types";
+	import StarRating from "./StarRating.svelte";
+	import ThumbRating from "./ThumbRating.svelte";
 
-  $: settings = $userSettings;
+	interface Props {
+		rating: number | undefined;
+		onChange: (newRating: number) => Promise<boolean>;
+	}
 
-  export let rating: number | undefined;
-  export let onChange: (newRating: number) => Promise<boolean>;
+	let { rating, onChange }: Props = $props();
 </script>
 
 <div class="wrap">
-  {#if settings?.ratingSystem === RatingSystem.Thumbs}
-    <ThumbRating {rating} {onChange} />
-  {:else}
-    <!-- All other systems work with the stars -->
-    <StarRating {rating} {onChange} />
-  {/if}
+	{#if store.userSettings?.ratingSystem === RatingSystem.Thumbs}
+		<ThumbRating {rating} {onChange} />
+	{:else}
+		<!-- All other systems work with the stars -->
+		<StarRating {rating} {onChange} />
+	{/if}
 </div>
 
 <style lang="scss">
-  .wrap {
-    width: 377px;
+	.wrap {
+		width: 377px;
 
-    @media screen and (max-width: 420px) {
-      width: 100%;
-    }
-  }
+		@media screen and (max-width: 420px) {
+			width: 100%;
+		}
+	}
 </style>

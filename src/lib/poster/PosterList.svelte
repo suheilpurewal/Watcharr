@@ -1,66 +1,71 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+	import { onMount } from "svelte";
 
-  export let type: "wrapped" | "vertical" = "wrapped";
+	interface Props {
+		type?: "wrapped" | "vertical";
+		children?: import("svelte").Snippet;
+	}
 
-  let ulEl: HTMLUListElement;
+	let { type = "wrapped", children }: Props = $props();
 
-  onMount(() => {
-    if (ulEl) {
-      ulEl.classList.add(type);
-    }
-  });
+	let ulEl: HTMLUListElement = $state();
+
+	onMount(() => {
+		if (ulEl) {
+			ulEl.classList.add(type);
+		}
+	});
 </script>
 
 <div>
-  <ul bind:this={ulEl}>
-    <slot />
-  </ul>
+	<ul bind:this={ulEl}>
+		{@render children?.()}
+	</ul>
 </div>
 
 <style lang="scss">
-  div {
-    display: flex;
-    justify-content: center;
-  }
+	div {
+		display: flex;
+		justify-content: center;
+	}
 
-  ul {
-    display: flex;
-    flex-flow: row;
-    justify-content: center;
-    gap: 10px;
-    list-style: none;
-    flex-wrap: wrap;
-    margin: 20px 10px;
-    max-width: 1200px;
+	ul {
+		display: flex;
+		flex-flow: row;
+		justify-content: center;
+		gap: 10px;
+		list-style: none;
+		flex-wrap: wrap;
+		margin: 20px 10px;
+		max-width: 1200px;
 
-    &:global(.vertical) {
-      flex-wrap: nowrap;
-      justify-content: unset;
-      overflow-x: auto;
-      padding: 15px 8px;
-      margin: 5px 0;
-    }
+		&:global(.vertical) {
+			flex-wrap: nowrap;
+			justify-content: unset;
+			overflow-x: auto;
+			padding: 15px 8px;
+			margin: 5px 0;
+		}
 
-    &:global(.wrapped li) {
-      @media screen and (max-width: 390px) {
-        flex: 0 48.5%;
-      }
-      @media screen and (max-width: 352px) {
-        flex: 0 48%;
-      }
-      @media screen and (width <= 349px) {
-        flex: unset;
-      }
-    }
+		&:global(.wrapped li) {
+			@media screen and (max-width: 390px) {
+				flex: 0 48.5%;
+			}
+			@media screen and (max-width: 352px) {
+				flex: 0 48%;
+			}
+			@media screen and (width <= 349px) {
+				flex: unset;
+			}
+		}
 
-    &:global(.wrapped .container) {
-      min-width: 150px !important;
+		&:global(.wrapped .container) {
+			min-width: 150px !important;
 
-      @media screen and (width <= 349px), screen and (width > 390px) {
-        width: 170px !important;
-        min-height: 256.367px !important;
-      }
-    }
-  }
+			@media screen and (width <= 349px), screen and (width > 390px) {
+				width: 170px !important;
+				min-height: 256.367px !important;
+			}
+		}
+	}
 </style>

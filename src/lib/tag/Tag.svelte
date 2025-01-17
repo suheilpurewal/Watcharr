@@ -1,48 +1,54 @@
 <script lang="ts">
-  import type { Tag } from "@/types";
+	import { run } from "svelte/legacy";
 
-  export let tag: Tag;
-  export let onClick: () => void | undefined = undefined!;
+	import type { Tag } from "@/types";
 
-  let tagBtn: HTMLButtonElement;
+	interface Props {
+		tag: Tag;
+		onClick?: () => void | undefined;
+	}
 
-  $: {
-    if (tagBtn) {
-      if (tag.color) {
-        tagBtn.style.color = tag.color;
-      }
-      if (tag.bgColor) {
-        tagBtn.style.background = tag.bgColor;
-      }
-    }
-  }
+	let { tag, onClick = undefined! }: Props = $props();
+
+	let tagBtn: HTMLButtonElement = $state();
+
+	run(() => {
+		if (tagBtn) {
+			if (tag.color) {
+				tagBtn.style.color = tag.color;
+			}
+			if (tag.bgColor) {
+				tagBtn.style.background = tag.bgColor;
+			}
+		}
+	});
 </script>
 
 <button
-  bind:this={tagBtn}
-  class={`plain`}
-  on:click={() => {
-    if (typeof onClick === "function") {
-      onClick();
-    }
-  }}
+	bind:this={tagBtn}
+	class={`plain`}
+	onclick={() => {
+		if (typeof onClick === "function") {
+			onClick();
+		}
+	}}
 >
-  {tag.name}
+	{tag.name}
 </button>
 
 <style lang="scss">
-  button {
-    text-transform: capitalize;
-    position: relative;
-    width: max-content;
-    border-radius: 8px;
-    padding: 5px 8px;
-    text-wrap: wrap;
-    word-break: break-word;
-    transition: opacity 150ms ease-in-out;
+	button {
+		text-transform: capitalize;
+		position: relative;
+		width: max-content;
+		border-radius: 8px;
+		padding: 5px 8px;
+		text-wrap: wrap;
+		word-break: break-word;
+		transition: opacity 150ms ease-in-out;
 
-    &:hover {
-      opacity: 0.8;
-    }
-  }
+		&:hover {
+			opacity: 0.8;
+		}
+	}
 </style>

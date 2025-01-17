@@ -1,58 +1,68 @@
 <script lang="ts">
-  import type { Watched } from "@/types";
-  import tooltip from "../actions/tooltip";
-  import Icon from "../Icon.svelte";
-  import TagMenu from "./TagMenu.svelte";
-  import { tagWatched, untagWatched } from "./api";
-  import { onMount } from "svelte";
+	import type { Watched } from "@/types";
+	import tooltip from "../actions/tooltip";
+	import Icon from "../Icon.svelte";
+	import TagMenu from "./TagMenu.svelte";
+	import { tagWatched, untagWatched } from "./api";
+	import { onMount } from "svelte";
 
-  export let watchedItem: Watched;
+	interface Props {
+		watchedItem: Watched;
+	}
 
-  let menuOpen = false;
+	let { watchedItem }: Props = $props();
 
-  onMount(() => {
-    const onScroll = () => {
-      menuOpen = false;
-    };
+	let menuOpen = $state(false);
 
-    window.addEventListener("scroll", onScroll);
+	onMount(() => {
+		const onScroll = () => {
+			menuOpen = false;
+		};
 
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
-  });
+		window.addEventListener("scroll", onScroll);
+
+		return () => {
+			window.removeEventListener("scroll", onScroll);
+		};
+	});
 </script>
 
 <div>
-  <button
-    on:click={() => (menuOpen = !menuOpen)}
-    use:tooltip={{
-      text: `Add to a Tag`,
-      pos: "bot"
-    }}
-  >
-    <Icon i={"tag"} wh={19} />
-  </button>
+	<button
+		onclick={() => (menuOpen = !menuOpen)}
+		use:tooltip={{
+			text: `Add to a Tag`,
+			pos: "bot",
+		}}
+	>
+		<Icon i={"tag"} wh={19} />
+	</button>
 
-  {#if menuOpen}
-    <TagMenu
-      titleText="Add To Tag"
-      classes="from-add-to-tag-btn"
-      selectedTags={watchedItem.tags}
-      onTagClick={(tag, remove) => {
-        console.debug("Tag: Adding content to tag. Remove?:", remove);
-        if (remove) {
-          untagWatched(watchedItem.id, tag);
-        } else {
-          tagWatched(watchedItem.id, tag);
-        }
-      }}
-    />
-  {/if}
+	{#if menuOpen}
+		<TagMenu
+			titleText="Add To Tag"
+			selectedTags={watchedItem.tags}
+			onTagClick={(tag, remove) => {
+				console.debug("Tag: Adding content to tag. Remove?:", remove);
+				if (remove) {
+					untagWatched(watchedItem.id, tag);
+				} else {
+					tagWatched(watchedItem.id, tag);
+				}
+			}}
+			menuConfig={{
+				top: "50px",
+				right: "-78px",
+				arrowLeft: "87px",
+				/* The place where this button will be is always dark, so white works for both themes */
+				arrowColor: "white",
+			}}
+		/>
+	{/if}
 </div>
 
 <style lang="scss">
-  div {
-    position: relative;
-  }
+	div {
+		position: relative;
+	}
 </style>
