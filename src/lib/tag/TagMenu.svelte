@@ -115,7 +115,7 @@
 		margin-bottom: 8px;
 		gap: 5px;
 
-		button {
+		button.plain {
 			display: flex;
 			align-items: center;
 			justify-content: center;
