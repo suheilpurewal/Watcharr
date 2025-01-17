@@ -1,25 +1,18 @@
 <script lang="ts">
 	import { afterNavigate, goto } from "$app/navigation";
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 	import Icon from "@/lib/Icon.svelte";
 	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import tooltip from "@/lib/actions/tooltip";
-	import { clearWatcharrData } from "@/lib/logout";
-	import ProxyUserLogoutModal from "@/lib/logout/ProxyUserLogoutModal.svelte";
 	import DetailedMenu from "@/lib/nav/DetailedMenu.svelte";
+	import FaceMenu from "@/lib/nav/FaceMenu.svelte";
 	import FilterMenu from "@/lib/nav/FilterMenu.svelte";
 	import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
 	import SortMenu from "@/lib/nav/SortMenu.svelte";
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
-	import {
-		isTouch,
-		parseTokenPayload,
-		userHasPermission,
-	} from "@/lib/util/helpers";
-	import { notify } from "@/lib/util/notify";
-	import { store, clearAllStores, defaultSort } from "@/store.svelte";
-	import { UserPermission, UserType } from "@/types";
+	import { isTouch } from "@/lib/util/helpers";
+	import { store, defaultSort } from "@/store.svelte";
 	import axios from "axios";
 	import { onMount } from "svelte";
 	interface Props {
@@ -37,10 +30,6 @@
 	let followingMenuShown = $state(false);
 	let detailedMenuShown = $state(false);
 	let tagMenuShown = $state(false);
-	let proxyUserLogoutShown = $state(false);
-
-	let settings = $derived(store.userSettings);
-	let user = $derived(store.userInfo);
 
 	function handleProfileClick() {
 		if (!localStorage.getItem("token")) {
@@ -91,61 +80,6 @@
 			},
 			isTouch() ? 800 : 400,
 		);
-	}
-
-	function logout() {
-		if (user?.type === UserType.Proxy) {
-			// Proxy users logout flow is different.
-			proxyUserLogoutShown = true;
-			return;
-		}
-		clearWatcharrData();
-		goto("/login");
-	}
-
-	function profile() {
-		goto("/profile");
-		subMenuShown = false;
-	}
-
-	function serverSettings() {
-		goto("/server");
-		subMenuShown = false;
-	}
-
-	function userManagement() {
-		goto("/manage_users");
-		subMenuShown = false;
-	}
-
-	function requestManagement() {
-		goto("/arr_requests");
-		subMenuShown = false;
-	}
-
-	function shareWatchedList() {
-		const nid = notify({ type: "loading", text: "Getting link" });
-		const ud = parseTokenPayload();
-		console.log(ud);
-		if (ud?.userId && ud?.username) {
-			const shareLink = `${window.location.origin}/lists/${ud.userId}/${ud.username}`;
-			navigator.clipboard
-				.writeText(shareLink)
-				.then(() => {
-					notify({ id: nid, type: "success", text: "Copied share link" });
-				})
-				.catch((r) => {
-					console.error("Failed to copy list share link", r);
-					notify({
-						id: nid,
-						type: "error",
-						text: `Failed to copy share link:<br/><a href="${shareLink}" target="_blank">${shareLink}</a>`,
-						time: 20000,
-					});
-				});
-		} else {
-			notify({ id: nid, type: "error", text: "Failed to get link" });
-		}
 	}
 
 	async function getInitialData() {
@@ -261,7 +195,7 @@
 		</div>
 		<div class="btns">
 			<!-- Detailed posters only supported on own watched list currently -->
-			{#if $page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")}
+			{#if page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")}
 				<button
 					class="plain other detailedView"
 					onclick={() => {
@@ -284,7 +218,7 @@
 				{/if}
 			{/if}
 			<!-- Show on watched list and shared/followed watched lists -->
-			{#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/") || $page.url?.pathname.includes("/tag/")}
+			{#if page.url?.pathname === "/" || page.url?.pathname.includes("/lists/") || page.url?.pathname.includes("/tag/")}
 				<button
 					class="plain other sort"
 					onclick={() => {
@@ -368,40 +302,7 @@
 			{/if}
 			<button class="plain face" onclick={handleProfileClick}>:)</button>
 			{#if subMenuShown}
-				<div class="menu face-menu">
-					<div>
-						{#if user?.username}
-							<h5 title={user.username}>Hi {user.username}!</h5>
-						{/if}
-						<button class="plain" onclick={() => profile()}>Profile</button>
-						{#if !settings?.private}
-							<button class="plain" onclick={() => shareWatchedList()}
-								>Share List</button
-							>
-						{/if}
-						{#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-							<button class="plain" onclick={() => serverSettings()}
-								>Settings</button
-							>
-							<button class="plain" onclick={() => userManagement()}
-								>Users</button
-							>
-							{#if store.serverFeatures?.sonarr || store.serverFeatures?.radarr}
-								<!-- At least one (sonarr/radarr) should be enabled for requests menu item to display. -->
-								<button class="plain" onclick={() => requestManagement()}
-									>Requests</button
-								>
-							{/if}
-						{/if}
-						<button class="plain" onclick={() => logout()}>Logout</button>
-						{#if proxyUserLogoutShown}
-							<ProxyUserLogoutModal
-								onClose={() => (proxyUserLogoutShown = false)}
-							/>
-						{/if}
-						<span>v{__WATCHARR_VERSION__}</span>
-					</div>
-				</div>
+				<FaceMenu />
 			{/if}
 		</div>
 	</div>
@@ -685,12 +586,6 @@
 				&:focus-visible {
 					color: $bg-color;
 					-webkit-text-stroke: 1.5px $text-color;
-				}
-			}
-
-			div.face-menu {
-				&:before {
-					right: 10px;
 				}
 			}
 		}

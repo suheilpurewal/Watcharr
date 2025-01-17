@@ -41,7 +41,6 @@
 	{#if menuOpen}
 		<TagMenu
 			titleText="Add To Tag"
-			classes="from-add-to-tag-btn"
 			selectedTags={watchedItem.tags}
 			onTagClick={(tag, remove) => {
 				console.debug("Tag: Adding content to tag. Remove?:", remove);
@@ -50,6 +49,13 @@
 				} else {
 					tagWatched(watchedItem.id, tag);
 				}
+			}}
+			menuConfig={{
+				top: "50px",
+				right: "-78px",
+				arrowLeft: "87px",
+				/* The place where this button will be is always dark, so white works for both themes */
+				arrowColor: "white",
 			}}
 		/>
 	{/if}

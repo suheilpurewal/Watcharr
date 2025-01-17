@@ -13,7 +13,7 @@
 	} from "../util/helpers";
 	import Icon from "../Icon.svelte";
 	import { toShowableRating, toWhichThumb } from "../rating/helpers";
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 
 	interface Props {
 		rating: number | undefined;
@@ -39,7 +39,7 @@
 	}
 </script>
 
-{#if ($page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")) && details && store.wlDetailedView && store.wlDetailedView.length > 0}
+{#if (page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")) && details && store.wlDetailedView && store.wlDetailedView.length > 0}
 	<div class="extra-details">
 		<!--
       The `if` statements can't be on their own line to look pretty

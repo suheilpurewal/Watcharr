@@ -5,11 +5,10 @@
 	import type { Tag as TagT } from "@/types";
 	import Tag from "./Tag.svelte";
 	import DeleteTagModal from "./DeleteTagModal.svelte";
-	import stayInView from "../actions/stayInView";
+	import Menu, { type MenuConfig } from "../Menu.svelte";
 
 	interface Props {
 		titleText?: string | undefined;
-		classes?: string | undefined;
 		onTagClick?: (tag: TagT, remove: boolean) => void | undefined;
 		selectedTags?: TagT[] | undefined;
 		/**
@@ -18,14 +17,21 @@
 		 * will trigger a deletion instead of `onTagClick()`.
 		 */
 		showManageBtn?: boolean;
+		menuConfig?: MenuConfig;
 	}
+
+	const defaultMenuConfig = {
+		width: "200px",
+		right: "47px",
+		arrowLeft: "78px",
+	};
 
 	let {
 		titleText = undefined,
-		classes = undefined,
 		onTagClick = undefined!,
 		selectedTags = undefined,
 		showManageBtn = false,
+		menuConfig = {},
 	}: Props = $props();
 
 	let allTags = $derived(store.tags);
@@ -40,56 +46,50 @@
 	}
 </script>
 
-<div
-	class={[`menu`, classes].join(" ")}
-	use:stayInView={{ elToShiftSelector: "& > .arrow" }}
->
-	<i class="arrow"></i>
-	<div class="inner">
-		<div class="title">
-			<h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
-			{#if showManageBtn}
-				<button
-					class={["plain", inManageMode ? "manage-on" : ""].join(" ")}
-					onclick={() => (inManageMode = !inManageMode)}
-				>
-					<Icon i="trash" wh={18} />
-				</button>
-			{/if}
-			<button class="plain" onclick={() => (tagModalOpen = !tagModalOpen)}>
-				<Icon i="add" wh={22} />
+<Menu conf={Object.assign(defaultMenuConfig, menuConfig)}>
+	<div class="title">
+		<h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
+		{#if showManageBtn}
+			<button
+				class={["plain", inManageMode ? "manage-on" : ""].join(" ")}
+				onclick={() => (inManageMode = !inManageMode)}
+			>
+				<Icon i="trash" wh={18} />
 			</button>
-		</div>
-		{#if allTags && allTags.length > 0}
-			{#if inManageMode}
-				<strong style="font-size: 12px; margin-bottom: 10px;"
-					>Click a tag to delete it.</strong
-				>
-			{/if}
-			<div class="list">
-				{#each allTags as t}
-					{@const isSelected = selectedTags
-						? selectedTags.find((tag) => tag.id === t.id)
-							? true
-							: false
-						: false}
-					<div>
-						<Tag
-							tag={t}
-							onClick={() =>
-								inManageMode ? deleteTag(t) : onTagClick(t, isSelected)}
-						/>
-						{#if isSelected}
-							<Icon i="check" wh={18} />
-						{/if}
-					</div>
-				{/each}
-			</div>
-		{:else}
-			<span style="margin-top: 0;">You have no tags yet!</span>
 		{/if}
+		<button class="plain" onclick={() => (tagModalOpen = !tagModalOpen)}>
+			<Icon i="add" wh={22} />
+		</button>
 	</div>
-</div>
+	{#if allTags && allTags.length > 0}
+		{#if inManageMode}
+			<strong style="font-size: 12px; margin-bottom: 10px;"
+				>Click a tag to delete it.</strong
+			>
+		{/if}
+		<div class="list">
+			{#each allTags as t}
+				{@const isSelected = selectedTags
+					? selectedTags.find((tag) => tag.id === t.id)
+						? true
+						: false
+					: false}
+				<div>
+					<Tag
+						tag={t}
+						onClick={() =>
+							inManageMode ? deleteTag(t) : onTagClick(t, isSelected)}
+					/>
+					{#if isSelected}
+						<Icon i="check" wh={18} />
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{:else}
+		<span style="margin-top: 0;">You have no tags yet!</span>
+	{/if}
+</Menu>
 
 {#if tagModalOpen}
 	<CreateTagModal onClose={() => (tagModalOpen = false)} />
@@ -100,76 +100,54 @@
 {/if}
 
 <style lang="scss">
-	div.menu {
-		width: 200px;
-		right: 47px;
+	h4 {
+		color: $text-color;
 
-		.arrow {
-			left: 78px;
+		&:not(:first-of-type) {
+			margin-top: 8px;
 		}
+	}
 
-		&.from-add-to-tag-btn {
-			top: 50px;
-			right: -78px;
+	.title {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		margin-bottom: 8px;
+		gap: 5px;
 
-			.arrow {
-				left: 87px;
-				/* The place where this button will be is always dark, so white works for both themes */
-				border-bottom-color: white;
+		button {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 28px;
+			height: 26px;
+			padding: 2px 3px;
+			border-radius: 8px;
+
+			&.manage-on {
+				color: #f3555a;
+				background-color: $text-color;
+			}
+
+			&:first-of-type {
+				margin-left: auto;
 			}
 		}
 	}
 
-	div.inner {
-		h4 {
+	.list {
+		display: flex;
+		flex-flow: column;
+		gap: 5px;
+
+		& > div {
+			display: flex;
+			align-items: center;
+			gap: 5px;
 			color: $text-color;
 
-			&:not(:first-of-type) {
-				margin-top: 8px;
-			}
-		}
-
-		.title {
-			display: flex;
-			flex-flow: row;
-			align-items: center;
-			margin-bottom: 8px;
-			gap: 5px;
-
-			button {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 28px;
-				height: 26px;
-				padding: 2px 3px;
-				border-radius: 8px;
-
-				&.manage-on {
-					color: #f3555a;
-					background-color: $text-color;
-				}
-
-				&:first-of-type {
-					margin-left: auto;
-				}
-			}
-		}
-
-		.list {
-			display: flex;
-			flex-flow: column;
-			gap: 5px;
-
-			& > div {
-				display: flex;
-				align-items: center;
-				gap: 5px;
-				color: $text-color;
-
-				:global(svg) {
-					min-width: 18px;
-				}
+			:global(svg) {
+				min-width: 18px;
 			}
 		}
 	}

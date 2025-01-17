@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
+	import Menu from "../Menu.svelte";
 
 	function sortClicked(type: string, modeType: string = "UPDOWN") {
 		let mode: string;
@@ -27,77 +28,64 @@
 	}
 </script>
 
-<div class="menu sort-menu">
-	<div>
-		<button
-			class={`plain ${store.activeSort[0] == "DATEADDED" ? store.activeSort[1].toLowerCase() : ""}`}
-			onclick={() => sortClicked("DATEADDED")}
-		>
-			Date Added
-		</button>
-		<button
-			class={`plain ${store.activeSort[0] == "LASTCHANGED" ? store.activeSort[1].toLowerCase() : ""}`}
-			onclick={() => sortClicked("LASTCHANGED")}
-		>
-			Last Changed
-		</button>
-		<button
-			class={`plain ${store.activeSort[0] == "LASTFIN" ? store.activeSort[1].toLowerCase() : ""}`}
-			onclick={() => sortClicked("LASTFIN")}
-		>
-			Last Finished
-		</button>
-		<button
-			class={`plain ${store.activeSort[0] == "RATING" ? store.activeSort[1].toLowerCase() : ""}`}
-			onclick={() => sortClicked("RATING")}
-		>
-			Rating
-		</button>
-		<button
-			class={`plain ${store.activeSort[0] == "ALPHA" ? store.activeSort[1].toLowerCase() : ""}`}
-			onclick={() => sortClicked("ALPHA")}
-		>
-			Alphabetical
-		</button>
-	</div>
-</div>
+<Menu conf={{ width: "180px", right: "90px", arrowLeft: "21px" }}>
+	<button
+		class={`plain ${store.activeSort[0] == "DATEADDED" ? store.activeSort[1].toLowerCase() : ""}`}
+		onclick={() => sortClicked("DATEADDED")}
+	>
+		Date Added
+	</button>
+	<button
+		class={`plain ${store.activeSort[0] == "LASTCHANGED" ? store.activeSort[1].toLowerCase() : ""}`}
+		onclick={() => sortClicked("LASTCHANGED")}
+	>
+		Last Changed
+	</button>
+	<button
+		class={`plain ${store.activeSort[0] == "LASTFIN" ? store.activeSort[1].toLowerCase() : ""}`}
+		onclick={() => sortClicked("LASTFIN")}
+	>
+		Last Finished
+	</button>
+	<button
+		class={`plain ${store.activeSort[0] == "RATING" ? store.activeSort[1].toLowerCase() : ""}`}
+		onclick={() => sortClicked("RATING")}
+	>
+		Rating
+	</button>
+	<button
+		class={`plain ${store.activeSort[0] == "ALPHA" ? store.activeSort[1].toLowerCase() : ""}`}
+		onclick={() => sortClicked("ALPHA")}
+	>
+		Alphabetical
+	</button>
+</Menu>
 
 <style lang="scss">
-	div.sort-menu {
-		width: 180px;
-		right: 90px;
+	button {
+		position: relative;
 
-		&:before {
-			left: 21px;
+		&.down::before {
+			content: "\2193";
 		}
 
-		& > div {
-			& > button {
-				position: relative;
+		&.up::before {
+			content: "\2191";
+		}
 
-				&.down::before {
-					content: "\2193";
-				}
+		&.on::before {
+			content: "\2713";
+		}
 
-				&.up::before {
-					content: "\2191";
-				}
-
-				&.on::before {
-					content: "\2713";
-				}
-
-				&::before {
-					position: absolute;
-					top: 4px;
-					left: 12px;
-					font-family:
-						system-ui,
-						-apple-system,
-						BlinkMacSystemFont;
-					font-size: 18px;
-				}
-			}
+		&::before {
+			position: absolute;
+			top: 4px;
+			left: 12px;
+			font-family:
+				system-ui,
+				-apple-system,
+				BlinkMacSystemFont;
+			font-size: 18px;
 		}
 	}
 </style>
