@@ -18,19 +18,21 @@ I am built with Go and Svelte(Kit).
 
 Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too): [https://beta.watcharr.app/](https://beta.watcharr.app/)
 
-[Track Progress Until Next Version](https://github.com/orgs/sbondCo/projects/9/views/3)
+[Track progress for the next version](https://github.com/orgs/sbondCo/projects/9/views/3).
 
 ### Contents
 
 - [Screenshots](#screenshots)
-- [Setup](#set-up)
-- [Contributing](CONTRIBUTING.md)
+- [Set Up](#set-up)
 - [Community Made Tools](#community-made-tools)
 - [Getting Help](#getting-help)
+- [Contributing](#contributing)
 
 # Screenshots
 
 <p align="center">
+
+<img src="./screenshot/devices-mock.png" alt="Overview" />
 
 | Homepage                                                   | Watched Show Hover                                                      |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -69,3 +71,7 @@ Thanks to anyone that has made a script or tool for Watcharr. Feel free to add y
 If something isn't working for you or you are stuck, [creating an issue](https://github.com/sbondCo/Watcharr/issues/new) is the best way to get help! Every type of issue is accepted, so don't be afraid to ask anything!
 
 You can also [join our space on Matrix](https://matrix.to/#/#watcharr:matrix.org) for support.
+
+# Contributing
+
+Please continue to our [contributing guide](CONTRIBUTING.md).
