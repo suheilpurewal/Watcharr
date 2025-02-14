@@ -455,12 +455,23 @@
 			flex-flow: column;
 		}
 
+		:global(body.nav-shown) ul.seasons {
+			top: $nav-height;
+		}
+
 		ul.seasons {
 			flex-flow: row;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			position: unset;
 			height: unset;
-			justify-content: center;
+			justify-content: unset;
+			overflow: auto;
+			min-width: unset;
+			position: sticky;
+			top: 0px;
+			padding: 10px 0;
+			z-index: 5;
+			@include nav-blur;
 
 			button {
 				&:first-of-type {
