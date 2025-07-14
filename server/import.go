@@ -186,9 +186,6 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		if pmLen == 1 && perfectMatches[0].ID != 0 {
 			slog.Debug("import: importing from perfect match")
 			return successfulImport(db, userId, perfectMatches[0].ID, ContentType(perfectMatches[0].MediaType), ar)
-		} else if pmLen > 1 {
-			slog.Debug("import: returning multiple perfect matches")
-			return ImportResponse{Type: IMPORT_MULTI, Results: perfectMatches}, nil
 		}
 		slog.Debug("import: returning all potential matches")
 		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
