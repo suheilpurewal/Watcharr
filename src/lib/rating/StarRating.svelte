@@ -57,7 +57,8 @@
 		// We attempt to avoid accidental clicks on stars being saved while trying
 		// to scroll down the page, so if the scroll pos has changed since the press
 		// started, ignore it. This issue only affects touch devices, so ignore on pc.
-		if (isTouch() && scrollLocAtStart !== window.scrollY) {
+		// Scroll pos has changed if starting pos has more than 10 dif than now.
+		if (isTouch() && Math.abs(scrollLocAtStart - window.scrollY) >= 10) {
 			console.info(
 				"saveSelectedRating: Scroll location has changed since star was pressed, not saving rating to avoid a misclick.",
 			);
