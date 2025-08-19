@@ -57,25 +57,22 @@
 	const mediaType: "movie" = "movie";
 
 	async function onStatusIntercept(n: string) {
-		console.log('[group] onStatusIntercept', n);
-		if (n === "FINISHED") {
-		defaultStartedAt.set(new Date().toISOString().slice(0, 16));
-		showAttendance.set(true);
-		// don't mark finished yet; we'll do it after modal submit (optional)
+	console.log('[group] onStatusIntercept', n);
+	if (n === "FINISHED") {
+		defaultStartedAt = new Date().toISOString().slice(0, 16); // <— assignment
+		showAttendance = true;                                     // <— assignment
+		console.log('[group] opening modal');
 		return;
-		}
-		// fall back to normal behavior for other statuses
-		console.log('[group] falling back to contentChanged');
-		contentChanged(n);
+	}
+	contentChanged(n);
 	}
 
-	// after modal submit, you can also mark as finished (optional):
 	function afterAttendanceSaved() {
-		showAttendance = false;
-		contentChanged("FINISHED");
+	showAttendance = false;          // <— assignment
+	contentChanged("FINISHED");
 	}
 	function cancelAttendance() {
-		showAttendance = false;
+	showAttendance = false;          // <— assignment
 	}
 
 	$effect(() => {
@@ -284,8 +281,8 @@
 					status={wListItem?.status}
 					onChange={onStatusIntercept}
 				/>
-				<button onclick={() => { showAttendance.set(true); console.log('[group] manual open'); }}>
-				Open Attendance (test)
+				<button onclick={() => { showAttendance = true; console.log('[group] manual open'); }}>
+					Open Attendance (test)
 				</button>
 				<AttendanceModal
 					open={showAttendance}
