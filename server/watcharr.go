@@ -19,6 +19,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"github.com/sbondCo/Watcharr/groupview"
 )
 
 type GormModel struct {
@@ -83,6 +84,9 @@ func main() {
 		&Game{},
 		&ArrRequest{},
 		&Tag{},
+		&groupview.Member{},
+    	&groupview.ViewingSession{},
+   	    &groupview.Attendance{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
@@ -160,6 +164,8 @@ func main() {
 	br.addTaskRoutes()
 	br.addTagRoutes()
 	br.rg.Static("/img", path.Join(DataPath, "img"))
+
+	groupview.RegisterRoutes(db, br.rg)
 
 	go setupTasks(db)
 
