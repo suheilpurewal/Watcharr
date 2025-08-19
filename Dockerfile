@@ -7,6 +7,7 @@ WORKDIR /server
 COPY server/*.go server/go.* ./
 COPY server/arr/*.go ./arr/
 COPY server/game/*.go ./game/
+COPY server/groupview/*.go ./groupview/
 
 # Required so we can build with cgo
 RUN apk update && apk add --no-cache musl-dev gcc build-base
