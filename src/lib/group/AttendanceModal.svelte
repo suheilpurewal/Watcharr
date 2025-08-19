@@ -1,44 +1,28 @@
-<svelte:options runes={false} />
-
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // ✅ Legacy props (no $props, no $-reading)
-  export let open = false;
-  export let mediaId = "";
-  export let mediaType: "movie" | "episode" = "movie";
-  export let defaultStartedAt = "";     // "YYYY-MM-DDTHH:mm" recommended
-  export let allowRatings = false;
+  // plain props (no onSubmit/onCancel props)
+  let {
+    open = false,
+    mediaId = "",
+    mediaType = "movie" as "movie" | "episode",
+    defaultStartedAt = new Date().toISOString(),
+    allowRatings = false,
+  } = $props();
 
-  type Member = { id: string; displayName: string; isActive: boolean };
-
-  let members: Member[] = [];
+  let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+  let startedAt = defaultStartedAt;
   let saving = false;
   let errorMsg = "";
-  let loadingMembers = false;
 
   async function loadMembers() {
-    if (loadingMembers) return;
-    loadingMembers = true;
-    try {
-      const r = await fetch("/api/group/members");
-      members = await r.json();
-    } finally {
-      loadingMembers = false;
-    }
+    const r = await fetch("/api/group/members");
+    members = await r.json();
   }
-
   onMount(() => { if (open) loadMembers(); });
-
-  // ✅ Legacy reactive statements
   $: if (open) loadMembers();
-  $: if (open) {
-    // sync the input when the modal opens or default changes
-    startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
-  }
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
@@ -67,6 +51,8 @@
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
+
+      // tell parent we saved successfully
       dispatch("submit");
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
@@ -111,7 +97,6 @@
     </div>
   </div>
 {/if}
-
 
 
 <style>
