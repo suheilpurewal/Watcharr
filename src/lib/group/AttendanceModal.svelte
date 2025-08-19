@@ -1,16 +1,16 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
 
   export let open = false;
-  export let mediaId = "";                   // required
+  export let mediaId = "";
   export let mediaType: "movie" | "episode" = "movie";
-  export let defaultStartedAt = new Date().toISOString(); // UTC ISO
-  export let allowRatings = false;           // keep simple first
+  export let defaultStartedAt = new Date().toISOString();
+  export let allowRatings = false;
 
-  const dispatch = createEventDispatcher();
   let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;
+  let startedAt = defaultStartedAt;   // bound to <input type="datetime-local">
   let saving = false;
   let errorMsg = "";
 
@@ -18,18 +18,16 @@
     const r = await fetch("/api/group/members");
     members = await r.json();
   }
-
   onMount(() => { if (open) loadMembers(); });
-
-  $: if (open) { /* fetch members when opened */ loadMembers(); }
+  $: if (open) loadMembers();
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
-    // force reactivity
     selected = new Set(selected);
   }
 
   async function save() {
+    console.log("[group] modal save clicked");
     errorMsg = "";
     if (!selected.size) {
       errorMsg = "Pick at least one attendee.";
@@ -40,7 +38,7 @@
       const body = {
         mediaId,
         mediaType,
-        startedAt: new Date(startedAt).toISOString(),
+        startedAt: new Date(startedAt).toISOString(), // normalize
         notes: null,
         attendees: Array.from(selected).map(id => ({ memberId: id }))
       };
@@ -59,6 +57,7 @@
   }
 
   function close() {
+    console.log("[group] modal cancel clicked");
     dispatch("cancel");
   }
 </script>
@@ -87,12 +86,13 @@
       {#if errorMsg}<p class="err">{errorMsg}</p>{/if}
 
       <div class="actions">
-		<button onclick={close} class="ghost">Cancel</button>
-		<button onclick={save} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+        <button onclick={close} class="ghost">Cancel</button>
+        <button onclick={save} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
       </div>
     </div>
   </div>
 {/if}
+
 
 <style>
 .overlay{
