@@ -302,7 +302,8 @@
 					/>
 				{/if}
 			</div>
-
+			//debugging div
+			<div style="opacity:.7;font-size:12px">modal: {showAttendance ? 'open' : 'closed'}</div>
 			{#if data.movieId}
 				<FollowedThoughts mediaType="movie" mediaId={data.movieId} />
 			{/if}
