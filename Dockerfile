@@ -4,16 +4,18 @@
 FROM golang:1.24-alpine AS server
 
 WORKDIR /server
-COPY server/*.go server/go.* ./
-COPY server/arr/*.go ./arr/
-COPY server/game/*.go ./game/
-COPY server/groupview/*.go ./groupview/
 
-# Required so we can build with cgo
+# 1) deps first for cache
+COPY server/go.* ./
 RUN apk update && apk add --no-cache musl-dev gcc build-base
+RUN go mod download
 
+# 2) now all sources (includes groupview, arr, game, etc.)
+COPY server/ ./
+
+# 3) build
 # CGO_CFLAGS: https://github.com/mattn/go-sqlite3/issues/1164#issuecomment-1635253695
-RUN go mod download && GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o ./watcharr
+RUN GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o /watcharr
 
 #
 # Frontend
@@ -24,7 +26,6 @@ WORKDIR /app
 COPY package*.json vite.config.ts svelte.config.js tsconfig.json ./
 COPY ./src ./src
 COPY ./static ./static
-
 RUN npm install && npm run build
 
 #
@@ -32,15 +33,13 @@ RUN npm install && npm run build
 #
 FROM node:20-alpine AS runner
 
-COPY --from=server /server/watcharr /
+# app binary + UI
+COPY --from=server /watcharr /watcharr
 COPY --from=ui /app/build /ui
 COPY --from=ui /app/package.json /app/package-lock.json /ui
 
-# Install just the prod dependencies for final step.
-# We --ignore-scripts, to stop the `prepare` script from auto-
-# running, which is only meant for development (will error).
+# install only prod ui deps (ignore dev prepare scripts)
 RUN cd /ui && npm ci --omit=dev --ignore-scripts=true
 
 EXPOSE 3080
-
 CMD ["/watcharr"]
