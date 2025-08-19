@@ -78,7 +78,6 @@
 	}
 
 
-
 	$effect(() => {
 		(async () => {
 			try {
@@ -293,8 +292,8 @@
 					mediaId={mediaId}
 					mediaType="movie"
 					defaultStartedAt={$defaultStartedAt}
-					onSubmit={afterAttendanceSaved}
-					onCancel={cancelAttendance}
+					onsubmit={afterAttendanceSaved}
+					oncancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts
@@ -306,8 +305,6 @@
 					/>
 				{/if}
 			</div>
-			//debugging div
-			<div style="opacity:.7;font-size:12px">modal: {$showAttendance ? 'open' : 'closed'}</div>
 			{#if data.movieId}
 				<FollowedThoughts mediaType="movie" mediaId={data.movieId} />
 			{/if}
