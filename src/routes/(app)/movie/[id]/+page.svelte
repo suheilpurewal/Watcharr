@@ -284,7 +284,7 @@
 					status={wListItem?.status}
 					onChange={onStatusIntercept}
 				/>
-				<button on:click={() => { showAttendance = true; console.log('[group] manual open'); }}>
+				<button onclick={() => { showAttendance = true; console.log('[group] manual open'); }}>
 				Open Attendance (test)
 				</button>
 				<AttendanceModal
@@ -292,8 +292,8 @@
 					mediaId={mediaId}
 					mediaType="movie"
 					defaultStartedAt={defaultStartedAt}
-					on:submit={afterAttendanceSaved}
-					on:cancel={cancelAttendance}
+					onSubmit={afterAttendanceSaved}
+					onCancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts

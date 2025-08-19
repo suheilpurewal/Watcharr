@@ -64,7 +64,7 @@
 </script>
 
 {#if open}
-  <div class="overlay" on:click|self={close}>
+  <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) close(); }}>
     <div class="modal">
       <h3>Who watched?</h3>
 
@@ -77,7 +77,7 @@
         {#each members as m}
           {#if m.isActive}
             <label class="chip">
-              <input type="checkbox" on:change={(e)=>toggle(m.id, (e.target as HTMLInputElement).checked)} />
+              <input type="checkbox" onchange={(e) => toggle(m.id, (e.target as HTMLInputElement).checked)} />
               <span>{m.displayName}</span>
             </label>
           {/if}
@@ -87,8 +87,8 @@
       {#if errorMsg}<p class="err">{errorMsg}</p>{/if}
 
       <div class="actions">
-        <button on:click={close} class="ghost">Cancel</button>
-        <button on:click={save} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+		<button onclick={close} class="ghost">Cancel</button>
+		<button onclick={save} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
       </div>
     </div>
   </div>
