@@ -54,4 +54,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+require github.com/sbondCo/Watcharr v0.0.0
 replace github.com/sbondCo/Watcharr => .
