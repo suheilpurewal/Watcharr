@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // All props come from $props() and are SIGNALS when read with $
+  // Props as signals (read as $open, $mediaId, etc.)
   let {
     open = false,
     mediaId = "",
@@ -15,7 +15,7 @@
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+  let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
 
@@ -24,16 +24,17 @@
     members = await r.json();
   }
 
-  onMount(() => { if (open) loadMembers(); });
+  // initial fetch if opened on mount
+  onMount(() => { if ($open) loadMembers(); });
 
-  // ✅ use $ when READING props in runes
+  // runes effects: READ props with $...
   $effect(() => {
-    if (open) loadMembers();
+    if ($open) loadMembers();
   });
 
   $effect(() => {
-    if (open) {
-      startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+    if ($open) {
+      startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
     }
   });
 
@@ -52,8 +53,8 @@
     saving = true;
     try {
       const body = {
-        mediaId: mediaId,
-        mediaType: mediaType,
+        mediaId: $mediaId,
+        mediaType: $mediaType,
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -78,7 +79,7 @@
   }
 </script>
 
-{#if open}
+{#if $open}
   <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) close(); }}>
     <div class="modal">
       <h3>Who watched?</h3>
