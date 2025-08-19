@@ -23,7 +23,7 @@
     members = await r.json();
   }
   onMount(() => { if (open) loadMembers(); });
-  $: if (open) loadMembers();
+  $effect: if (open) loadMembers();
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
