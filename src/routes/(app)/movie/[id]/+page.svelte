@@ -32,6 +32,10 @@
 	import tooltip from "@/lib/actions/tooltip.js";
 	import MyThoughts from "@/lib/content/MyThoughts.svelte";
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
+	import AttendanceModal from "$lib/group/AttendanceModal.svelte";
+
+	let showAttendance = false;
+	let defaultStartedAt = new Date().toISOString().slice(0,16);
 
 	let { data } = $props();
 
@@ -47,6 +51,32 @@
 			(w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
 		),
 	);
+
+	// adding this
+	const mediaId = String(data.movieId);
+	const mediaType: "movie" = "movie";
+
+	async function onStatusIntercept(n: string) {
+		if (n === "FINISHED") {
+		defaultStartedAt = new Date().toISOString();
+		showAttendance = true;
+		// don't mark finished yet; we'll do it after modal submit (optional)
+		return;
+		}
+		// fall back to normal behavior for other statuses
+		contentChanged(n);
+	}
+
+	// after modal submit, you can also mark as finished (optional):
+	function afterAttendanceSaved() {
+		showAttendance = false;
+		contentChanged("FINISHED");
+	}
+	function cancelAttendance() {
+		showAttendance = false;
+	}
+	</script>
+
 
 	$effect(() => {
 		(async () => {
@@ -252,7 +282,15 @@
 				/>
 				<Status
 					status={wListItem?.status}
-					onChange={(n) => contentChanged(n)}
+					onChange={onStatusIntercept}
+				/>
+				<AttendanceModal
+					open={showAttendance}
+					mediaId={mediaId}
+					mediaType="movie"
+					defaultStartedAt={defaultStartedAt}
+					on:submit={afterAttendanceSaved}
+					on:cancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts
