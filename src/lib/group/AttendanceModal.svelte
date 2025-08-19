@@ -2,18 +2,20 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // ✅ Plain props (no $props()) — safer with this app's setup
-  export let open = false;
-  export let mediaId = "";
-  export let mediaType: "movie" | "episode" = "movie";
-  export let defaultStartedAt = ""; // parent passes a datetime-local string
-  export let allowRatings = false;
+  // Runes props (read with $propName)
+  let {
+    open = false,
+    mediaId = "",
+    mediaType = "movie" as "movie" | "episode",
+    defaultStartedAt = "",
+    allowRatings = false,
+  } = $props();
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;
+  let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
 
@@ -23,16 +25,18 @@
   }
 
   // initial fetch if opened on mount
-  onMount(() => { if (open) loadMembers(); });
+  onMount(() => { if ($open) loadMembers(); });
 
-  // ✅ runes-safe reactive effects (no `$:` labels)
+  // runes-safe effects
   $effect(() => {
-    if (open) loadMembers();
+    if ($open) loadMembers();
   });
 
-  // keep the input synced to the parent-provided default when opened
   $effect(() => {
-    if (open) startedAt = defaultStartedAt;
+    if ($open) {
+      // sync local input when parent opens modal or updates default
+      startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
+    }
   });
 
   function toggle(id: string, checked: boolean) {
@@ -50,8 +54,8 @@
     saving = true;
     try {
       const body = {
-        mediaId,
-        mediaType,
+        mediaId: $mediaId,
+        mediaType: $mediaType,
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -63,8 +67,7 @@
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // emit submit event for parent
-      dispatch("submit");
+      dispatch("submit"); // parent listens with onsubmit
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -74,7 +77,7 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    dispatch("cancel");
+    dispatch("cancel"); // parent listens with oncancel
   }
 </script>
 
