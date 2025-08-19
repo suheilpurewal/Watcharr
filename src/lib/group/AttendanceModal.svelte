@@ -2,19 +2,20 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // Runes props (read with $propName)
+  // Runes props
   let {
-    open = false,
-    mediaId = "",
-    mediaType = "movie" as "movie" | "episode",
-    defaultStartedAt = "",
-    allowRatings = false,
+    open = false,                 // SIGNAL (read as $open)
+    mediaId = "",                 // plain
+    mediaType = "movie" as "movie" | "episode", // plain
+    defaultStartedAt = "",        // SIGNAL (read as $defaultStartedAt)
+    allowRatings = false,         // plain (unused for now)
   } = $props();
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
   let members: Member[] = [];
   let selected = new Set<string>();
+  // initialize local input from the default (unwrap with $)
   let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
@@ -24,24 +25,23 @@
     members = await r.json();
   }
 
-  // initial fetch if opened on mount
   onMount(() => { if ($open) loadMembers(); });
 
-  // runes-safe effects
+  // when opened, (re)load members
   $effect(() => {
     if ($open) loadMembers();
   });
 
+  // when opened, sync startedAt to the parent-provided default
   $effect(() => {
     if ($open) {
-      // sync local input when parent opens modal or updates default
       startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
     }
   });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
-    selected = new Set(selected);
+    selected = new Set(selected); // force reactivity
   }
 
   async function save() {
@@ -54,8 +54,8 @@
     saving = true;
     try {
       const body = {
-        mediaId: $mediaId,
-        mediaType: $mediaType,
+        mediaId,                                // plain prop
+        mediaType,                              // plain prop
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -66,7 +66,6 @@
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
-
       dispatch("submit"); // parent listens with onsubmit
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
