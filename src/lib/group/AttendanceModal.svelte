@@ -2,12 +2,12 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // Runes props (read WITHOUT $ everywhere)
+  // All props come from $props() and are SIGNALS when read with $
   let {
-    open = false,                          // boolean (from parent)
-    mediaId = "",                          // string
+    open = false,
+    mediaId = "",
     mediaType = "movie" as "movie" | "episode",
-    defaultStartedAt = "",                 // string (e.g., "2025-08-19T16:01")
+    defaultStartedAt = "",
     allowRatings = false,
   } = $props();
 
@@ -15,7 +15,7 @@
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+  let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
 
@@ -24,22 +24,21 @@
     members = await r.json();
   }
 
-  // initial fetch if opened on mount
-  onMount(() => { if (open) loadMembers(); });
+  onMount(() => { if ($open) loadMembers(); });
 
-  // runes-safe effects (no `$:` labels, and NO `$prop` reads)
+  // ✅ use $ when READING props in runes
   $effect(() => {
-    if (open) loadMembers();
+    if ($open) loadMembers();
   });
 
-  // keep local input synced with parent default when opened
   $effect(() => {
-    if (open) startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+    if ($open) {
+      startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
+    }
   });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
-    // force reactivity for Set
     selected = new Set(selected);
   }
 
@@ -53,8 +52,8 @@
     saving = true;
     try {
       const body = {
-        mediaId,
-        mediaType,
+        mediaId: $mediaId,
+        mediaType: $mediaType,
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -79,7 +78,7 @@
   }
 </script>
 
-{#if open}
+{#if $open}
   <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) close(); }}>
     <div class="modal">
       <h3>Who watched?</h3>
