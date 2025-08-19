@@ -19,7 +19,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"github.com/sbondCo/Watcharr/server/groupview"
+	"github.com/suheilpurewal/Watcharr/server/groupview"
 )
 
 type GormModel struct {

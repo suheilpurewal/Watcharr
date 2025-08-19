@@ -1,4 +1,4 @@
-module github.com/sbondCo/Watcharr
+module github.com/suheilpurewal/Watcharr
 
 go 1.24
 
