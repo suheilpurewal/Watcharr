@@ -2,20 +2,18 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // plain props (no onSubmit/onCancel props)
-  let {
-    open = false,
-    mediaId = "",
-    mediaType = "movie" as "movie" | "episode",
-    defaultStartedAt = new Date().toISOString(),
-    allowRatings = false,
-  } = $props();
+  // ✅ Plain props (no $props()) — safer with this app's setup
+  export let open = false;
+  export let mediaId = "";
+  export let mediaType: "movie" | "episode" = "movie";
+  export let defaultStartedAt = ""; // parent passes a datetime-local string
+  export let allowRatings = false;
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;   // bound to datetime-local
+  let startedAt = defaultStartedAt;
   let saving = false;
   let errorMsg = "";
 
@@ -27,12 +25,12 @@
   // initial fetch if opened on mount
   onMount(() => { if (open) loadMembers(); });
 
-  // runes-safe reactive effects
+  // ✅ runes-safe reactive effects (no `$:` labels)
   $effect(() => {
     if (open) loadMembers();
   });
 
-  // keep input in sync when modal opens with a (possibly) new default
+  // keep the input synced to the parent-provided default when opened
   $effect(() => {
     if (open) startedAt = defaultStartedAt;
   });
@@ -65,7 +63,7 @@
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // tell parent we saved successfully
+      // emit submit event for parent
       dispatch("submit");
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
