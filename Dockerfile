@@ -4,15 +4,18 @@
 FROM golang:1.24-alpine AS server
 
 WORKDIR /server
-COPY server/*.go server/go.* ./
-COPY server/arr/*.go ./arr/
-COPY server/game/*.go ./game/
 
-# Required so we can build with cgo
+# copy only go.mod/go.sum first to cache deps
+COPY server/go.* ./
+
 RUN apk update && apk add --no-cache musl-dev gcc build-base
+RUN go mod download
 
-# CGO_CFLAGS: https://github.com/mattn/go-sqlite3/issues/1164#issuecomment-1635253695
-RUN go mod download && GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o ./watcharr
+# now copy ALL server sources (this includes groupview)
+COPY server/ ./
+
+# build
+RUN GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o ./watcharr
 
 #
 # Frontend
