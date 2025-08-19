@@ -68,12 +68,16 @@
 	}
 
 	function afterAttendanceSaved() {
+		console.log('[group] parent afterAttendanceSaved()');
 		showAttendance = false;
 		contentChanged("FINISHED");
 	}
 	function cancelAttendance() {
+		console.log('[group] parent cancelAttendance()');
 		showAttendance = false;
 	}
+
+
 
 	$effect(() => {
 		(async () => {
