@@ -34,8 +34,8 @@
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 	import AttendanceModal from "$lib/group/AttendanceModal.svelte";
 
-	let showAttendance = false;
-	let defaultStartedAt = new Date().toISOString().slice(0,16);
+	let showAttendance = $state(false);
+	let defaultStartedAt = $state(new Date().toISOString().slice(0, 16));
 
 	let { data } = $props();
 
@@ -59,8 +59,8 @@
 	async function onStatusIntercept(n: string) {
 		console.log('[group] onStatusIntercept', n);
 		if (n === "FINISHED") {
-		defaultStartedAt = new Date().toISOString().slice(0, 16);
-		showAttendance = true;
+		defaultStartedAt.set(new Date().toISOString().slice(0, 16));
+		showAttendance.set(true);
 		// don't mark finished yet; we'll do it after modal submit (optional)
 		return;
 		}
@@ -284,7 +284,7 @@
 					status={wListItem?.status}
 					onChange={onStatusIntercept}
 				/>
-				<button onclick={() => { showAttendance = true; console.log('[group] manual open'); }}>
+				<button onclick={() => { showAttendance.set(true); console.log('[group] manual open'); }}>
 				Open Attendance (test)
 				</button>
 				<AttendanceModal
