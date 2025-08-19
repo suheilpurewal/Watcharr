@@ -1,16 +1,20 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
+  import { onMount } from "svelte";
 
-  export let open = false;
-  export let mediaId = "";
-  export let mediaType: "movie" | "episode" = "movie";
-  export let defaultStartedAt = new Date().toISOString();
-  export let allowRatings = false;
+  // Props (project-style callbacks)
+  let {
+    open = false,
+    mediaId = "",
+    mediaType = "movie" as "movie" | "episode",
+    defaultStartedAt = new Date().toISOString(),
+    allowRatings = false,
+    onSubmit = () => {},
+    onCancel = () => {},
+  } = $props();
 
   let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;   // bound to <input type="datetime-local">
+  let startedAt = defaultStartedAt;
   let saving = false;
   let errorMsg = "";
 
@@ -38,17 +42,19 @@
       const body = {
         mediaId,
         mediaType,
-        startedAt: new Date(startedAt).toISOString(), // normalize
+        startedAt: new Date(startedAt).toISOString(),
         notes: null,
-        attendees: Array.from(selected).map(id => ({ memberId: id }))
+        attendees: Array.from(selected).map((id) => ({ memberId: id })),
       };
       const res = await fetch("/api/group/viewings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
-      dispatch("submit");
+
+      // Call parent callback prop (not event)
+      onSubmit();
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -58,9 +64,10 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    dispatch("cancel");
+    onCancel(); // Call parent callback prop (not event)
   }
 </script>
+
 
 {#if open}
   <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) close(); }}>

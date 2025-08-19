@@ -57,22 +57,22 @@
 	const mediaType: "movie" = "movie";
 
 	async function onStatusIntercept(n: string) {
-	console.log('[group] onStatusIntercept', n);
-	if (n === "FINISHED") {
-		defaultStartedAt = new Date().toISOString().slice(0, 16);
-		showAttendance = true;
-		console.log('[group] opening modal');
-		return;
-	}
-	contentChanged(n);
+		console.log('[group] onStatusIntercept', n);
+		if (n === "FINISHED") {
+			defaultStartedAt = new Date().toISOString().slice(0, 16);
+			showAttendance = true;
+			console.log('[group] opening modal');
+			return;
+		}
+		contentChanged(n);
 	}
 
 	function afterAttendanceSaved() {
-	showAttendance = false;
-	contentChanged("FINISHED");
+		showAttendance = false;
+		contentChanged("FINISHED");
 	}
 	function cancelAttendance() {
-	showAttendance = false;
+		showAttendance = false;
 	}
 
 	$effect(() => {
