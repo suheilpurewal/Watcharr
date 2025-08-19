@@ -289,11 +289,11 @@
 				</button>
 				<AttendanceModal
 					open={showAttendance}
+					defaultStartedAt={defaultStartedAt}
 					mediaId={mediaId}
 					mediaType="movie"
-					defaultStartedAt={defaultStartedAt}
-					onsubmit={afterAttendanceSaved}
-					oncancel={cancelAttendance}
+					on:submit={afterAttendanceSaved}
+					on:cancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts
