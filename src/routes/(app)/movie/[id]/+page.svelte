@@ -59,8 +59,8 @@
 	async function onStatusIntercept(n: string) {
 	console.log('[group] onStatusIntercept', n);
 	if (n === "FINISHED") {
-		defaultStartedAt = new Date().toISOString().slice(0, 16); // <— assignment
-		showAttendance = true;                                     // <— assignment
+		defaultStartedAt = new Date().toISOString().slice(0, 16);
+		showAttendance = true;
 		console.log('[group] opening modal');
 		return;
 	}
@@ -68,11 +68,11 @@
 	}
 
 	function afterAttendanceSaved() {
-	showAttendance = false;          // <— assignment
+	showAttendance = false;
 	contentChanged("FINISHED");
 	}
 	function cancelAttendance() {
-	showAttendance = false;          // <— assignment
+	showAttendance = false;
 	}
 
 	$effect(() => {
@@ -282,7 +282,7 @@
 					onChange={onStatusIntercept}
 				/>
 				<button onclick={() => { showAttendance = true; console.log('[group] manual open'); }}>
-					Open Attendance (test)
+				Open Attendance (test)
 				</button>
 				<AttendanceModal
 					open={showAttendance}
