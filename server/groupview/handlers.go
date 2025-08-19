@@ -100,17 +100,38 @@ type historyRow struct {
 }
 
 func (a *API) GetHistory(c *gin.Context) {
-	// Using a simple join query; LIMIT can be added via query param later.
-	rows := []historyRow{}
+	type historyRow struct {
+		SessionID  string    `json:"sessionID"`
+		MediaID    string    `json:"mediaID"`
+		MediaType  string    `json:"mediaType"`
+		StartedAt  time.Time `json:"startedAt"`
+		Notes      *string   `json:"notes"`
+		MemberName string    `json:"memberName"`
+		MemberID   string    `json:"memberID"`
+		Rating     *float64  `json:"rating"`
+	}
+
+	var rows []historyRow
 	q := a.DB.Table("viewing_sessions AS vs").
-		Select(`vs.id as session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
-		        m.display_name as member_name, a.member_id, a.rating`).
+		Select(`vs.id AS session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
+		        m.display_name AS member_name, a.member_id, a.rating`).
 		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
-		Joins("JOIN members m ON m.id = a.member_id").
-		Order("vs.started_at DESC, m.display_name ASC").
-		Limit(500)
+		Joins("JOIN members m ON m.id = a.member_id")
+
+	// OPTIONAL FILTERS
+	if mid := c.Query("mediaId"); mid != "" {
+		q = q.Where("vs.media_id = ?", mid)
+	}
+	if mt := c.Query("mediaType"); mt != "" {
+		q = q.Where("vs.media_type = ?", mt) // "movie" | "episode"
+	}
+
+	// default order / cap
+	q = q.Order("vs.started_at DESC, m.display_name ASC").Limit(500)
+
 	if err := q.Scan(&rows).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error()); return
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 	c.JSON(http.StatusOK, rows)
 }
