@@ -58,7 +58,7 @@
 
 	async function onStatusIntercept(n: string) {
 		if (n === "FINISHED") {
-		defaultStartedAt = new Date().toISOString();
+		defaultStartedAt = new Date().toISOString().slice(0, 16);
 		showAttendance = true;
 		// don't mark finished yet; we'll do it after modal submit (optional)
 		return;
@@ -75,8 +75,6 @@
 	function cancelAttendance() {
 		showAttendance = false;
 	}
-	</script>
-
 
 	$effect(() => {
 		(async () => {
