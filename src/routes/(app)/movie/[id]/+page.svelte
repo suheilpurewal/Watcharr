@@ -285,10 +285,10 @@
 				Open Attendance (test)
 				</button>
 				<AttendanceModal
-				   open={showAttendance}
+				   open={$showAttendance}
 				   mediaId={mediaId}
 				   mediaType="movie"
-				   defaultStartedAt={defaultStartedAt}
+				   defaultStartedAt={$defaultStartedAt}
 				   onsubmit={afterAttendanceSaved}
 				   oncancel={cancelAttendance}
 				/>
@@ -303,7 +303,7 @@
 				{/if}
 			</div>
 			//debugging div
-			<div style="opacity:.7;font-size:12px">modal: {showAttendance ? 'open' : 'closed'}</div>
+			<div style="opacity:.7;font-size:12px">modal: {$showAttendance ? 'open' : 'closed'}</div>
 			{#if data.movieId}
 				<FollowedThoughts mediaType="movie" mediaId={data.movieId} />
 			{/if}
