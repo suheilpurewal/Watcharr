@@ -1,42 +1,44 @@
+<svelte:options runes={false} />
+
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // Props as signals (read as $open, $mediaId, etc.)
-  let {
-    open = false,
-    mediaId = "",
-    mediaType = "movie" as "movie" | "episode",
-    defaultStartedAt = "",
-    allowRatings = false,
-  } = $props();
+  // ✅ Legacy props (no $props, no $-reading)
+  export let open = false;
+  export let mediaId = "";
+  export let mediaType: "movie" | "episode" = "movie";
+  export let defaultStartedAt = "";     // "YYYY-MM-DDTHH:mm" recommended
+  export let allowRatings = false;
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
+  let startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
+  let loadingMembers = false;
 
   async function loadMembers() {
-    const r = await fetch("/api/group/members");
-    members = await r.json();
+    if (loadingMembers) return;
+    loadingMembers = true;
+    try {
+      const r = await fetch("/api/group/members");
+      members = await r.json();
+    } finally {
+      loadingMembers = false;
+    }
   }
 
-  // initial fetch if opened on mount
-  onMount(() => { if ($open) loadMembers(); });
+  onMount(() => { if (open) loadMembers(); });
 
-  // runes effects: READ props with $...
-  $effect(() => {
-    if ($open) loadMembers();
-  });
-
-  $effect(() => {
-    if ($open) {
-      startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
-    }
-  });
+  // ✅ Legacy reactive statements
+  $: if (open) loadMembers();
+  $: if (open) {
+    // sync the input when the modal opens or default changes
+    startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
+  }
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
@@ -53,8 +55,8 @@
     saving = true;
     try {
       const body = {
-        mediaId: $mediaId,
-        mediaType: $mediaType,
+        mediaId,
+        mediaType,
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -79,7 +81,7 @@
   }
 </script>
 
-{#if $open}
+{#if open}
   <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) close(); }}>
     <div class="modal">
       <h3>Who watched?</h3>
