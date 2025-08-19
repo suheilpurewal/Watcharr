@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
+  import { onMount } from "svelte";
 
-  // plain props (no onSubmit/onCancel props)
+  // Props (project-style callbacks)
   let {
     open = false,
     mediaId = "",
     mediaType = "movie" as "movie" | "episode",
     defaultStartedAt = new Date().toISOString(),
     allowRatings = false,
+    onSubmit = () => {},
+    onCancel = () => {},
   } = $props();
 
   let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
@@ -52,8 +53,8 @@
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // tell parent we saved successfully
-      dispatch("submit");
+      // Call parent callback prop (not event)
+      onSubmit();
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -63,7 +64,7 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    dispatch("cancel");
+    onCancel(); // Call parent callback prop (not event)
   }
 </script>
 
