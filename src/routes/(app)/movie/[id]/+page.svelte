@@ -57,6 +57,7 @@
 	const mediaType: "movie" = "movie";
 
 	async function onStatusIntercept(n: string) {
+		console.log('[group] onStatusIntercept', n);
 		if (n === "FINISHED") {
 		defaultStartedAt = new Date().toISOString().slice(0, 16);
 		showAttendance = true;
@@ -64,6 +65,7 @@
 		return;
 		}
 		// fall back to normal behavior for other statuses
+		console.log('[group] falling back to contentChanged');
 		contentChanged(n);
 	}
 
@@ -282,6 +284,9 @@
 					status={wListItem?.status}
 					onChange={onStatusIntercept}
 				/>
+				<button on:click={() => { showAttendance = true; console.log('[group] manual open'); }}>
+				Open Attendance (test)
+				</button>
 				<AttendanceModal
 					open={showAttendance}
 					mediaId={mediaId}
