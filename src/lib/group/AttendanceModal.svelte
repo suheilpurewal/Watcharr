@@ -11,9 +11,11 @@
     allowRatings = false,
   } = $props();
 
-  let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
+  type Member = { id: string; displayName: string; isActive: boolean };
+
+  let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;
+  let startedAt = defaultStartedAt;   // bound to datetime-local
   let saving = false;
   let errorMsg = "";
 
@@ -21,8 +23,19 @@
     const r = await fetch("/api/group/members");
     members = await r.json();
   }
+
+  // initial fetch if opened on mount
   onMount(() => { if (open) loadMembers(); });
-  $: if (open) loadMembers();
+
+  // runes-safe reactive effects
+  $effect(() => {
+    if (open) loadMembers();
+  });
+
+  // keep input in sync when modal opens with a (possibly) new default
+  $effect(() => {
+    if (open) startedAt = defaultStartedAt;
+  });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
