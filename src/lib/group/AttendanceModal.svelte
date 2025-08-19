@@ -2,21 +2,20 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // Runes props
+  // Runes props (read WITHOUT $ everywhere)
   let {
-    open = false,                 // SIGNAL (read as $open)
-    mediaId = "",                 // plain
-    mediaType = "movie" as "movie" | "episode", // plain
-    defaultStartedAt = "",        // SIGNAL (read as $defaultStartedAt)
-    allowRatings = false,         // plain (unused for now)
+    open = false,                          // boolean (from parent)
+    mediaId = "",                          // string
+    mediaType = "movie" as "movie" | "episode",
+    defaultStartedAt = "",                 // string (e.g., "2025-08-19T16:01")
+    allowRatings = false,
   } = $props();
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
   let members: Member[] = [];
   let selected = new Set<string>();
-  // initialize local input from the default (unwrap with $)
-  let startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
+  let startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
   let saving = false;
   let errorMsg = "";
 
@@ -25,23 +24,23 @@
     members = await r.json();
   }
 
-  onMount(() => { if ($open) loadMembers(); });
+  // initial fetch if opened on mount
+  onMount(() => { if (open) loadMembers(); });
 
-  // when opened, (re)load members
+  // runes-safe effects (no `$:` labels, and NO `$prop` reads)
   $effect(() => {
-    if ($open) loadMembers();
+    if (open) loadMembers();
   });
 
-  // when opened, sync startedAt to the parent-provided default
+  // keep local input synced with parent default when opened
   $effect(() => {
-    if ($open) {
-      startedAt = $defaultStartedAt || new Date().toISOString().slice(0, 16);
-    }
+    if (open) startedAt = defaultStartedAt || new Date().toISOString().slice(0, 16);
   });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
-    selected = new Set(selected); // force reactivity
+    // force reactivity for Set
+    selected = new Set(selected);
   }
 
   async function save() {
@@ -54,8 +53,8 @@
     saving = true;
     try {
       const body = {
-        mediaId,                                // plain prop
-        mediaType,                              // plain prop
+        mediaId,
+        mediaType,
         startedAt: new Date(startedAt).toISOString(),
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
@@ -66,7 +65,7 @@
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
-      dispatch("submit"); // parent listens with onsubmit
+      dispatch("submit");
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -76,7 +75,7 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    dispatch("cancel"); // parent listens with oncancel
+    dispatch("cancel");
   }
 </script>
 
