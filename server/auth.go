@@ -21,6 +21,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/argon2"
 	"gorm.io/gorm"
+	"github.com/google/uuid"
+	"./groupview"
 )
 
 type UserType uint8
@@ -328,6 +330,12 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
+	// Handle family group creation/assignment
+	if err := handleFamilyGroupAssignment(db, &user); err != nil {
+		slog.Error("Registration: Failed to handle family group assignment", "error", err)
+		// Don't fail registration, but log the error
+	}
+
 	token, err := signJWT(&user)
 	if err != nil {
 		slog.Error("Registration: Failed to sign new jwt", "error", err)
@@ -574,6 +582,93 @@ func useAdminToken(req *UseAdminTokenRequest, db *gorm.DB, userId uint) error {
 		slog.Info("useAdminToken failed", "error", err, "error_pretty", "using token transaction failed")
 		return errors.New("failed to use token")
 	}
+	return nil
+}
+
+// handleFamilyGroupAssignment creates or assigns users to family groups during registration
+func handleFamilyGroupAssignment(db *gorm.DB, user *User) error {
+	slog.Debug("handleFamilyGroupAssignment: Starting family group assignment", "userId", user.ID, "username", user.Username)
+	
+	// Check if any family group exists
+	var existingGroup groupview.Group
+	result := db.First(&existingGroup)
+	
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// No group exists, create the first family group and make this user admin
+			slog.Info("handleFamilyGroupAssignment: No family group exists, creating first group", "userId", user.ID)
+			
+			groupID := uuid.New().String()
+			newGroup := groupview.Group{
+				ID:   groupID,
+				Name: "Family",
+			}
+			
+			if err := db.Create(&newGroup).Error; err != nil {
+				slog.Error("handleFamilyGroupAssignment: Failed to create family group", "error", err)
+				return fmt.Errorf("failed to create family group: %w", err)
+			}
+			
+			// Create group member record for this user as admin
+			memberID := uuid.New().String()
+			groupMember := groupview.GroupMember{
+				ID:      memberID,
+				GroupID: groupID,
+				UserID:  user.ID,
+				Role:    "admin",
+			}
+			
+			if err := db.Create(&groupMember).Error; err != nil {
+				slog.Error("handleFamilyGroupAssignment: Failed to create group member record", "error", err)
+				return fmt.Errorf("failed to create group member record: %w", err)
+			}
+			
+			// Update user to be group admin
+			if err := db.Model(user).Update("is_group_admin", true).Error; err != nil {
+				slog.Error("handleFamilyGroupAssignment: Failed to update user as group admin", "error", err)
+				return fmt.Errorf("failed to update user as group admin: %w", err)
+			}
+			
+			slog.Info("handleFamilyGroupAssignment: Successfully created family group and made user admin", "userId", user.ID, "groupId", groupID)
+			
+		} else {
+			slog.Error("handleFamilyGroupAssignment: Database error checking for existing groups", "error", result.Error)
+			return fmt.Errorf("database error checking for existing groups: %w", result.Error)
+		}
+	} else {
+		// Group exists, add this user as a member
+		slog.Info("handleFamilyGroupAssignment: Family group exists, adding user as member", "userId", user.ID, "groupId", existingGroup.ID)
+		
+		// Check if user is already a member
+		var existingMember groupview.GroupMember
+		memberCheck := db.Where("group_id = ? AND user_id = ?", existingGroup.ID, user.ID).First(&existingMember)
+		
+		if memberCheck.Error != nil {
+			if errors.Is(memberCheck.Error, gorm.ErrRecordNotFound) {
+				// User is not a member, add them
+				memberID := uuid.New().String()
+				groupMember := groupview.GroupMember{
+					ID:      memberID,
+					GroupID: existingGroup.ID,
+					UserID:  user.ID,
+					Role:    "member",
+				}
+				
+				if err := db.Create(&groupMember).Error; err != nil {
+					slog.Error("handleFamilyGroupAssignment: Failed to create group member record", "error", err)
+					return fmt.Errorf("failed to create group member record: %w", err)
+				}
+				
+				slog.Info("handleFamilyGroupAssignment: Successfully added user to existing family group", "userId", user.ID, "groupId", existingGroup.ID)
+			} else {
+				slog.Error("handleFamilyGroupAssignment: Database error checking for existing membership", "error", memberCheck.Error)
+				return fmt.Errorf("database error checking for existing membership: %w", memberCheck.Error)
+			}
+		} else {
+			slog.Info("handleFamilyGroupAssignment: User is already a member of the family group", "userId", user.ID, "groupId", existingGroup.ID)
+		}
+	}
+	
 	return nil
 }
 
