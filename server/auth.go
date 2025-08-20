@@ -22,7 +22,7 @@ import (
 	"golang.org/x/crypto/argon2"
 	"gorm.io/gorm"
 	"github.com/google/uuid"
-	"./groupview"
+	"github.com/suheilpurewal/Watcharr/groupview"
 )
 
 type UserType uint8

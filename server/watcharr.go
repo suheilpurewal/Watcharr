@@ -20,7 +20,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	groupview "github.com/sbondCo/Watcharr/groupview"
+	groupview "github.com/suheilpurewal/Watcharr/groupview"
 )
 
 type GormModel struct {
