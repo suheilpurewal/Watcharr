@@ -87,13 +87,15 @@
     }
   }
 
-  $: if (open) {
-    loadPendingRatings();
-  }
+  $effect(() => {
+    if (open) {
+      loadPendingRatings();
+    }
+  });
 
-  $: currentPendingRating = pendingRatings[currentRatingIndex];
-  $: hasRatings = pendingRatings.length > 0;
-  $: remainingCount = pendingRatings.length - currentRatingIndex;
+  let currentPendingRating = $derived(pendingRatings[currentRatingIndex]);
+  let hasRatings = $derived(pendingRatings.length > 0);
+  let remainingCount = $derived(pendingRatings.length - currentRatingIndex);
 </script>
 
 {#if open && hasRatings && currentPendingRating}
