@@ -143,9 +143,9 @@ func main() {
 		})
 	}
 	br := newBaseRouter(db, gine.Group("/api"))
-	// Only add setup routes if there are no users found in db.
+	// Only add setup routes if there are no users found in db (excluding soft-deleted users).
 	var userCount int64
-	if uresp := db.Model(&User{}).Count(&userCount); uresp.Error == nil {
+	if uresp := db.Model(&User{}).Where("deleted_at IS NULL").Count(&userCount); uresp.Error == nil {
 		if userCount != 0 {
 			slog.Debug("registered users found.. skipped creating setup routes.")
 		} else {

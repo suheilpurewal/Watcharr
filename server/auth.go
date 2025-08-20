@@ -345,9 +345,9 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 }
 
 func registerFirstUser(user *UserRegisterRequest, db *gorm.DB) (AuthResponse, error) {
-	// Ensure no users exist
+	// Ensure no users exist (excluding soft-deleted users)
 	var userCount int64
-	uresp := db.Model(&User{}).Count(&userCount)
+	uresp := db.Model(&User{}).Where("deleted_at IS NULL").Count(&userCount)
 	if uresp.Error != nil {
 		slog.Error("registerFirstUser: User count query failed!", "error", uresp.Error)
 		return AuthResponse{}, errors.New("failed to query db for a count of users")
