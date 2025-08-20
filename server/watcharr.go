@@ -85,6 +85,8 @@ func main() {
 		&Game{},
 		&ArrRequest{},
 		&Tag{},
+		&groupview.Group{},
+		&groupview.GroupMember{},
 		&groupview.Member{},
     	&groupview.ViewingSession{},
    	    &groupview.Attendance{},
@@ -166,7 +168,7 @@ func main() {
 	br.addTagRoutes()
 	br.rg.Static("/img", path.Join(DataPath, "img"))
 
-	groupview.RegisterRoutes(db, br.rg)
+	groupview.RegisterRoutes(db, br.rg, AuthRequired(db))
 
 	go setupTasks(db)
 
