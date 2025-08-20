@@ -14,7 +14,7 @@
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
-  let members: Member[] = [];
+  let members: Member[] = $state([]);
   let selected = new Set<string>();
   let startedAt = defaultStartedAt;   // bound to datetime-local
   let saving = false;
