@@ -288,12 +288,12 @@
 				Open Attendance (test)
 				</button>
 				<AttendanceModal
-					open={showAttendance}
-					defaultStartedAt={defaultStartedAt}
+					open={$showAttendance}
 					mediaId={mediaId}
 					mediaType="movie"
-					on:submit={afterAttendanceSaved}
-					on:cancel={cancelAttendance}
+					defaultStartedAt={$defaultStartedAt}
+					onsubmit={afterAttendanceSaved}
+					oncancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts

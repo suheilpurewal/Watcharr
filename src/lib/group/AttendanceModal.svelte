@@ -1,20 +1,21 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
 
-  // Props (project-style callbacks)
+  // plain props (no onSubmit/onCancel props)
   let {
     open = false,
     mediaId = "",
     mediaType = "movie" as "movie" | "episode",
     defaultStartedAt = new Date().toISOString(),
     allowRatings = false,
-    onSubmit = () => {},
-    onCancel = () => {},
   } = $props();
 
-  let members: Array<{ id: string; displayName: string; isActive: boolean }> = [];
+  type Member = { id: string; displayName: string; isActive: boolean };
+
+  let members: Member[] = [];
   let selected = new Set<string>();
-  let startedAt = defaultStartedAt;
+  let startedAt = defaultStartedAt;   // bound to datetime-local
   let saving = false;
   let errorMsg = "";
 
@@ -22,8 +23,19 @@
     const r = await fetch("/api/group/members");
     members = await r.json();
   }
+
+  // initial fetch if opened on mount
   onMount(() => { if (open) loadMembers(); });
-  $effect: if (open) loadMembers();
+
+  // runes-safe reactive effects
+  $effect(() => {
+    if (open) loadMembers();
+  });
+
+  // keep input in sync when modal opens with a (possibly) new default
+  $effect(() => {
+    if (open) startedAt = defaultStartedAt;
+  });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
@@ -53,8 +65,8 @@
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // Call parent callback prop (not event)
-      onSubmit();
+      // tell parent we saved successfully
+      dispatch("submit");
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -64,7 +76,7 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    onCancel(); // Call parent callback prop (not event)
+    dispatch("cancel");
   }
 </script>
 
@@ -98,6 +110,7 @@
     </div>
   </div>
 {/if}
+
 
 
 <style>
