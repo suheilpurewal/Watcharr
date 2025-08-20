@@ -283,9 +283,6 @@
 					status={wListItem?.status}
 					onChange={onStatusIntercept}
 				/>
-				<button onclick={() => { showAttendance = true; console.log('[group] TV manual open'); }}>
-				Open Attendance (test)
-				</button>
 				<AttendanceModal
 					open={showAttendance}
 					mediaId={mediaId}

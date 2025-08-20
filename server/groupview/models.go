@@ -24,13 +24,14 @@ type ViewingSession struct {
 }
 
 type Attendance struct {
-	ID               string    `gorm:"primaryKey" json:"id"` // uuid
-	ViewingSessionID string    `gorm:"index;not null" json:"viewingSessionId"`
-	MemberID         string    `gorm:"index;not null" json:"memberId"`
-	Rating           *float64  `json:"rating"`
+	ID               string     `gorm:"primaryKey" json:"id"` // uuid
+	ViewingSessionID string     `gorm:"index;not null" json:"viewingSessionId"`
+	MemberID         string     `gorm:"index;not null" json:"memberId"` // Keep for backward compatibility
+	UserID           *uint      `gorm:"index" json:"userId"`             // New field for user-based attendance
+	Rating           *float64   `json:"rating"`
 	RatedAt          *time.Time `json:"ratedAt"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	UpdatedAt        time.Time  `json:"updatedAt"`
 }
 
 func (Attendance) TableName() string    { return "attendances" }

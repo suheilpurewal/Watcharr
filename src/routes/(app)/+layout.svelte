@@ -13,6 +13,7 @@
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
 	import { isTouch } from "@/lib/util/helpers";
 	import { store, defaultSort } from "@/store.svelte";
+	import PendingRatingsModal from "@/lib/group/PendingRatingsModal.svelte";
 	import axios from "axios";
 	import { onMount } from "svelte";
 	interface Props {
@@ -31,6 +32,7 @@
 	let detailedMenuShown = $state(false);
 	let tagMenuShown = $state(false);
 	let scroll = window.scrollY;
+	let showPendingRatings = $state(false);
 
 	function handleProfileClick() {
 		if (!localStorage.getItem("token")) {
@@ -122,6 +124,16 @@
 			}
 			if (ts?.data) {
 				store.tags = ts.data;
+			}
+
+			// Check for pending ratings after user data is loaded
+			try {
+				const pendingResp = await axios.get("/api/group/my-pending-ratings");
+				if (pendingResp?.data?.length > 0) {
+					showPendingRatings = true;
+				}
+			} catch (err) {
+				console.log("No pending ratings or group features not available:", err);
 			}
 		} else {
 			goto("/login?again=1");
@@ -371,6 +383,15 @@
 {:catch err}
 	<PageError pretty="Failed to retrieve user data!" error={err} />
 {/await}
+
+<!-- Pending Ratings Modal -->
+{#if showPendingRatings}
+	<PendingRatingsModal
+		open={showPendingRatings}
+		onclose={() => (showPendingRatings = false)}
+		oncomplete={() => (showPendingRatings = false)}
+	/>
+{/if}
 
 <style lang="scss">
 	nav {
