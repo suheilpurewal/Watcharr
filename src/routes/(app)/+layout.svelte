@@ -345,6 +345,13 @@
 				<Icon i="compass" wh={26} />
 			</button>
 			<button
+				class="plain other family"
+				onclick={() => goto("/family")}
+				use:tooltip={{ text: "Family History", pos: "bot" }}
+			>
+				<Icon i="home" wh={24} />
+			</button>
+			<button
 				class="plain other following"
 				onclick={() => {
 					closeAllSubMenus("following");
