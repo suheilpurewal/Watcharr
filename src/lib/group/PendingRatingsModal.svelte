@@ -2,8 +2,7 @@
   import { onMount } from "svelte";
   import { store } from "@/store.svelte";
 
-  export let open = false;
-  export let onClose = () => {};
+  let { open = false, onclose = () => {} } = $props();
 
   type PendingRating = {
     attendanceId: string;
@@ -25,9 +24,9 @@
     
     loading = true;
     try {
-      const response = await fetch("/api/group/my-pending-ratings", {
+      const response = await fetch("/group/my-pending-ratings", {
         headers: {
-          "Authorization": store.userInfo?.token || "",
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
         },
       });
       
@@ -51,11 +50,11 @@
     submitting = true;
     
     try {
-      const response = await fetch(`/api/group/attendance/${rating.attendanceId}/rating`, {
+      const response = await fetch(`/group/attendance/${rating.attendanceId}/rating`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": store.userInfo?.token || "",
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
         },
         body: JSON.stringify({ rating: currentRating }),
       });
@@ -67,7 +66,7 @@
         
         if (currentRatingIndex >= pendingRatings.length) {
           // All ratings submitted, close modal
-          onClose();
+          onclose();
         }
       } else {
         console.error("Failed to submit rating");
@@ -84,7 +83,7 @@
     currentRating = 5; // Reset to default
     
     if (currentRatingIndex >= pendingRatings.length) {
-      onClose();
+      onclose();
     }
   }
 
@@ -98,7 +97,7 @@
 </script>
 
 {#if open && hasRatings && currentPendingRating}
-  <div class="overlay" on:click={(e) => { if (e.currentTarget === e.target) onClose(); }}>
+  <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) onclose(); }}>
     <div class="modal">
       <h3>Rate Your Viewing Experience</h3>
       
@@ -139,8 +138,8 @@
         </div>
 
         <div class="actions">
-          <button on:click={skipRating} class="ghost">Skip</button>
-          <button on:click={submitRating} disabled={submitting}>
+          <button onclick={skipRating} class="ghost">Skip</button>
+          <button onclick={submitRating} disabled={submitting}>
             {submitting ? "Submitting..." : "Submit Rating"}
           </button>
         </div>
@@ -148,12 +147,12 @@
     </div>
   </div>
 {:else if open && !loading && !hasRatings}
-  <div class="overlay" on:click={(e) => { if (e.currentTarget === e.target) onClose(); }}>
+  <div class="overlay" onclick={(e) => { if (e.currentTarget === e.target) onclose(); }}>
     <div class="modal">
       <h3>No Pending Ratings</h3>
       <p>You don't have any viewings that need ratings right now.</p>
       <div class="actions">
-        <button on:click={onClose}>Close</button>
+        <button onclick={onclose}>Close</button>
       </div>
     </div>
   </div>
