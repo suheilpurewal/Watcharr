@@ -447,10 +447,12 @@ func (a *API) ShareContentToFamily(c *gin.Context) {
 		ratedAt = &t
 	}
 
+	// Convert userID to uint properly
+	userIDUint := userID.(uint)
 	attendance := Attendance{
 		ID:               uuid.NewString(),
 		ViewingSessionID: session.ID,
-		UserID:           &userID.(uint),
+		UserID:           &userIDUint,
 		Rating:           req.Rating,
 		RatedAt:          ratedAt,
 	}
