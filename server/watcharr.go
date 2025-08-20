@@ -95,6 +95,15 @@ func main() {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
+	// Run group view SQL migrations
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("Failed to get SQL DB instance:", err)
+	}
+	if err := groupview.Migrate(sqlDB); err != nil {
+		log.Fatal("Failed to run group view migrations:", err)
+	}
+
 	if isProd {
 		go runUI()
 		gin.SetMode(gin.ReleaseMode)

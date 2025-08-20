@@ -61,7 +61,11 @@ export type Icon =
 	| "github"
 	| "website"
 	| "tmdb"
-	| "igdb";
+	| "igdb"
+	| "home"
+	| "arrow-up"
+	| "arrow-down"
+	| "note";
 
 export type Theme = "light" | "dark" | "system";
 

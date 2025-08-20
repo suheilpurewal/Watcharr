@@ -622,6 +622,66 @@
 			d="M467 45.2A44.45 44.45 0 00435.29 32H312.36a30.63 30.63 0 00-21.52 8.89L45.09 286.59a44.82 44.82 0 000 63.32l117 117a44.83 44.83 0 0063.34 0l245.65-245.6A30.6 30.6 0 00480 199.8v-123a44.24 44.24 0 00-13-31.6zM384 160a32 32 0 1132-32 32 32 0 01-32 32z"
 		/>
 	</svg>
+{:else if i === "home"}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width={wh}
+		height={wh}
+		viewBox="0 0 512 512"
+	>
+		<path
+			d="M261.56 101.28a8 8 0 00-11.06 0L66.4 277.15a8 8 0 00-2.47 5.79L63.9 448a32 32 0 0032 32H192a16 16 0 0016-16V328a8 8 0 018-8h80a8 8 0 018 8v136a16 16 0 0016 16h96.06a32 32 0 0032-32V282.94a8 8 0 00-2.47-5.79z"
+		/>
+		<path
+			d="M490.91 244.15l-74.8-71.56V64a16 16 0 00-16-16h-48a16 16 0 00-16 16v32l-57.92-55.38C272.77 35.14 264.71 32 256 32c-8.68 0-16.72 3.14-22.14 8.63l-212.7 203.5c-6.22 6-7 15.87-1.34 22.37A16 16 0 0043 267.56L250.5 69.28a8 8 0 0111.06 0l207.52 198.28a16 16 0 0022.59-.44c6.14-6.36 5.63-16.86-.76-22.97z"
+		/>
+	</svg>
+{:else if i === "arrow-up"}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width={wh}
+		height={wh}
+		viewBox="0 0 512 512"
+	>
+		<path
+			fill="none"
+			stroke="currentColor"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="48"
+			d="M112 244l144-144 144 144M256 120v292"
+		/>
+	</svg>
+{:else if i === "arrow-down"}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width={wh}
+		height={wh}
+		viewBox="0 0 512 512"
+	>
+		<path
+			fill="none"
+			stroke="currentColor"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="48"
+			d="M112 268l144 144 144-144M256 392V100"
+		/>
+	</svg>
+{:else if i === "note"}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width={wh}
+		height={wh}
+		viewBox="0 0 512 512"
+	>
+		<path
+			d="M368 415.86V72a24.07 24.07 0 00-24-24H72a24.07 24.07 0 00-24 24v352a40.12 40.12 0 0040 40h328.86a8 8 0 005.66-13.66zM256 336H144a16 16 0 010-32h112a16 16 0 010 32zm80-80H144a16 16 0 010-32h192a16 16 0 010 32zm0-80H144a16 16 0 010-32h192a16 16 0 010 32z"
+		/>
+		<path
+			d="M416 360v-24a40.12 40.12 0 00-40-40H48a8 8 0 00-8 8v96a40.12 40.12 0 0040 40h328a8 8 0 008-8 24.07 24.07 0 000-72z"
+		/>
+	</svg>
 {:else if i === "ticket"}
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
