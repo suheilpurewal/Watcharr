@@ -24,7 +24,7 @@
     
     loading = true;
     try {
-      const response = await fetch("/api/group/my-pending-ratings", {
+      const response = await fetch("/group/my-pending-ratings", {
         headers: {
           "Authorization": localStorage.getItem("token") || "",
         },
@@ -50,7 +50,7 @@
     submitting = true;
     
     try {
-      const response = await fetch(`/api/group/attendance/${rating.attendanceId}/rating`, {
+      const response = await fetch(`/group/attendance/${rating.attendanceId}/rating`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
