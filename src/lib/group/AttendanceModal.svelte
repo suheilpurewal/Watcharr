@@ -23,7 +23,7 @@
   async function loadMembers() {
     try {
       console.log("[group] Loading members...");
-      const r = await fetch("/api/group/members");
+      const r = await fetch("/group/members");
       if (!r.ok) {
         console.error("[group] Failed to load members:", r.status, r.statusText);
         return;
@@ -65,7 +65,7 @@
         notes: null,
         attendees: Array.from(selected).map((id) => ({ memberId: id })),
       };
-      const res = await fetch("/api/group/viewings", {
+      const res = await fetch("/group/viewings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
