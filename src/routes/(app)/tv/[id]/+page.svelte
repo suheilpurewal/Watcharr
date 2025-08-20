@@ -33,30 +33,54 @@
 	import tooltip from "@/lib/actions/tooltip.js";
 	import MyThoughts from "@/lib/content/MyThoughts.svelte";
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
+	import AttendanceModal from "$lib/group/AttendanceModal.svelte";
 
-	let { data } = $props();
+	export let data;
 
-	let wListItem = $derived(
-		store.watchedList.find(
-			(w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId,
-		),
+	let showAttendance = false;
+	let defaultStartedAt = new Date().toISOString().slice(0, 16);
+	let trailer: string | undefined;
+	let trailerShown = false;
+	let requestModalShown = false;
+	let jellyfinUrl: string | undefined;
+	let arrRequestButtonComp: ArrRequestButton | undefined;
+	let show: TMDBShowDetails | undefined;
+	let pageError: Error | undefined;
+
+	$: wListItem = store.watchedList.find(
+		(w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId,
 	);
-	let trailer: string | undefined = $state();
-	let trailerShown = $state(false);
-	let requestModalShown = $state(false);
-	let jellyfinUrl: string | undefined = $state();
-	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
-	let show: TMDBShowDetails | undefined = $state();
-	let pageError: Error | undefined = $state();
 
-	$effect(() => {
+	// For attendance modal
+	$: mediaId = String(data.tvId);
+	const mediaType: "episode" = "episode"; // TV shows use "episode" for attendance
+
+	async function onStatusIntercept(n: string) {
+		console.log('[group] TV onStatusIntercept', n);
+		if (n === "FINISHED") {
+			defaultStartedAt = new Date().toISOString().slice(0, 16);
+			showAttendance = true;
+			console.log('[group] opening TV attendance modal');
+			return;
+		}
+		contentChanged(n);
+	}
+
+	function afterAttendanceSaved() {
+		console.log('[group] TV parent afterAttendanceSaved()');
+		showAttendance = false;
+		contentChanged("FINISHED");
+	}
+	function cancelAttendance() {
+		console.log('[group] TV parent cancelAttendance()');
+		showAttendance = false;
+	}
+
+	$: if (data.tvId) {
 		(async () => {
 			try {
 				show = undefined;
 				pageError = undefined;
-				if (!data.tvId) {
-					return;
-				}
 				const resp = (
 					await axios.get(`/content/tv/${data.tvId}`, {
 						params: { region: store.userSettings?.country },
@@ -83,7 +107,7 @@
 				pageError = err;
 			}
 		})();
-	});
+	}
 
 	async function getTvCredits() {
 		const credits = (await axios.get(`/content/tv/${data.tvId}/credits`))
@@ -257,7 +281,18 @@
 				/>
 				<Status
 					status={wListItem?.status}
-					onChange={(n) => contentChanged(n)}
+					onChange={onStatusIntercept}
+				/>
+				<button onclick={() => { showAttendance = true; console.log('[group] TV manual open'); }}>
+				Open Attendance (test)
+				</button>
+				<AttendanceModal
+					open={showAttendance}
+					mediaId={mediaId}
+					mediaType="episode"
+					defaultStartedAt={defaultStartedAt}
+					on:submit={afterAttendanceSaved}
+					on:cancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts
