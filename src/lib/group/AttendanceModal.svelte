@@ -2,14 +2,12 @@
   import { onMount, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  // plain props (no onSubmit/onCancel props)
-  let {
-    open = false,
-    mediaId = "",
-    mediaType = "movie" as "movie" | "episode",
-    defaultStartedAt = new Date().toISOString(),
-    allowRatings = false,
-  } = $props();
+  // Legacy Svelte props
+  export let open = false;
+  export let mediaId = "";
+  export let mediaType: "movie" | "episode" = "movie";
+  export let defaultStartedAt = new Date().toISOString();
+  export let allowRatings = false;
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
@@ -24,18 +22,11 @@
     members = await r.json();
   }
 
-  // initial fetch if opened on mount
-  onMount(() => { if (open) loadMembers(); });
-
-  // runes-safe reactive effects
-  $effect(() => {
-    if (open) loadMembers();
-  });
-
-  // keep input in sync when modal opens with a (possibly) new default
-  $effect(() => {
-    if (open) startedAt = defaultStartedAt;
-  });
+  // Load members when modal opens
+  $: if (open) {
+    loadMembers();
+    startedAt = defaultStartedAt;
+  }
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);

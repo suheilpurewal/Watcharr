@@ -34,26 +34,24 @@
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 	import AttendanceModal from "$lib/group/AttendanceModal.svelte";
 
-	let showAttendance = $state(false);
-	let defaultStartedAt = $state(new Date().toISOString().slice(0, 16));
+	export let data;
 
-	let { data } = $props();
+	let showAttendance = false;
+	let defaultStartedAt = new Date().toISOString().slice(0, 16);
+	let trailer: string | undefined;
+	let requestModalShown = false;
+	let trailerShown = false;
+	let jellyfinUrl: string | undefined;
+	let arrRequestButtonComp: ArrRequestButton | undefined;
+	let movie: TMDBMovieDetails | undefined;
+	let pageError: Error | undefined;
 
-	let trailer: string | undefined = $state();
-	let requestModalShown = $state(false);
-	let trailerShown = $state(false);
-	let jellyfinUrl: string | undefined = $state();
-	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
-	let movie: TMDBMovieDetails | undefined = $state();
-	let pageError: Error | undefined = $state();
-	let wListItem = $derived(
-		store.watchedList.find(
-			(w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
-		),
+	$: wListItem = store.watchedList.find(
+		(w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
 	);
 
 	// adding this
-	const mediaId = String(data.movieId);
+	$: mediaId = String(data.movieId);
 	const mediaType: "movie" = "movie";
 
 	async function onStatusIntercept(n: string) {
@@ -77,15 +75,11 @@
 		showAttendance = false;
 	}
 
-
-	$effect(() => {
+	$: if (data.movieId) {
 		(async () => {
 			try {
 				movie = undefined;
 				pageError = undefined;
-				if (!data.movieId) {
-					return;
-				}
 				const resp = (
 					await axios.get(`/content/movie/${data.movieId}`, {
 						params: { region: store.userSettings?.country },
@@ -112,7 +106,7 @@
 				pageError = err;
 			}
 		})();
-	});
+	}
 
 	async function getMovieCredits() {
 		const credits = (await axios.get(`/content/movie/${data.movieId}/credits`))
@@ -288,12 +282,12 @@
 				Open Attendance (test)
 				</button>
 				<AttendanceModal
-					open={$showAttendance}
+					open={showAttendance}
 					mediaId={mediaId}
 					mediaType="movie"
-					defaultStartedAt={$defaultStartedAt}
-					onsubmit={afterAttendanceSaved}
-					oncancel={cancelAttendance}
+					defaultStartedAt={defaultStartedAt}
+					on:submit={afterAttendanceSaved}
+					on:cancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts
