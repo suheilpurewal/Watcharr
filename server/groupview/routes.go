@@ -5,20 +5,25 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(db *gorm.DB, api *gin.RouterGroup) {
+func RegisterRoutes(db *gorm.DB, api *gin.RouterGroup, authRequired gin.HandlerFunc) {
 	a := &API{DB: db}
 	g := api.Group("/group")
 	
-	// Import AuthRequired from main package
-	// Note: This assumes AuthRequired is available in the main package
-	// If not, we'll need to import it properly
-	
+	// Public routes (no auth required)
 	g.GET("/members", a.GetMembers)
 	g.POST("/members", a.PostMember)
 	g.POST("/viewings", a.PostViewing)
 	g.GET("/history", a.GetHistory)
 	
-	// These routes require authentication
-	g.GET("/my-pending-ratings", a.GetMyPendingRatings)
-	g.PUT("/attendance/:id/rating", a.UpdateAttendanceRating)
+	// Authenticated routes
+	g.GET("/my-pending-ratings", authRequired, a.GetMyPendingRatings)
+	g.PUT("/attendance/:id/rating", authRequired, a.UpdateAttendanceRating)
+	
+	// Group management routes
+	g.GET("/info", authRequired, a.GetGroupInfo)
+	g.PUT("/name", authRequired, a.UpdateGroupName)
+	
+	// Phase 2: Family history and content sharing routes
+	g.GET("/family-history", authRequired, a.GetFamilyHistory)
+	g.POST("/share-content", authRequired, a.ShareContentToFamily)
 }

@@ -2,6 +2,25 @@ package groupview
 
 import "time"
 
+// Group represents a family group
+type Group struct {
+	ID        string    `gorm:"primaryKey" json:"id"` // uuid string
+	Name      string    `gorm:"not null" json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// GroupMember links users to groups with roles
+type GroupMember struct {
+	ID      string    `gorm:"primaryKey" json:"id"` // uuid string
+	GroupID string    `gorm:"index;not null" json:"groupId"`
+	UserID  uint      `gorm:"index;not null" json:"userId"`
+	Role    string    `gorm:"not null;default:'member'" json:"role"` // 'admin' or 'member'
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Legacy Member model - keeping for backward compatibility during transition
 type Member struct {
 	ID          string    `gorm:"primaryKey" json:"id"` // uuid string
 	Slug        string    `gorm:"uniqueIndex;not null" json:"slug"`

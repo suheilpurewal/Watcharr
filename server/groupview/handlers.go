@@ -254,3 +254,217 @@ func (a *API) UpdateAttendanceRating(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
+// GetGroupInfo returns information about the user's family group
+func (a *API) GetGroupInfo(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Find the user's group through group_members table
+	var groupInfo struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Role string `json:"role"`
+	}
+
+	q := a.DB.Table("groups AS g").
+		Select("g.id, g.name, gm.role").
+		Joins("JOIN group_members gm ON gm.group_id = g.id").
+		Where("gm.user_id = ?", userID)
+
+	if err := q.Scan(&groupInfo).Error; err != nil {
+		c.String(http.StatusNotFound, "No group found for user")
+		return
+	}
+
+	c.JSON(http.StatusOK, groupInfo)
+}
+
+// UpdateGroupName allows group admins to update the group name
+func (a *API) UpdateGroupName(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	var req struct {
+		Name string `json:"name" binding:"required,min=1,max=50"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Check if user is admin of their group
+	var groupMember GroupMember
+	if err := a.DB.Where("user_id = ? AND role = ?", userID, "admin").Take(&groupMember).Error; err != nil {
+		c.String(http.StatusForbidden, "Only group admins can update group name")
+		return
+	}
+
+	// Update the group name
+	result := a.DB.Model(&Group{}).
+		Where("id = ?", groupMember.GroupID).
+		Update("name", req.Name)
+
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, result.Error.Error())
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		c.String(http.StatusNotFound, "Group not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "name": req.Name})
+}
+
+// GetFamilyHistory returns all family viewing sessions for the user's group
+func (a *API) GetFamilyHistory(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Get user's group ID
+	var groupMember GroupMember
+	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err != nil {
+		c.String(http.StatusNotFound, "User not in any group")
+		return
+	}
+
+	type FamilyHistoryItem struct {
+		SessionID    string    `json:"sessionId"`
+		MediaID      string    `json:"mediaId"`
+		MediaType    string    `json:"mediaType"`
+		StartedAt    time.Time `json:"startedAt"`
+		Notes        *string   `json:"notes"`
+		AttendeeCount int      `json:"attendeeCount"`
+		AverageRating *float64 `json:"averageRating"`
+		Attendees    []struct {
+			UserID   uint     `json:"userId"`
+			Username string   `json:"username"`
+			Rating   *float64 `json:"rating"`
+		} `json:"attendees"`
+	}
+
+	var history []FamilyHistoryItem
+
+	// Get all viewing sessions with attendees from the user's group
+	q := a.DB.Table("viewing_sessions AS vs").
+		Select(`vs.id AS session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
+		        COUNT(a.id) AS attendee_count, AVG(a.rating) AS average_rating`).
+		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
+		Joins("JOIN group_members gm ON gm.user_id = a.user_id").
+		Where("gm.group_id = ? AND a.user_id IS NOT NULL", groupMember.GroupID).
+		Group("vs.id, vs.media_id, vs.media_type, vs.started_at, vs.notes").
+		Order("vs.started_at DESC").
+		Limit(100)
+
+	if err := q.Scan(&history).Error; err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Get attendees for each session
+	for i := range history {
+		var attendees []struct {
+			UserID   uint     `json:"userId"`
+			Username string   `json:"username"`
+			Rating   *float64 `json:"rating"`
+		}
+
+		attendeeQuery := a.DB.Table("attendances AS a").
+			Select("u.id AS user_id, u.username, a.rating").
+			Joins("JOIN users u ON u.id = a.user_id").
+			Joins("JOIN group_members gm ON gm.user_id = u.id").
+			Where("a.viewing_session_id = ? AND gm.group_id = ? AND a.user_id IS NOT NULL", 
+				history[i].SessionID, groupMember.GroupID)
+
+		if err := attendeeQuery.Scan(&attendees).Error; err != nil {
+			continue // Skip this session if we can't get attendees
+		}
+
+		history[i].Attendees = attendees
+	}
+
+	c.JSON(http.StatusOK, history)
+}
+
+// ShareContentToFamily shares a user's personal watched content to the family group
+func (a *API) ShareContentToFamily(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	var req struct {
+		MediaID   string    `json:"mediaId" binding:"required"`
+		MediaType string    `json:"mediaType" binding:"required"`
+		StartedAt time.Time `json:"startedAt" binding:"required"`
+		Notes     *string   `json:"notes"`
+		Rating    *float64  `json:"rating"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Get user's group
+	var groupMember GroupMember
+	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err != nil {
+		c.String(http.StatusNotFound, "User not in any group")
+		return
+	}
+
+	// Create viewing session
+	session := ViewingSession{
+		ID:        uuid.NewString(),
+		MediaID:   req.MediaID,
+		MediaType: req.MediaType,
+		StartedAt: req.StartedAt,
+		Notes:     req.Notes,
+	}
+
+	tx := a.DB.Begin()
+	if err := tx.Create(&session).Error; err != nil {
+		tx.Rollback()
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Create attendance record for the sharing user
+	var ratedAt *time.Time
+	if req.Rating != nil {
+		t := time.Now().UTC()
+		ratedAt = &t
+	}
+
+	attendance := Attendance{
+		ID:               uuid.NewString(),
+		ViewingSessionID: session.ID,
+		UserID:           &userID.(uint),
+		Rating:           req.Rating,
+		RatedAt:          ratedAt,
+	}
+
+	if err := tx.Create(&attendance).Error; err != nil {
+		tx.Rollback()
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"sessionId": session.ID})
+}

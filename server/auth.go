@@ -67,6 +67,8 @@ type User struct {
 	Tags []Tag `json:"-"`
 	// Users permissions
 	Permissions int `gorm:"default:1" json:"-"`
+	// Is this user a group admin (for family group management)
+	IsGroupAdmin bool `gorm:"default:false" json:"isGroupAdmin"`
 	// All user settings cols, in another struct for reusability
 	UserSettings
 }
