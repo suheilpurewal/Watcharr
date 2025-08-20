@@ -34,24 +34,26 @@
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 	import AttendanceModal from "$lib/group/AttendanceModal.svelte";
 
-	export let data;
+	let { data } = $props();
 
-	let showAttendance = false;
-	let defaultStartedAt = new Date().toISOString().slice(0, 16);
-	let trailer: string | undefined;
-	let requestModalShown = false;
-	let trailerShown = false;
-	let jellyfinUrl: string | undefined;
-	let arrRequestButtonComp: ArrRequestButton | undefined;
-	let movie: TMDBMovieDetails | undefined;
-	let pageError: Error | undefined;
+	let showAttendance = $state(false);
+	let defaultStartedAt = $state(new Date().toISOString().slice(0, 16));
+	let trailer: string | undefined = $state();
+	let requestModalShown = $state(false);
+	let trailerShown = $state(false);
+	let jellyfinUrl: string | undefined = $state();
+	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
+	let movie: TMDBMovieDetails | undefined = $state();
+	let pageError: Error | undefined = $state();
 
-	$: wListItem = store.watchedList.find(
-		(w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
+	let wListItem = $derived(
+		store.watchedList.find(
+			(w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId,
+		),
 	);
 
 	// adding this
-	$: mediaId = String(data.movieId);
+	const mediaId = String(data.movieId);
 	const mediaType: "movie" = "movie";
 
 	async function onStatusIntercept(n: string) {
@@ -75,38 +77,40 @@
 		showAttendance = false;
 	}
 
-	$: if (data.movieId) {
-		(async () => {
-			try {
-				movie = undefined;
-				pageError = undefined;
-				const resp = (
-					await axios.get(`/content/movie/${data.movieId}`, {
-						params: { region: store.userSettings?.country },
-					})
-				).data as TMDBMovieDetails;
-				if (resp.videos?.results?.length > 0) {
-					const t = resp.videos.results.find(
-						(v) => v.type?.toLowerCase() === "trailer",
-					);
-					if (t?.key) {
-						if (t?.site?.toLowerCase() === "youtube") {
-							trailer = `https://www.youtube.com/embed/${t?.key}`;
+	$effect(() => {
+		if (data.movieId) {
+			(async () => {
+				try {
+					movie = undefined;
+					pageError = undefined;
+					const resp = (
+						await axios.get(`/content/movie/${data.movieId}`, {
+							params: { region: store.userSettings?.country },
+						})
+					).data as TMDBMovieDetails;
+					if (resp.videos?.results?.length > 0) {
+						const t = resp.videos.results.find(
+							(v) => v.type?.toLowerCase() === "trailer",
+						);
+						if (t?.key) {
+							if (t?.site?.toLowerCase() === "youtube") {
+								trailer = `https://www.youtube.com/embed/${t?.key}`;
+							}
 						}
 					}
+					contentExistsOnJellyfin("movie", resp.title, resp.id).then((j) => {
+						if (j?.hasContent && j?.url !== "") {
+							jellyfinUrl = j.url;
+						}
+					});
+					movie = resp;
+				} catch (err: any) {
+					movie = undefined;
+					pageError = err;
 				}
-				contentExistsOnJellyfin("movie", resp.title, resp.id).then((j) => {
-					if (j?.hasContent && j?.url !== "") {
-						jellyfinUrl = j.url;
-					}
-				});
-				movie = resp;
-			} catch (err: any) {
-				movie = undefined;
-				pageError = err;
-			}
-		})();
-	}
+			})();
+		}
+	});
 
 	async function getMovieCredits() {
 		const credits = (await axios.get(`/content/movie/${data.movieId}/credits`))
@@ -283,8 +287,8 @@
 					mediaId={mediaId}
 					mediaType="movie"
 					defaultStartedAt={defaultStartedAt}
-					on:submit={afterAttendanceSaved}
-					on:cancel={cancelAttendance}
+					onsubmit={afterAttendanceSaved}
+					oncancel={cancelAttendance}
 				/>
 				{#if wListItem}
 					<MyThoughts

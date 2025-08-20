@@ -26,7 +26,7 @@
     try {
       const response = await fetch("/api/group/my-pending-ratings", {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+          "Authorization": localStorage.getItem("token") || "",
         },
       });
       
@@ -54,7 +54,7 @@
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+          "Authorization": localStorage.getItem("token") || "",
         },
         body: JSON.stringify({ rating: currentRating }),
       });
