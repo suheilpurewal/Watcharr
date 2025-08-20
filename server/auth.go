@@ -52,7 +52,7 @@ type User struct {
 	GormModel
 	Username string `gorm:"uniqueIndex:usr_name_to_type;not null" json:"username" binding:"required"`
 	Password string `gorm:"not null" json:"password" binding:"required"`
-	AvatarID uint   `json:"-"`
+	AvatarID *uint  `json:"-"`
 	Avatar   Image  `json:"avatar"`
 	Bio      string `json:"bio"`
 	// The type of user/which auth service they originate from.

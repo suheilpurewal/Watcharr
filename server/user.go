@@ -18,7 +18,7 @@ import (
 type PublicUser struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
-	AvatarID uint   `json:"-"`
+	AvatarID *uint  `json:"-"`
 	Avatar   Image  `json:"avatar"`
 	Bio      string `json:"bio,omitempty"`
 }
@@ -28,7 +28,7 @@ type PrivateUser struct {
 	Username    string   `json:"username"`
 	Type        UserType `json:"type"`
 	Permissions int      `json:"permissions"`
-	AvatarID    uint     `json:"-"`
+	AvatarID    *uint    `json:"-"`
 	Avatar      Image    `json:"avatar"`
 	Bio         string   `json:"bio"`
 }
@@ -186,7 +186,7 @@ func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
 			return errors.New("image has no id")
 		}
 		// Update users avatar to newly inserted
-		if err := tx.Where("id = ?", userId).Updates(&User{AvatarID: img.ID}).Error; err != nil {
+		if err := tx.Where("id = ?", userId).Updates(&User{AvatarID: &img.ID}).Error; err != nil {
 			return err
 		}
 		// commit transaction if no errors
