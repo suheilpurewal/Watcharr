@@ -1,13 +1,16 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
+  import { onMount } from "svelte";
 
-  // Legacy Svelte props
-  export let open = false;
-  export let mediaId = "";
-  export let mediaType: "movie" | "episode" = "movie";
-  export let defaultStartedAt = new Date().toISOString();
-  export let allowRatings = false;
+  // Svelte 5 runes props
+  let {
+    open = false,
+    mediaId = "",
+    mediaType = "movie" as "movie" | "episode",
+    defaultStartedAt = new Date().toISOString(),
+    allowRatings = false,
+    onsubmit = () => {},
+    oncancel = () => {}
+  } = $props();
 
   type Member = { id: string; displayName: string; isActive: boolean };
 
@@ -23,10 +26,12 @@
   }
 
   // Load members when modal opens
-  $: if (open) {
-    loadMembers();
-    startedAt = defaultStartedAt;
-  }
+  $effect(() => {
+    if (open) {
+      loadMembers();
+      startedAt = defaultStartedAt;
+    }
+  });
 
   function toggle(id: string, checked: boolean) {
     checked ? selected.add(id) : selected.delete(id);
@@ -57,7 +62,7 @@
       if (!res.ok) throw new Error(await res.text());
 
       // tell parent we saved successfully
-      dispatch("submit");
+      onsubmit();
     } catch (e) {
       errorMsg = (e as Error).message || "Failed to save";
     } finally {
@@ -67,7 +72,7 @@
 
   function close() {
     console.log("[group] modal cancel clicked");
-    dispatch("cancel");
+    oncancel();
   }
 </script>
 
