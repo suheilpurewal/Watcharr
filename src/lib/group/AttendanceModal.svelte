@@ -21,8 +21,19 @@
   let errorMsg = "";
 
   async function loadMembers() {
-    const r = await fetch("/api/group/members");
-    members = await r.json();
+    try {
+      console.log("[group] Loading members...");
+      const r = await fetch("/api/group/members");
+      if (!r.ok) {
+        console.error("[group] Failed to load members:", r.status, r.statusText);
+        return;
+      }
+      const data = await r.json();
+      console.log("[group] Members loaded:", data);
+      members = data;
+    } catch (error) {
+      console.error("[group] Error loading members:", error);
+    }
   }
 
   // Load members when modal opens
@@ -88,12 +99,10 @@
 
       <div class="members">
         {#each members as m}
-          {#if m.isActive}
-            <label class="chip">
-              <input type="checkbox" onchange={(e) => toggle(m.id, (e.target as HTMLInputElement).checked)} />
-              <span>{m.displayName}</span>
-            </label>
-          {/if}
+          <label class="chip">
+            <input type="checkbox" onchange={(e) => toggle(m.id, (e.target as HTMLInputElement).checked)} />
+            <span>{m.displayName}</span>
+          </label>
         {/each}
       </div>
 
