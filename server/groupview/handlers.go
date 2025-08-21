@@ -164,44 +164,32 @@ func (a *API) PostViewing(c *gin.Context) {
 		}
 		if err := tx.Create(&rec).Error; err != nil { tx.Rollback(); c.String(http.StatusBadRequest, err.Error()); return }
 		
-		// Also create a Watched record for this user/content combination using Watcharr's addWatched function
+		// Create a Watched record for this user/content combination (without rating)
+		// The rating will be added later through the regular Watcharr rating system
 		if userID != nil {
 			// Convert mediaID to integer for the watcheds table
 			mediaIDInt, err := strconv.Atoi(in.MediaID)
 			if err == nil {
-				// Use Watcharr's addWatched function to properly create the watched record
-				rating := 0.0
-				if aIn.Rating != nil {
-					rating = *aIn.Rating
-				}
-				
-				// Create the watched record using Watcharr's system
-				watchedRecord := Watched{
-					Status:    FINISHED,
-					Rating:    rating,
-					UserID:    *userID,
-					ContentID: &mediaIDInt,
-				}
-				
 				// Check if a watched record already exists
 				var existingWatched Watched
 				watchedExists := tx.Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).First(&existingWatched).Error == nil
 				
 				if !watchedExists {
-					// Create new watched record
+					// Create new watched record without rating (rating will be added later)
+					watchedRecord := Watched{
+						Status:    FINISHED,
+						Rating:    0.0, // Default to 0, will be updated when user rates
+						UserID:    *userID,
+						ContentID: &mediaIDInt,
+					}
+					
 					if err := tx.Create(&watchedRecord).Error; err != nil {
 						tx.Rollback()
 						c.String(http.StatusBadRequest, "Failed to create watched record: "+err.Error())
 						return
 					}
-				} else if aIn.Rating != nil {
-					// Update existing watched record with new rating
-					if err := tx.Model(&existingWatched).Update("rating", *aIn.Rating).Error; err != nil {
-						tx.Rollback()
-						c.String(http.StatusBadRequest, "Failed to update watched record: "+err.Error())
-						return
-					}
 				}
+				// If record exists, don't update it - let the regular rating system handle it
 			}
 		}
 	}
