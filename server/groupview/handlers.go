@@ -479,6 +479,15 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 			}
 			a.DB.Table("watcheds").Select("user_id, rating").Where("content_id = ? AND status = 'FINISHED'", mediaIDInt).Find(&specificRatings)
 			slog.Info("Debug: Specific ratings for content", "contentID", mediaIDInt, "ratings", specificRatings)
+			
+			// Debug: Show all watcheds records for each user to see what content_ids they have
+			var userWatchedRecords []struct {
+				UserID    uint    `json:"user_id"`
+				ContentID int     `json:"content_id"`
+				Rating    float64 `json:"rating"`
+			}
+			a.DB.Table("watcheds").Select("user_id, content_id, rating").Where("status = 'FINISHED'").Find(&userWatchedRecords)
+			slog.Info("Debug: All user watched records by user", "records", userWatchedRecords)
 		}
 	
 			// Debug: Check for specific ratings
@@ -522,13 +531,11 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		}
 
 		// Get ALL attendees for this session with their ratings from the Watched table
-		// Convert mediaID to integer for the query
-		mediaIDInt, _ := strconv.Atoi(history[i].MediaID)
+		// First, let's find what content_id is actually stored in watcheds for this user/content combination
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, COALESCE(w.rating, 0) AS rating").
 			Joins("JOIN users u ON u.id = a.user_id").
-			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
-				mediaIDInt).
+			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.status = 'FINISHED'").
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)
 		
