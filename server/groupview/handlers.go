@@ -22,6 +22,22 @@ type UserMember struct {
 	IsActive    bool   `json:"isActive"`
 }
 
+// FamilyHistoryItem represents a family viewing session with attendees
+type FamilyHistoryItem struct {
+	SessionID    string    `json:"sessionId"`
+	MediaID      string    `json:"mediaId"`
+	MediaType    string    `json:"mediaType"`
+	StartedAt    time.Time `json:"startedAt"`
+	Notes        *string   `json:"notes"`
+	AttendeeCount int      `json:"attendeeCount"`
+	AverageRating *float64 `json:"averageRating"`
+	Attendees    []struct {
+		UserID   uint     `json:"userId"`
+		Username string   `json:"username"`
+		Rating   *float64 `json:"rating"`
+	} `json:"attendees"`
+}
+
 func (a *API) GetMembers(c *gin.Context) {
 	// Get all registered users and return them as group members
 	var users []struct {
@@ -343,21 +359,6 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		}
 		c.String(http.StatusInternalServerError, "Failed to check group membership")
 		return
-	}
-
-	type FamilyHistoryItem struct {
-		SessionID    string    `json:"sessionId"`
-		MediaID      string    `json:"mediaId"`
-		MediaType    string    `json:"mediaType"`
-		StartedAt    time.Time `json:"startedAt"`
-		Notes        *string   `json:"notes"`
-		AttendeeCount int      `json:"attendeeCount"`
-		AverageRating *float64 `json:"averageRating"`
-		Attendees    []struct {
-			UserID   uint     `json:"userId"`
-			Username string   `json:"username"`
-			Rating   *float64 `json:"rating"`
-		} `json:"attendees"`
 	}
 
 	var history []FamilyHistoryItem
