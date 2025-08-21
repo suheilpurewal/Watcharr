@@ -56,11 +56,11 @@ type FamilyHistoryItem struct {
 	Notes        *string   `json:"notes"`
 	AttendeeCount int      `json:"attendeeCount"`
 	AverageRating *float64 `json:"averageRating"`
-	Attendees    []struct {
-		UserID   uint     `json:"userId"`
-		Username string   `json:"username"`
-		Rating   *float64 `json:"rating"`
-	} `json:"attendees"`
+			Attendees    []struct {
+			UserID   uint    `json:"userId"`
+			Username string  `json:"username"`
+			Rating   float64 `json:"rating"`
+		} `json:"attendees"`
 }
 
 func (a *API) GetMembers(c *gin.Context) {
@@ -507,9 +507,9 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 			AttendeeCount:  row.AttendeeCount,
 			AverageRating:  row.AverageRating,
 			Attendees:      []struct {
-				UserID   uint     `json:"userId"`
-				Username string   `json:"username"`
-				Rating   *float64 `json:"rating"`
+				UserID   uint    `json:"userId"`
+				Username string  `json:"username"`
+				Rating   float64 `json:"rating"`
 			}{},
 		}
 	}
@@ -517,16 +517,16 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	// Get attendees for each session
 	for i := range history {
 		var attendees []struct {
-			UserID   uint     `json:"userId"`
-			Username string   `json:"username"`
-			Rating   *float64 `json:"rating"`
+			UserID   uint    `json:"userId"`
+			Username string  `json:"username"`
+			Rating   float64 `json:"rating"`
 		}
 
 		// Get ALL attendees for this session with their ratings from the Watched table
 		// Convert mediaID to integer for the query
 		mediaIDInt, _ := strconv.Atoi(history[i].MediaID)
 		attendeeQuery := a.DB.Table("attendances AS a").
-			Select("u.id AS user_id, u.username, w.rating").
+			Select("u.id AS user_id, u.username, COALESCE(w.rating, 0) AS rating").
 			Joins("JOIN users u ON u.id = a.user_id").
 			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
 				mediaIDInt).
@@ -601,9 +601,9 @@ func (a *API) GetPersonalHistory(c *gin.Context) {
 			AttendeeCount:  row.AttendeeCount,
 			AverageRating:  row.AverageRating,
 			Attendees:      []struct {
-				UserID   uint     `json:"userId"`
-				Username string   `json:"username"`
-				Rating   *float64 `json:"rating"`
+				UserID   uint    `json:"userId"`
+				Username string  `json:"username"`
+				Rating   float64 `json:"rating"`
 			}{},
 		}
 	}
@@ -611,9 +611,9 @@ func (a *API) GetPersonalHistory(c *gin.Context) {
 	// Get attendees for each session
 	for i := range history {
 		var attendees []struct {
-			UserID   uint     `json:"userId"`
-			Username string   `json:"username"`
-			Rating   *float64 `json:"rating"`
+			UserID   uint    `json:"userId"`
+			Username string  `json:"username"`
+			Rating   float64 `json:"rating"`
 		}
 
 		attendeeQuery := a.DB.Table("attendances AS a").
