@@ -240,7 +240,7 @@
 							<div class="attendee-list">
 								{#each item.attendees as attendee}
 									<div class="attendee">
-										<span class="name" style="color: red;">{attendee.username}</span>
+										<span class="name">{attendee.username}</span>
 										{#if attendee.rating !== undefined && attendee.rating !== null}
 											<span class="individual-rating">
 												<Icon i="star" wh={12} />

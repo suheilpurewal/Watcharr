@@ -465,7 +465,7 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 			UserID    uint    `json:"user_id"`
 			ContentID int     `json:"content_id"`
 			Status    string  `json:"status"`
-			Rating    *float64 `json:"rating"`
+			Rating    float64 `json:"rating"`
 		}
 		a.DB.Table("watcheds").Select("user_id, content_id, status, rating").Find(&watchedRecords)
 		slog.Info("Debug: All watcheds records", "records", watchedRecords)
