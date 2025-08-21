@@ -14,6 +14,7 @@ func RegisterRoutes(db *gorm.DB, api *gin.RouterGroup, authRequired gin.HandlerF
 	g.POST("/members", a.PostMember)
 	g.POST("/viewings", a.PostViewing)
 	g.GET("/history", a.GetHistory)
+	g.GET("/test-tables", a.TestDatabaseTables)
 	
 	// Authenticated routes
 	g.GET("/my-pending-ratings", authRequired, a.GetMyPendingRatings)

@@ -371,6 +371,18 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	// Get all viewing sessions with attendees from the user's group
 	slog.Info("GetFamilyHistory: Starting query for group", "groupID", groupMember.GroupID)
 	
+	// First, get the basic session information
+	type sessionRow struct {
+		SessionID      string     `json:"session_id"`
+		MediaID        string     `json:"media_id"`
+		MediaType      string     `json:"media_type"`
+		StartedAt      time.Time  `json:"started_at"`
+		Notes          *string    `json:"notes"`
+		AttendeeCount  int        `json:"attendee_count"`
+		AverageRating  *float64   `json:"average_rating"`
+	}
+	
+	var sessionRows []sessionRow
 	q := a.DB.Table("viewing_sessions AS vs").
 		Select(`vs.id AS session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
 		        COUNT(a.id) AS attendee_count, AVG(a.rating) AS average_rating`).
@@ -381,10 +393,29 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		Order("vs.started_at DESC").
 		Limit(100)
 
-	if err := q.Scan(&history).Error; err != nil {
+	if err := q.Scan(&sessionRows).Error; err != nil {
 		slog.Error("GetFamilyHistory query failed", "error", err, "userID", userID, "groupID", groupMember.GroupID)
 		c.String(http.StatusInternalServerError, "Failed to load family history")
 		return
+	}
+
+	// Convert session rows to FamilyHistoryItem
+	history = make([]FamilyHistoryItem, len(sessionRows))
+	for i, row := range sessionRows {
+		history[i] = FamilyHistoryItem{
+			SessionID:      row.SessionID,
+			MediaID:        row.MediaID,
+			MediaType:      row.MediaType,
+			StartedAt:      row.StartedAt,
+			Notes:          row.Notes,
+			AttendeeCount:  row.AttendeeCount,
+			AverageRating:  row.AverageRating,
+			Attendees:      []struct {
+				UserID   uint     `json:"userId"`
+				Username string   `json:"username"`
+				Rating   *float64 `json:"rating"`
+			}{},
+		}
 	}
 
 	// Get attendees for each session
@@ -594,6 +625,30 @@ func (a *API) DebugGroupStatus(c *gin.Context) {
 		"userId": userID,
 		"inGroup": inGroup,
 		"groupId": groupID,
+		"tablesExist": tableCount == 4,
+		"tableCounts": gin.H{
+			"groups": groupCount,
+			"groupMembers": memberCount,
+			"viewingSessions": sessionCount,
+			"attendances": attendanceCount,
+		},
+	})
+}
+
+// TestDatabaseTables is a simple endpoint to check if the database tables exist (no auth required)
+func (a *API) TestDatabaseTables(c *gin.Context) {
+	// Check if tables exist
+	var tableCount int
+	a.DB.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('groups', 'group_members', 'viewing_sessions', 'attendances')").Scan(&tableCount)
+	
+	// Count records in each table
+	var groupCount, memberCount, sessionCount, attendanceCount int64
+	a.DB.Model(&Group{}).Count(&groupCount)
+	a.DB.Model(&GroupMember{}).Count(&memberCount)
+	a.DB.Model(&ViewingSession{}).Count(&sessionCount)
+	a.DB.Model(&Attendance{}).Count(&attendanceCount)
+	
+	c.JSON(http.StatusOK, gin.H{
 		"tablesExist": tableCount == 4,
 		"tableCounts": gin.H{
 			"groups": groupCount,
