@@ -408,6 +408,16 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	a.DB.Model(&struct{}{}).Table("watcheds").Count(&watchedCount)
 	slog.Info("Debug: watcheds table count", "count", watchedCount)
 	
+	// Debug: Show all records in watcheds table
+	var watchedRecords []struct {
+		UserID    uint    `json:"user_id"`
+		ContentID int     `json:"content_id"`
+		Status    string  `json:"status"`
+		Rating    *float64 `json:"rating"`
+	}
+	a.DB.Table("watcheds").Select("user_id, content_id, status, rating").Find(&watchedRecords)
+	slog.Info("Debug: All watcheds records", "records", watchedRecords)
+	
 			// Debug: Check for specific ratings
 		var testRating struct {
 			Rating float64
