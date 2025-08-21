@@ -33,8 +33,8 @@
 	async function loadFamilyHistory() {
 		try {
 			loading = true;
-			const response = await axios.get("/group/family-history");
-			familyHistory = response.data;
+			const response = await axios.get("/api/group/family-history");
+			familyHistory = Array.isArray(response.data) ? response.data : [];
 
 			// Load content details for each item
 			for (const item of familyHistory) {
@@ -82,6 +82,11 @@
 	}
 
 	function applyFiltersAndSort() {
+		if (!Array.isArray(familyHistory)) {
+			filteredHistory = [];
+			return;
+		}
+		
 		let filtered = [...familyHistory];
 
 		// Apply type filter
@@ -116,7 +121,7 @@
 	}
 
 	// Reactive statement to update filtered history when filters change
-	$: if (familyHistory.length > 0 && Object.keys(contentDetails).length > 0) {
+	$: if (Array.isArray(familyHistory) && familyHistory.length > 0 && Object.keys(contentDetails).length > 0) {
 		applyFiltersAndSort();
 	}
 
