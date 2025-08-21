@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"log/slog"
 )
 
 type API struct {
@@ -335,7 +336,12 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	// Get user's group ID
 	var groupMember GroupMember
 	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err != nil {
-		c.String(http.StatusNotFound, "User not in any group")
+		if err == gorm.ErrRecordNotFound {
+			// User is not in any group, return empty history
+			c.JSON(http.StatusOK, []FamilyHistoryItem{})
+			return
+		}
+		c.String(http.StatusInternalServerError, "Failed to check group membership")
 		return
 	}
 
@@ -368,7 +374,8 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		Limit(100)
 
 	if err := q.Scan(&history).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		slog.Error("GetFamilyHistory query failed", "error", err, "userID", userID, "groupID", groupMember.GroupID)
+		c.String(http.StatusInternalServerError, "Failed to load family history")
 		return
 	}
 
@@ -388,7 +395,8 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 				history[i].SessionID, groupMember.GroupID)
 
 		if err := attendeeQuery.Scan(&attendees).Error; err != nil {
-			continue // Skip this session if we can't get attendees
+			slog.Warn("Failed to get attendees for session", "sessionID", history[i].SessionID, "error", err)
+			continue
 		}
 
 		history[i].Attendees = attendees

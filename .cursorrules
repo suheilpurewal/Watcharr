@@ -1,0 +1,93 @@
+You are an expert SvelteKit + TypeScript + Go engineer working in a fork of Watcharr.
+Primary objective: turn Watcharr into a group-based app with a shared “Family” hub that shows the group’s combined watchlist, viewings (who/when), per-member ratings, and pending requests. Secondary objective: finalize the “mark as watched → attendance modal” flow so viewings are captured consistently for movies (and later episodes). 
+
+Current blocker to fix first
+
+Family hub page isn’t loading data due to a broken API call. Diagnose and fix the fetch/endpoint/schema/auth issues so the Family page renders real group data. (The server has group routes under server/groupview/*.) Do not rely on mock data; use the actual endpoints. 
+
+Ground truth (project state)
+
+You will find a movie details page that wires an AttendanceModal to capture group attendees & time after “FINISHED.” Files of interest:
+
+src/routes/(app)/movie/[id]/+page.svelte (parent page wiring) 
+
+src/lib/group/AttendanceModal.svelte (modal; loads /api/group/members, posts to /api/group/viewings) 
+
+These components mix Svelte v5 runes and legacy patterns; standardize to v5 runes where you touch UI code, and use createEventDispatcher for events.
+
+Success criteria (acceptance tests)
+A) Family hub (Group view) — must pass
+
+Navigating to the Family page loads real data from group APIs (no spinner hang, no console errors).
+
+The page displays:
+
+Group viewings with who watched + when + (if available) ratings.
+
+Group pending requests not yet watched.
+
+Correct empty states and clear error surfaces on failed fetches.
+
+API integration is robust: proper HTTP paths, auth/headers, schema parsing, and failure UX (error message + retry/refresh guidance).
+
+B) “Mark as watched → attendance modal” — should pass
+
+Clicking FINISHED on a movie opens the AttendanceModal.
+
+Selecting ≥1 attendee and time → POST to /api/group/viewings succeeds → modal closes → page reflects watched state (same affordances as TV pages).
+
+Cancel leaves status unchanged; POST failure keeps modal open with an error message.
+
+Code uses Svelte v5 runes consistently in touched files; no misuse of store subscriptions.
+
+Constraints and style
+
+Scope discipline: When asked to change a specific file, do not touch others unless strictly required by types or imports. Provide small, reviewable diffs with comments.
+
+No command execution. Provide code diffs only; the maintainer will build/run via Docker.
+
+Type safety: Pass npm run check locally (types/svelte). If changes require types, add them in the smallest surface possible.
+
+Explainability: For each diff, include a short rationale (what was broken, what changed, why).
+
+Step plan (do in order)
+
+Locate Family page & requests
+
+Find the Family/group hub route (likely under src/routes/group or similar) and identify its fetch calls.
+
+Verify endpoints under server/groupview/* and confirm the exact paths/JSON shapes exposed by routes.go and related handlers. Align the client to those shapes. 
+
+Fix API integration
+
+Ensure correct URL, method, headers, credentials/auth, and JSON decode.
+
+Add defensive error handling: non-OK status → show a clear UI error state, don’t spin forever.
+
+Log fetch failures in dev and surface a helpful user message with a retry button.
+
+Render group data
+
+Implement components/sections to display:
+a) Viewings (content title, date/time, attendees list, optional ratings)
+b) Pending requests (title, who requested, date)
+
+Add empty states (e.g., “No viewings yet”) and loading skeletons.
+
+Harden attendance modal flow (movie page)
+
+Keep parent wiring in +page.svelte minimal and correct: open modal on FINISHED, close on success, call existing contentChanged("FINISHED") to refresh watched UI. 
+
+Ensure AttendanceModal.svelte uses runes ($props, $state, $effect) and createEventDispatcher, syncs startedAt on open, validates at least one attendee, posts correct payload, and handles errors. 
+
+QA notes to maintainers
+
+Provide a manual test checklist (routes to visit, expected UI, how to simulate API errors).
+
+List any new env vars or server config assumptions.
+
+What not to do
+
+Don’t invent new endpoints if server/groupview/* already provides what you need; if shapes are insufficient, propose a tiny server change with a small diff.
+
+Don’t refactor unrelated Watcharr areas or styling.
