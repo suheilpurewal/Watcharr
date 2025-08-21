@@ -364,9 +364,13 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		return
 	}
 
+	slog.Info("GetFamilyHistory: Found user in group", "userID", userID, "groupID", groupMember.GroupID)
+
 	var history []FamilyHistoryItem
 
 	// Get all viewing sessions with attendees from the user's group
+	slog.Info("GetFamilyHistory: Starting query for group", "groupID", groupMember.GroupID)
+	
 	q := a.DB.Table("viewing_sessions AS vs").
 		Select(`vs.id AS session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
 		        COUNT(a.id) AS attendee_count, AVG(a.rating) AS average_rating`).
@@ -556,4 +560,46 @@ func (a *API) EnsureUserInGroup(c *gin.Context) {
 	}
 	
 	c.JSON(http.StatusOK, gin.H{"message": "Added user to existing family group", "groupId": existingGroup.ID})
+}
+
+// DebugGroupStatus returns debug information about the user's group status
+func (a *API) DebugGroupStatus(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Check if tables exist
+	var tableCount int
+	a.DB.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('groups', 'group_members', 'viewing_sessions', 'attendances')").Scan(&tableCount)
+	
+	// Check if user is in a group
+	var groupMember GroupMember
+	var inGroup bool
+	var groupID string
+	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err == nil {
+		inGroup = true
+		groupID = groupMember.GroupID
+	}
+	
+	// Count records in each table
+	var groupCount, memberCount, sessionCount, attendanceCount int64
+	a.DB.Model(&Group{}).Count(&groupCount)
+	a.DB.Model(&GroupMember{}).Count(&memberCount)
+	a.DB.Model(&ViewingSession{}).Count(&sessionCount)
+	a.DB.Model(&Attendance{}).Count(&attendanceCount)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"userId": userID,
+		"inGroup": inGroup,
+		"groupId": groupID,
+		"tablesExist": tableCount == 4,
+		"tableCounts": gin.H{
+			"groups": groupCount,
+			"groupMembers": memberCount,
+			"viewingSessions": sessionCount,
+			"attendances": attendanceCount,
+		},
+	})
 }

@@ -29,4 +29,5 @@ func RegisterRoutes(db *gorm.DB, api *gin.RouterGroup, authRequired gin.HandlerF
 	
 	// Debug/utility routes
 	g.GET("/ensure-user-in-group", authRequired, a.EnsureUserInGroup)
+	g.GET("/debug-status", authRequired, a.DebugGroupStatus)
 }
