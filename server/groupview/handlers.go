@@ -140,6 +140,44 @@ func (a *API) PostViewing(c *gin.Context) {
 			RatedAt:          ratedAt,
 		}
 		if err := tx.Create(&rec).Error; err != nil { tx.Rollback(); c.String(http.StatusBadRequest, err.Error()); return }
+		
+		// Also create a Watched record for this user/content combination
+		if userID != nil {
+			// Convert mediaID to integer for the watcheds table
+			mediaIDInt, err := strconv.Atoi(in.MediaID)
+			if err == nil {
+				// Check if a watched record already exists
+				var existingWatched struct {
+					ID uint
+				}
+				watchedExists := tx.Table("watcheds").Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).First(&existingWatched).Error == nil
+				
+				if !watchedExists {
+					// Create new watched record
+					watchedRecord := map[string]interface{}{
+						"user_id":    *userID,
+						"content_id": mediaIDInt,
+						"status":     "FINISHED",
+						"rating":     aIn.Rating,
+						"created_at": time.Now().UTC(),
+						"updated_at": time.Now().UTC(),
+					}
+					if err := tx.Table("watcheds").Create(watchedRecord).Error; err != nil {
+						tx.Rollback()
+						c.String(http.StatusBadRequest, "Failed to create watched record: "+err.Error())
+						return
+					}
+				} else if aIn.Rating != nil {
+					// Update existing watched record with new rating
+					if err := tx.Table("watcheds").Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).
+						Update("rating", aIn.Rating).Error; err != nil {
+						tx.Rollback()
+						c.String(http.StatusBadRequest, "Failed to update watched record: "+err.Error())
+						return
+					}
+				}
+			}
+		}
 	}
 	if err := tx.Commit().Error; err != nil { c.String(http.StatusInternalServerError, err.Error()); return }
 	c.JSON(http.StatusCreated, gin.H{"id": s.ID})
