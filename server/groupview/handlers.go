@@ -398,6 +398,8 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Failed to load family history")
 		return
 	}
+	
+	slog.Info("GetFamilyHistory: Found sessions", "sessionCount", len(sessionRows), "groupID", groupMember.GroupID)
 
 	// Convert session rows to FamilyHistoryItem
 	history = make([]FamilyHistoryItem, len(sessionRows))
@@ -426,18 +428,19 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 			Rating   *float64 `json:"rating"`
 		}
 
+		// Get ALL attendees for this session (not just group members)
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, a.rating").
 			Joins("JOIN users u ON u.id = a.user_id").
-			Joins("JOIN group_members gm ON gm.user_id = u.id").
-			Where("a.viewing_session_id = ? AND gm.group_id = ? AND a.user_id IS NOT NULL", 
-				history[i].SessionID, groupMember.GroupID)
+			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
+				history[i].SessionID)
 
 		if err := attendeeQuery.Scan(&attendees).Error; err != nil {
 			slog.Warn("Failed to get attendees for session", "sessionID", history[i].SessionID, "error", err)
 			continue
 		}
 
+		slog.Info("Found attendees for session", "sessionID", history[i].SessionID, "attendeeCount", len(attendees), "attendees", attendees)
 		history[i].Attendees = attendees
 	}
 

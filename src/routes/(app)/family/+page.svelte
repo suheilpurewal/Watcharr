@@ -35,6 +35,12 @@
 			loading = true;
 			const response = await axios.get("/group/family-history");
 			familyHistory = Array.isArray(response.data) ? response.data : [];
+			
+			// Debug: Log the data we received
+			console.log("Family history data:", familyHistory);
+			if (familyHistory.length > 0) {
+				console.log("First item attendees:", familyHistory[0].attendees);
+			}
 
 			// Load content details for each item
 			for (const item of familyHistory) {
