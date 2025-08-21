@@ -79,7 +79,7 @@
 	}
 
 	function formatRating(rating?: number): string {
-		if (!rating) return "—";
+		if (rating === undefined || rating === null) return "—";
 		return rating.toFixed(1);
 	}
 
@@ -241,7 +241,7 @@
 								{#each item.attendees as attendee}
 									<div class="attendee">
 										<span class="name">{attendee.username}</span>
-										{#if attendee.rating}
+										{#if attendee.rating !== undefined && attendee.rating !== null}
 											<span class="individual-rating">
 												<Icon i="star" wh={12} />
 												{formatRating(attendee.rating)}
