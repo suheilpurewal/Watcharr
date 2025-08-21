@@ -17,6 +17,23 @@ type API struct {
 	DB *gorm.DB
 }
 
+// getOrCacheContent gets content from the database or creates it if it doesn't exist
+func (a *API) getOrCacheContent(contentType ContentType, tmdbID int) (Content, error) {
+	var content Content
+	
+	// Look in db for content
+	if err := a.DB.Where("type = ? AND tmdb_id = ?", contentType, tmdbID).First(&content).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Content not found, we'll need to create it
+			// For now, let's just return an error since we don't have TMDB API access here
+			return Content{}, fmt.Errorf("content not found for tmdb_id %d and type %s", tmdbID, contentType)
+		}
+		return Content{}, err
+	}
+	
+	return content, nil
+}
+
 // WatchedStatus represents the status of watched content
 type WatchedStatus string
 
@@ -27,6 +44,22 @@ const (
 	HOLD     WatchedStatus = "HOLD"
 	DROPPED  WatchedStatus = "DROPPED"
 )
+
+// ContentType represents the type of content
+type ContentType string
+
+const (
+	MOVIE ContentType = "movie"
+	SHOW  ContentType = "tv"
+)
+
+// Content represents cached content from TMDB
+type Content struct {
+	ID     int         `json:"id" gorm:"primaryKey;autoIncrement"`
+	TmdbID int         `json:"tmdbId" gorm:"uniqueIndex:contentidtotypeidx;not null"`
+	Title  string      `json:"title"`
+	Type   ContentType `json:"type" gorm:"uniqueIndex:contentidtotypeidx;not null"`
+}
 
 // Watched represents a watched item in the database
 type Watched struct {
@@ -167,29 +200,39 @@ func (a *API) PostViewing(c *gin.Context) {
 		// Create a Watched record for this user/content combination (without rating)
 		// The rating will be added later through the regular Watcharr rating system
 		if userID != nil {
-			// Convert mediaID to integer for the watcheds table
+			// Convert mediaID to integer for the TMDB API call
 			mediaIDInt, err := strconv.Atoi(in.MediaID)
 			if err == nil {
-				// Check if a watched record already exists
-				var existingWatched Watched
-				watchedExists := tx.Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).First(&existingWatched).Error == nil
-				
-				if !watchedExists {
-					// Create new watched record without rating (rating will be added later)
-					watchedRecord := Watched{
-						Status:    FINISHED,
-						Rating:    0.0, // Default to 0, will be updated when user rates
-						UserID:    *userID,
-						ContentID: &mediaIDInt,
-					}
-					
-					if err := tx.Create(&watchedRecord).Error; err != nil {
-						tx.Rollback()
-						c.String(http.StatusBadRequest, "Failed to create watched record: "+err.Error())
-						return
-					}
+				// Use Watcharr's getOrCacheContent function to get the proper internal content ID
+				contentType := "movie"
+				if in.MediaType == "episode" {
+					contentType = "tv"
 				}
-				// If record exists, don't update it - let the regular rating system handle it
+				
+				// Get or cache the content to get the internal content ID
+				content, err := a.getOrCacheContent(ContentType(contentType), mediaIDInt)
+				if err == nil && content.ID != 0 {
+					// Check if a watched record already exists using the internal content ID
+					var existingWatched Watched
+					watchedExists := tx.Where("user_id = ? AND content_id = ?", *userID, content.ID).First(&existingWatched).Error == nil
+					
+					if !watchedExists {
+						// Create new watched record without rating (rating will be added later)
+						watchedRecord := Watched{
+							Status:    FINISHED,
+							Rating:    0.0, // Default to 0, will be updated when user rates
+							UserID:    *userID,
+							ContentID: &content.ID, // Use the internal content ID
+						}
+						
+						if err := tx.Create(&watchedRecord).Error; err != nil {
+							tx.Rollback()
+							c.String(http.StatusBadRequest, "Failed to create watched record: "+err.Error())
+							return
+						}
+					}
+					// If record exists, don't update it - let the regular rating system handle it
+				}
 			}
 		}
 	}
@@ -441,7 +484,8 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		        COUNT(a.id) AS attendee_count, AVG(w.rating) AS average_rating`).
 		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
 		Joins("JOIN group_members gm ON gm.user_id = a.user_id").
-		Joins("LEFT JOIN watcheds w ON w.user_id = a.user_id AND CAST(w.content_id AS TEXT) = vs.media_id AND w.status = 'FINISHED'").
+		Joins("LEFT JOIN contents c ON c.tmdb_id = CAST(vs.media_id AS INTEGER) AND c.type = vs.media_type").
+		Joins("LEFT JOIN watcheds w ON w.user_id = a.user_id AND w.content_id = c.id AND w.status = 'FINISHED'").
 		Where("gm.group_id = ? AND a.user_id IS NOT NULL", groupMember.GroupID).
 		Group("vs.id, vs.media_id, vs.media_type, vs.started_at, vs.notes").
 		Order("vs.started_at DESC").
@@ -532,13 +576,14 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 
 		// Get ALL attendees for this session with their ratings from the Watched table
 		// We need to match the mediaID from the viewing session with the content_id in watcheds
-		// Convert mediaID to integer for the query
+		// First, get the internal content ID from the TMDB ID
 		mediaIDInt, _ := strconv.Atoi(history[i].MediaID)
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, COALESCE(w.rating, 0) AS rating").
 			Joins("JOIN users u ON u.id = a.user_id").
-			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
-				mediaIDInt).
+			Joins("LEFT JOIN contents c ON c.tmdb_id = ? AND c.type = ?", 
+				mediaIDInt, history[i].MediaType).
+			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = c.id AND w.status = 'FINISHED'").
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)
 		
