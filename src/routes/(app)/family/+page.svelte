@@ -33,7 +33,7 @@
 	async function loadFamilyHistory() {
 		try {
 			loading = true;
-			const response = await axios.get("/api/group/family-history");
+			const response = await axios.get("/group/family-history");
 			familyHistory = Array.isArray(response.data) ? response.data : [];
 
 			// Load content details for each item
