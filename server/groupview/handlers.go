@@ -401,6 +401,22 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	}
 	
 	slog.Info("GetFamilyHistory: Found sessions", "sessionCount", len(sessionRows), "groupID", groupMember.GroupID)
+	
+	// Debug: Check if watcheds table exists and has data
+	var watchedCount int64
+	a.DB.Model(&struct{}{}).Table("watcheds").Count(&watchedCount)
+	slog.Info("Debug: watcheds table count", "count", watchedCount)
+	
+	// Debug: Check for specific ratings
+	var testRating struct {
+		Rating float64
+	}
+	testQuery := a.DB.Table("watcheds").Select("rating").Where("user_id = ? AND content_id = ? AND status = 'FINISHED'", userID, sessionRows[0].MediaID).First(&testRating)
+	if testQuery.Error != nil {
+		slog.Warn("Debug: No rating found for test query", "error", testQuery.Error, "userID", userID, "contentID", sessionRows[0].MediaID)
+	} else {
+		slog.Info("Debug: Found test rating", "rating", testRating.Rating)
+	}
 
 	// Convert session rows to FamilyHistoryItem
 	history = make([]FamilyHistoryItem, len(sessionRows))
@@ -437,6 +453,12 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 				history[i].MediaID).
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)
+		
+		// Debug: Log the SQL query
+		sql := attendeeQuery.ToSQL(func(tx *gorm.DB) *gorm.DB {
+			return tx.Find(&[]struct{}{})
+		})
+		slog.Info("Attendee query SQL", "sql", sql, "mediaID", history[i].MediaID, "sessionID", history[i].SessionID)
 
 		if err := attendeeQuery.Scan(&attendees).Error; err != nil {
 			slog.Warn("Failed to get attendees for session", "sessionID", history[i].SessionID, "error", err)
