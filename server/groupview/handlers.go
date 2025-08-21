@@ -388,7 +388,7 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		        COUNT(a.id) AS attendee_count, AVG(w.rating) AS average_rating`).
 		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
 		Joins("JOIN group_members gm ON gm.user_id = a.user_id").
-		Joins("LEFT JOIN watched w ON w.user_id = a.user_id AND w.content_id = vs.media_id AND w.status = 'FINISHED'").
+		Joins("LEFT JOIN watcheds w ON w.user_id = a.user_id AND w.content_id = vs.media_id AND w.status = 'FINISHED'").
 		Where("gm.group_id = ? AND a.user_id IS NOT NULL", groupMember.GroupID).
 		Group("vs.id, vs.media_id, vs.media_type, vs.started_at, vs.notes").
 		Order("vs.started_at DESC").
@@ -433,7 +433,7 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, w.rating").
 			Joins("JOIN users u ON u.id = a.user_id").
-			Joins("LEFT JOIN watched w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
+			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
 				history[i].MediaID).
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)

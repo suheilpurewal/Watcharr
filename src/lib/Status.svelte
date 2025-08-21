@@ -50,6 +50,16 @@
 		<Icon i="check" />
 	</button>
 	<button
+		class={status && status !== "FAMILY_WATCHED" ? "not-active" : ""}
+		onclick={() => handleStatusClick("FAMILY_WATCHED")}
+		use:tooltip={{
+			text: "Family Watched",
+			pos: "top",
+		}}
+	>
+		<Icon i="people" />
+	</button>
+	<button
 		class={status && status !== "HOLD" ? "not-active" : ""}
 		onclick={() => handleStatusClick("HOLD")}
 		use:tooltip={{

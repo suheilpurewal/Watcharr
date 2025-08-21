@@ -58,19 +58,20 @@
 
 	async function onStatusIntercept(n: string) {
 		console.log('[group] onStatusIntercept', n);
-		if (n === "FINISHED") {
+		if (n === "FAMILY_WATCHED") {
 			defaultStartedAt = new Date().toISOString().slice(0, 16);
 			showAttendance = true;
-			console.log('[group] opening modal');
+			console.log('[group] opening family attendance modal');
 			return;
 		}
+		// For "FINISHED" and other statuses, proceed normally
 		contentChanged(n);
 	}
 
 	function afterAttendanceSaved() {
 		console.log('[group] parent afterAttendanceSaved()');
 		showAttendance = false;
-		contentChanged("FINISHED");
+		contentChanged("FINISHED"); // This will mark it as personally watched too
 	}
 	function cancelAttendance() {
 		console.log('[group] parent cancelAttendance()');
