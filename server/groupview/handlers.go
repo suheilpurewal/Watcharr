@@ -531,11 +531,14 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		}
 
 		// Get ALL attendees for this session with their ratings from the Watched table
-		// First, let's find what content_id is actually stored in watcheds for this user/content combination
+		// We need to match the mediaID from the viewing session with the content_id in watcheds
+		// Convert mediaID to integer for the query
+		mediaIDInt, _ := strconv.Atoi(history[i].MediaID)
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, COALESCE(w.rating, 0) AS rating").
 			Joins("JOIN users u ON u.id = a.user_id").
-			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.status = 'FINISHED'").
+			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
+				mediaIDInt).
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)
 		
