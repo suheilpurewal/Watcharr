@@ -24,7 +24,7 @@
     
     loading = true;
     try {
-      const response = await fetch("/group/my-pending-ratings", {
+      const response = await fetch("/api/group/my-pending-ratings", {
         headers: {
           "Authorization": localStorage.getItem("token") || "",
         },

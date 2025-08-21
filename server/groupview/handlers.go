@@ -1,6 +1,7 @@
 package groupview
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -354,9 +355,11 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// User is not in any group, return empty history
+			slog.Info("GetFamilyHistory: User not in any group, returning empty history", "userID", userID)
 			c.JSON(http.StatusOK, []FamilyHistoryItem{})
 			return
 		}
+		slog.Error("GetFamilyHistory: Database error checking group membership", "userID", userID, "error", err)
 		c.String(http.StatusInternalServerError, "Failed to check group membership")
 		return
 	}
@@ -478,4 +481,79 @@ func (a *API) ShareContentToFamily(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"sessionId": session.ID})
+}
+
+// EnsureUserInGroup ensures the current user is in a family group, creating one if needed
+func (a *API) EnsureUserInGroup(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Check if user is already in a group
+	var groupMember GroupMember
+	if err := a.DB.Where("user_id = ?", userID).Take(&groupMember).Error; err == nil {
+		// User is already in a group
+		c.JSON(http.StatusOK, gin.H{"message": "User already in group", "groupId": groupMember.GroupID})
+		return
+	}
+
+	// User is not in a group, check if any group exists
+	var existingGroup Group
+	if err := a.DB.First(&existingGroup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No group exists, create the first family group and make this user admin
+			groupID := uuid.New().String()
+			newGroup := Group{
+				ID:   groupID,
+				Name: "Family",
+			}
+			
+			if err := a.DB.Create(&newGroup).Error; err != nil {
+				slog.Error("EnsureUserInGroup: Failed to create family group", "error", err)
+				c.String(http.StatusInternalServerError, "Failed to create family group")
+				return
+			}
+			
+			// Create group member record for this user as admin
+			memberID := uuid.New().String()
+			groupMember := GroupMember{
+				ID:      memberID,
+				GroupID: groupID,
+				UserID:  userID.(uint),
+				Role:    "admin",
+			}
+			
+			if err := a.DB.Create(&groupMember).Error; err != nil {
+				slog.Error("EnsureUserInGroup: Failed to create group member record", "error", err)
+				c.String(http.StatusInternalServerError, "Failed to create group member record")
+				return
+			}
+			
+			c.JSON(http.StatusOK, gin.H{"message": "Created new family group and made user admin", "groupId": groupID})
+			return
+		} else {
+			slog.Error("EnsureUserInGroup: Database error checking for existing groups", "error", err)
+			c.String(http.StatusInternalServerError, "Database error")
+			return
+		}
+	}
+
+	// Group exists, add this user as a member
+	memberID := uuid.New().String()
+	groupMember = GroupMember{
+		ID:      memberID,
+		GroupID: existingGroup.ID,
+		UserID:  userID.(uint),
+		Role:    "member",
+	}
+	
+	if err := a.DB.Create(&groupMember).Error; err != nil {
+		slog.Error("EnsureUserInGroup: Failed to create group member record", "error", err)
+		c.String(http.StatusInternalServerError, "Failed to create group member record")
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Added user to existing family group", "groupId": existingGroup.ID})
 }
