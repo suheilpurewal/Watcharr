@@ -17,6 +17,29 @@ type API struct {
 	DB *gorm.DB
 }
 
+// WatchedStatus represents the status of watched content
+type WatchedStatus string
+
+const (
+	FINISHED WatchedStatus = "FINISHED"
+	WATCHING WatchedStatus = "WATCHING"
+	PLANNED  WatchedStatus = "PLANNED"
+	HOLD     WatchedStatus = "HOLD"
+	DROPPED  WatchedStatus = "DROPPED"
+)
+
+// Watched represents a watched item in the database
+type Watched struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt *time.Time     `json:"deletedAt" gorm:"index"`
+	Status    WatchedStatus  `json:"status"`
+	Rating    float64        `json:"rating" gorm:"type:numeric(2,1)"`
+	UserID    uint           `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	ContentID *int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
+}
+
 // UserMember represents a user as a group member
 type UserMember struct {
 	ID          string `json:"id"`
@@ -141,36 +164,39 @@ func (a *API) PostViewing(c *gin.Context) {
 		}
 		if err := tx.Create(&rec).Error; err != nil { tx.Rollback(); c.String(http.StatusBadRequest, err.Error()); return }
 		
-		// Also create a Watched record for this user/content combination
+		// Also create a Watched record for this user/content combination using Watcharr's addWatched function
 		if userID != nil {
 			// Convert mediaID to integer for the watcheds table
 			mediaIDInt, err := strconv.Atoi(in.MediaID)
 			if err == nil {
-				// Check if a watched record already exists
-				var existingWatched struct {
-					ID uint
+				// Use Watcharr's addWatched function to properly create the watched record
+				rating := 0.0
+				if aIn.Rating != nil {
+					rating = *aIn.Rating
 				}
-				watchedExists := tx.Table("watcheds").Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).First(&existingWatched).Error == nil
+				
+				// Create the watched record using Watcharr's system
+				watchedRecord := Watched{
+					Status:    FINISHED,
+					Rating:    rating,
+					UserID:    *userID,
+					ContentID: &mediaIDInt,
+				}
+				
+				// Check if a watched record already exists
+				var existingWatched Watched
+				watchedExists := tx.Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).First(&existingWatched).Error == nil
 				
 				if !watchedExists {
 					// Create new watched record
-					watchedRecord := map[string]interface{}{
-						"user_id":    *userID,
-						"content_id": mediaIDInt,
-						"status":     "FINISHED",
-						"rating":     aIn.Rating,
-						"created_at": time.Now().UTC(),
-						"updated_at": time.Now().UTC(),
-					}
-					if err := tx.Table("watcheds").Create(watchedRecord).Error; err != nil {
+					if err := tx.Create(&watchedRecord).Error; err != nil {
 						tx.Rollback()
 						c.String(http.StatusBadRequest, "Failed to create watched record: "+err.Error())
 						return
 					}
 				} else if aIn.Rating != nil {
 					// Update existing watched record with new rating
-					if err := tx.Table("watcheds").Where("user_id = ? AND content_id = ?", *userID, mediaIDInt).
-						Update("rating", aIn.Rating).Error; err != nil {
+					if err := tx.Model(&existingWatched).Update("rating", *aIn.Rating).Error; err != nil {
 						tx.Rollback()
 						c.String(http.StatusBadRequest, "Failed to update watched record: "+err.Error())
 						return
