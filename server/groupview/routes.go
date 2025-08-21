@@ -26,6 +26,7 @@ func RegisterRoutes(db *gorm.DB, api *gin.RouterGroup, authRequired gin.HandlerF
 	
 	// Phase 2: Family history and content sharing routes
 	g.GET("/family-history", authRequired, a.GetFamilyHistory)
+	g.GET("/personal-history", authRequired, a.GetPersonalHistory)
 	g.POST("/share-content", authRequired, a.ShareContentToFamily)
 	
 	// Debug/utility routes

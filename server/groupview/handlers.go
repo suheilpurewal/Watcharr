@@ -444,6 +444,87 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, history)
 }
 
+// GetPersonalHistory returns all viewing sessions where the current user was in attendance
+func (a *API) GetPersonalHistory(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.String(http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Get all viewing sessions where the current user was in attendance
+	type sessionRow struct {
+		SessionID      string     `json:"session_id"`
+		MediaID        string     `json:"media_id"`
+		MediaType      string     `json:"media_type"`
+		StartedAt      time.Time  `json:"started_at"`
+		Notes          *string    `json:"notes"`
+		AttendeeCount  int        `json:"attendee_count"`
+		AverageRating  *float64   `json:"average_rating"`
+		UserRating     *float64   `json:"user_rating"`
+	}
+	
+	var sessionRows []sessionRow
+	q := a.DB.Table("viewing_sessions AS vs").
+		Select(`vs.id AS session_id, vs.media_id, vs.media_type, vs.started_at, vs.notes,
+		        COUNT(a.id) AS attendee_count, AVG(a.rating) AS average_rating,
+		        user_attendance.rating AS user_rating`).
+		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
+		Joins("JOIN attendances user_attendance ON user_attendance.viewing_session_id = vs.id").
+		Where("user_attendance.user_id = ? AND a.user_id IS NOT NULL", userID).
+		Group("vs.id, vs.media_id, vs.media_type, vs.started_at, vs.notes, user_attendance.rating").
+		Order("vs.started_at DESC").
+		Limit(100)
+
+	if err := q.Scan(&sessionRows).Error; err != nil {
+		slog.Error("GetPersonalHistory query failed", "error", err, "userID", userID)
+		c.String(http.StatusInternalServerError, "Failed to load personal history")
+		return
+	}
+
+	// Convert to FamilyHistoryItem format for consistency
+	history := make([]FamilyHistoryItem, len(sessionRows))
+	for i, row := range sessionRows {
+		history[i] = FamilyHistoryItem{
+			SessionID:      row.SessionID,
+			MediaID:        row.MediaID,
+			MediaType:      row.MediaType,
+			StartedAt:      row.StartedAt,
+			Notes:          row.Notes,
+			AttendeeCount:  row.AttendeeCount,
+			AverageRating:  row.AverageRating,
+			Attendees:      []struct {
+				UserID   uint     `json:"userId"`
+				Username string   `json:"username"`
+				Rating   *float64 `json:"rating"`
+			}{},
+		}
+	}
+
+	// Get attendees for each session
+	for i := range history {
+		var attendees []struct {
+			UserID   uint     `json:"userId"`
+			Username string   `json:"username"`
+			Rating   *float64 `json:"rating"`
+		}
+
+		attendeeQuery := a.DB.Table("attendances AS a").
+			Select("u.id AS user_id, u.username, a.rating").
+			Joins("JOIN users u ON u.id = a.user_id").
+			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", history[i].SessionID)
+
+		if err := attendeeQuery.Scan(&attendees).Error; err != nil {
+			slog.Warn("Failed to get attendees for session", "sessionID", history[i].SessionID, "error", err)
+			continue
+		}
+
+		history[i].Attendees = attendees
+	}
+
+	c.JSON(http.StatusOK, history)
+}
+
 // ShareContentToFamily shares a user's personal watched content to the family group
 func (a *API) ShareContentToFamily(c *gin.Context) {
 	userID, exists := c.Get("userId")

@@ -345,11 +345,18 @@
 				<Icon i="compass" wh={26} />
 			</button>
 			<button
+				class="plain other personal"
+				onclick={() => goto("/")}
+				use:tooltip={{ text: "Personal History", pos: "bot" }}
+			>
+				<Icon i="home" wh={24} />
+			</button>
+			<button
 				class="plain other family"
 				onclick={() => goto("/family")}
 				use:tooltip={{ text: "Family History", pos: "bot" }}
 			>
-				<Icon i="home" wh={24} />
+				<Icon i="people" wh={24} />
 			</button>
 			<button
 				class="plain other following"
