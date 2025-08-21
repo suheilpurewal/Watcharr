@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -388,7 +389,7 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		        COUNT(a.id) AS attendee_count, AVG(w.rating) AS average_rating`).
 		Joins("JOIN attendances a ON a.viewing_session_id = vs.id").
 		Joins("JOIN group_members gm ON gm.user_id = a.user_id").
-		Joins("LEFT JOIN watcheds w ON w.user_id = a.user_id AND w.content_id = vs.media_id AND w.status = 'FINISHED'").
+		Joins("LEFT JOIN watcheds w ON w.user_id = a.user_id AND CAST(w.content_id AS TEXT) = vs.media_id AND w.status = 'FINISHED'").
 		Where("gm.group_id = ? AND a.user_id IS NOT NULL", groupMember.GroupID).
 		Group("vs.id, vs.media_id, vs.media_type, vs.started_at, vs.notes").
 		Order("vs.started_at DESC").
@@ -407,16 +408,18 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 	a.DB.Model(&struct{}{}).Table("watcheds").Count(&watchedCount)
 	slog.Info("Debug: watcheds table count", "count", watchedCount)
 	
-	// Debug: Check for specific ratings
-	var testRating struct {
-		Rating float64
-	}
-	testQuery := a.DB.Table("watcheds").Select("rating").Where("user_id = ? AND content_id = ? AND status = 'FINISHED'", userID, sessionRows[0].MediaID).First(&testRating)
-	if testQuery.Error != nil {
-		slog.Warn("Debug: No rating found for test query", "error", testQuery.Error, "userID", userID, "contentID", sessionRows[0].MediaID)
-	} else {
-		slog.Info("Debug: Found test rating", "rating", testRating.Rating)
-	}
+			// Debug: Check for specific ratings
+		var testRating struct {
+			Rating float64
+		}
+		// Convert mediaID to integer for the query
+		mediaIDInt, _ := strconv.Atoi(sessionRows[0].MediaID)
+		testQuery := a.DB.Table("watcheds").Select("rating").Where("user_id = ? AND content_id = ? AND status = 'FINISHED'", userID, mediaIDInt).First(&testRating)
+		if testQuery.Error != nil {
+			slog.Warn("Debug: No rating found for test query", "error", testQuery.Error, "userID", userID, "contentID", mediaIDInt)
+		} else {
+			slog.Info("Debug: Found test rating", "rating", testRating.Rating)
+		}
 
 	// Convert session rows to FamilyHistoryItem
 	history = make([]FamilyHistoryItem, len(sessionRows))
@@ -446,11 +449,13 @@ func (a *API) GetFamilyHistory(c *gin.Context) {
 		}
 
 		// Get ALL attendees for this session with their ratings from the Watched table
+		// Convert mediaID to integer for the query
+		mediaIDInt, _ := strconv.Atoi(history[i].MediaID)
 		attendeeQuery := a.DB.Table("attendances AS a").
 			Select("u.id AS user_id, u.username, w.rating").
 			Joins("JOIN users u ON u.id = a.user_id").
 			Joins("LEFT JOIN watcheds w ON w.user_id = u.id AND w.content_id = ? AND w.status = 'FINISHED'", 
-				history[i].MediaID).
+				mediaIDInt).
 			Where("a.viewing_session_id = ? AND a.user_id IS NOT NULL", 
 				history[i].SessionID)
 		
