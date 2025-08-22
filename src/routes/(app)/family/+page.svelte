@@ -29,6 +29,7 @@
 	let filterType: "all" | "movie" | "episode" = "all";
 	let sortBy: "date" | "rating" | "title" = "date";
 	let sortOrder: "desc" | "asc" = "desc";
+	let expandedRatings: Set<string> = new Set();
 
 	async function loadFamilyHistory() {
 		try {
@@ -85,6 +86,15 @@
 
 	function goToContent(mediaType: string, mediaId: string) {
 		goto(`/${mediaType}/${mediaId}`);
+	}
+
+	function toggleRatings(sessionId: string) {
+		if (expandedRatings.has(sessionId)) {
+			expandedRatings.delete(sessionId);
+		} else {
+			expandedRatings.add(sessionId);
+		}
+		expandedRatings = expandedRatings; // Trigger reactivity
 	}
 
 	function applyFiltersAndSort() {
@@ -231,45 +241,60 @@
 							<h3 class="content-title">{content?.title || content?.name || "Unknown Title"}</h3>
 							<div class="header-badges">
 								<span class="type-badge">{item.mediaType}</span>
-								{#if item.averageRating}
-									<span class="rating-badge">
-										<Icon i="star" wh={12} />
-										{formatRating(item.averageRating)}
-									</span>
-								{/if}
 							</div>
 						</div>
 
 						<!-- Metadata Row -->
 						<div class="metadata-row">
 							<div class="date-time">
-								<Icon i="calendar" wh={14} />
+								<Icon i="calendar" wh={12} />
 								{formatDate(item.startedAt)}
 							</div>
 							<div class="attendee-count">
-								<Icon i="people" wh={14} />
+								<Icon i="people" wh={12} />
 								{item.attendeeCount} {item.attendeeCount === 1 ? "person" : "people"}
 							</div>
 						</div>
 
-						<!-- Attendees Section -->
+						<!-- Collapsible Ratings Section -->
 						{#if item.attendees.length > 0}
-							<div class="attendees-section">
-								<div class="attendees-list">
-									{#each item.attendees as attendee}
-										<div class="attendee-item">
-											<span class="attendee-name">{attendee.username}</span>
-											{#if attendee.rating !== undefined && attendee.rating !== null}
-												<span class="attendee-rating">
-													<Icon i="star" wh={10} />
-													{formatRating(attendee.rating)}
-												</span>
-											{:else}
-												<span class="no-rating">—</span>
-											{/if}
+							<div class="ratings-section">
+								<button 
+									class="ratings-toggle"
+									onclick={(e) => { e.stopPropagation(); toggleRatings(item.sessionId); }}
+								>
+									<div class="ratings-summary">
+										<Icon i="star" wh={14} />
+										<span class="average-rating">
+											{formatRating(item.averageRating)} average
+										</span>
+									</div>
+									<Icon 
+										i={expandedRatings.has(item.sessionId) ? "chevron-up" : "chevron-down"} 
+										wh={16} 
+										class="expand-icon"
+									/>
+								</button>
+
+								{#if expandedRatings.has(item.sessionId)}
+									<div class="ratings-details">
+										<div class="attendees-list">
+											{#each item.attendees as attendee}
+												<div class="attendee-item">
+													<span class="attendee-name">{attendee.username}</span>
+													{#if attendee.rating !== undefined && attendee.rating !== null}
+														<span class="attendee-rating">
+															<Icon i="star" wh={10} />
+															{formatRating(attendee.rating)}
+														</span>
+													{:else}
+														<span class="no-rating">—</span>
+													{/if}
+												</div>
+											{/each}
 										</div>
-									{/each}
-								</div>
+									</div>
+								{/if}
 							</div>
 						{/if}
 
@@ -296,7 +321,7 @@
 
 	/* Header Section */
 	.header {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 		color: white;
 		padding: 2rem 1rem;
 		text-align: center;
@@ -428,8 +453,8 @@
 
 		&:focus {
 			outline: none;
-			border-color: #667eea;
-			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+			border-color: #3b82f6;
+			box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 		}
 
 		&:hover {
@@ -455,8 +480,8 @@
 
 		&:focus {
 			outline: none;
-			border-color: #667eea;
-			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+			border-color: #3b82f6;
+			box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 		}
 	}
 
@@ -571,25 +596,13 @@
 	}
 
 	.type-badge {
-		background: #667eea;
+		background: #3b82f6;
 		color: white;
 		padding: 0.25rem 0.5rem;
 		border-radius: 0.375rem;
 		font-size: 0.75rem;
 		font-weight: 500;
 		text-transform: capitalize;
-	}
-
-	.rating-badge {
-		background: #fbbf24;
-		color: #92400e;
-		padding: 0.25rem 0.5rem;
-		border-radius: 0.375rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
 	}
 
 	/* Metadata Row */
@@ -608,10 +621,56 @@
 		font-weight: 500;
 	}
 
-	/* Attendees Section */
-	.attendees-section {
+	/* Ratings Section */
+	.ratings-section {
 		border-top: 1px solid #f3f4f6;
 		padding-top: 0.75rem;
+	}
+
+	.ratings-toggle {
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0.5rem;
+		cursor: pointer;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-radius: 0.5rem;
+		transition: background-color 0.2s ease;
+
+		&:hover {
+			background: #f9fafb;
+		}
+
+		&:focus {
+			outline: none;
+			background: #f3f4f6;
+		}
+	}
+
+	.ratings-summary {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: #fbbf24;
+		font-weight: 600;
+		font-size: 0.875rem;
+	}
+
+	.average-rating {
+		color: #92400e;
+	}
+
+	.expand-icon {
+		color: #6b7280;
+		transition: transform 0.2s ease;
+	}
+
+	.ratings-details {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid #f3f4f6;
 	}
 
 	.attendees-list {
@@ -709,6 +768,14 @@
 		.poster-placeholder {
 			background: #374151;
 			color: #6b7280;
+		}
+
+		.ratings-toggle:hover {
+			background: #374151;
+		}
+
+		.ratings-toggle:focus {
+			background: #4b5563;
 		}
 	}
 </style>
