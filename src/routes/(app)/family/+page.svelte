@@ -75,7 +75,8 @@
 			month: "short",
 			day: "numeric",
 			hour: "2-digit",
-			minute: "2-digit"
+			minute: "2-digit",
+			timeZone: "America/Chicago"
 		});
 	}
 
@@ -247,7 +248,6 @@
 						<!-- Metadata Row -->
 						<div class="metadata-row">
 							<div class="date-time">
-								<Icon i="calendar" wh={10} />
 								{formatDate(item.startedAt)}
 							</div>
 							<div class="attendee-count">
@@ -325,7 +325,7 @@
 
 	/* Header Section */
 	.header {
-		background: #111827;
+		background: #000000;
 		color: white;
 		padding: 2rem 1rem;
 		text-align: center;
@@ -408,7 +408,7 @@
 	.filter-bar {
 		position: sticky;
 		top: 0;
-		background: #1f2937;
+		background: #000000;
 		border-bottom: 1px solid #374151;
 		padding: 1rem;
 		z-index: 10;
@@ -766,11 +766,11 @@
 	/* Dark Theme Support */
 	@media (prefers-color-scheme: dark) {
 		.family-history {
-			background: #111827;
+			background: #000000;
 		}
 
 		.filter-bar {
-			background: #1f2937;
+			background: #000000;
 			border-bottom-color: #374151;
 		}
 
