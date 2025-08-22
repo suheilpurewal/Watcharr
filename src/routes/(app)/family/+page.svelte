@@ -141,123 +141,143 @@
 </svelte:head>
 
 <div class="family-history">
+	<!-- Header Section -->
 	<div class="header">
-		<h1>
-			<Icon i="people" wh={32} />
-			Family Viewing History
-		</h1>
-		<p>See what your family has watched together</p>
+		<div class="header-content">
+			<div class="title-section">
+				<Icon i="people" wh={28} />
+				<h1>Family Viewing History</h1>
+			</div>
+			<p class="subtitle">See what your family has watched together</p>
+		</div>
 	</div>
 
 	{#if loading}
-		<Spinner />
+		<div class="loading-container">
+			<Spinner />
+		</div>
 	{:else if error}
-		<Error error={error} pretty="Failed to load family history!" />
+		<div class="error-container">
+			<Error error={error} pretty="Failed to load family history!" />
+		</div>
 	{:else if familyHistory.length === 0}
 		<div class="empty-state">
-			<Icon i="film" wh={64} />
+			<div class="empty-icon">
+				<Icon i="film" wh={48} />
+			</div>
 			<h2>No Family Viewings Yet</h2>
 			<p>Start watching movies and TV shows together to see your family history here!</p>
 		</div>
 	{:else}
-		<!-- Filter and Sort Controls -->
-		<div class="controls">
+		<!-- Sticky Filter Controls -->
+		<div class="filter-bar">
 			<div class="filter-controls">
-				<label>
-					<Icon i="filter" wh={16} />
-					Filter by type:
-					<select bind:value={filterType}>
+				<div class="filter-group">
+					<label for="type-filter">Type</label>
+					<select id="type-filter" bind:value={filterType} class="filter-select">
 						<option value="all">All</option>
 						<option value="movie">Movies</option>
 						<option value="episode">TV Episodes</option>
 					</select>
-				</label>
-			</div>
-			
-			<div class="sort-controls">
-				<label>
-					<Icon i="sort" wh={16} />
-					Sort by:
-					<select bind:value={sortBy}>
+				</div>
+				
+				<div class="filter-group">
+					<label for="sort-filter">Sort</label>
+					<select id="sort-filter" bind:value={sortBy} class="filter-select">
 						<option value="date">Date</option>
 						<option value="rating">Rating</option>
 						<option value="title">Title</option>
 					</select>
-				</label>
+				</div>
 				
 				<button 
-					class="sort-order" 
+					class="sort-toggle" 
 					onclick={() => sortOrder = sortOrder === "desc" ? "asc" : "desc"}
 					title={sortOrder === "desc" ? "Descending" : "Ascending"}
 				>
 					<Icon i={sortOrder === "desc" ? "arrow-down" : "arrow-up"} wh={16} />
 				</button>
 			</div>
+			
+			<div class="results-count">
+				{filteredHistory.length} of {familyHistory.length} viewings
+			</div>
 		</div>
 
-		<!-- Results Summary -->
-		<div class="results-summary">
-			Showing {filteredHistory.length} of {familyHistory.length} viewings
-		</div>
-
-		<div class="history-list">
+		<!-- Content Cards -->
+		<div class="content-grid">
 			{#each filteredHistory as item}
 				{@const content = contentDetails[item.mediaId]}
-				<div class="history-item" onclick={() => goToContent(item.mediaType, item.mediaId)}>
-					<div class="poster">
+				<div class="viewing-card" onclick={() => goToContent(item.mediaType, item.mediaId)}>
+					<!-- Poster Section -->
+					<div class="poster-section">
 						{#if content?.poster_path}
 							<img 
 								src={`https://image.tmdb.org/t/p/w200${content.poster_path}`} 
 								alt={content.title || content.name}
+								class="poster-image"
 							/>
 						{:else}
 							<div class="poster-placeholder">
-								<Icon i="film" wh={32} />
+								<Icon i="film" wh={24} />
 							</div>
 						{/if}
 					</div>
 
-					<div class="details">
-						<div class="title-section">
-							<h3>{content?.title || content?.name || "Unknown Title"}</h3>
-							<div class="metadata">
-								<span class="date">{formatDate(item.startedAt)}</span>
-								<span class="type">{item.mediaType}</span>
+					<!-- Content Section -->
+					<div class="content-section">
+						<!-- Header Row -->
+						<div class="card-header">
+							<h3 class="content-title">{content?.title || content?.name || "Unknown Title"}</h3>
+							<div class="header-badges">
+								<span class="type-badge">{item.mediaType}</span>
 								{#if item.averageRating}
-									<span class="rating">
-										<Icon i="star" wh={14} />
+									<span class="rating-badge">
+										<Icon i="star" wh={12} />
 										{formatRating(item.averageRating)}
 									</span>
 								{/if}
 							</div>
 						</div>
 
-						<div class="attendees">
-							<div class="attendee-count">
-								<Icon i="people" wh={16} />
-								{item.attendeeCount} {item.attendeeCount === 1 ? "person" : "people"}
+						<!-- Metadata Row -->
+						<div class="metadata-row">
+							<div class="date-time">
+								<Icon i="calendar" wh={14} />
+								{formatDate(item.startedAt)}
 							</div>
-							<div class="attendee-list">
-								{#each item.attendees as attendee}
-									<div class="attendee">
-										<span class="name">{attendee.username}</span>
-										{#if attendee.rating !== undefined && attendee.rating !== null}
-											<span class="individual-rating">
-												<Icon i="star" wh={12} />
-												{formatRating(attendee.rating)}
-											</span>
-										{:else}
-											<span class="no-rating">—</span>
-										{/if}
-									</div>
-								{/each}
+							<div class="attendee-count">
+								<Icon i="people" wh={14} />
+								{item.attendeeCount} {item.attendeeCount === 1 ? "person" : "people"}
 							</div>
 						</div>
 
+						<!-- Attendees Section -->
+						{#if item.attendees.length > 0}
+							<div class="attendees-section">
+								<div class="attendees-list">
+									{#each item.attendees as attendee}
+										<div class="attendee-item">
+											<span class="attendee-name">{attendee.username}</span>
+											{#if attendee.rating !== undefined && attendee.rating !== null}
+												<span class="attendee-rating">
+													<Icon i="star" wh={10} />
+													{formatRating(attendee.rating)}
+												</span>
+											{:else}
+												<span class="no-rating">—</span>
+											{/if}
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+
+						<!-- Notes Section -->
 						{#if item.notes}
-							<div class="notes">
-								<Icon i="note" wh={14} />
-								{item.notes}
+							<div class="notes-section">
+								<Icon i="note" wh={12} />
+								<span class="notes-text">{item.notes}</span>
 							</div>
 						{/if}
 					</div>
@@ -269,156 +289,231 @@
 
 <style lang="scss">
 	.family-history {
+		min-height: 100vh;
+		background: var(--bg-color, #f8f9fa);
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	}
+
+	/* Header Section */
+	.header {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		padding: 2rem 1rem;
+		text-align: center;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+		@media (min-width: 768px) {
+			padding: 3rem 2rem;
+		}
+	}
+
+	.header-content {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 20px;
 	}
 
-	.header {
-		text-align: center;
-		margin-bottom: 40px;
+	.title-section {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-bottom: 0.5rem;
 
 		h1 {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 12px;
-			font-size: 2.5rem;
-			margin-bottom: 8px;
-		}
+			font-size: 1.75rem;
+			font-weight: 600;
+			margin: 0;
+			letter-spacing: -0.025em;
 
-		p {
-			color: #666;
-			font-size: 1.1rem;
+			@media (min-width: 768px) {
+				font-size: 2.25rem;
+			}
 		}
 	}
 
+	.subtitle {
+		font-size: 1rem;
+		opacity: 0.9;
+		margin: 0;
+		font-weight: 400;
+	}
+
+	/* Loading & Error States */
+	.loading-container,
+	.error-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 50vh;
+		padding: 2rem;
+	}
+
+	/* Empty State */
 	.empty-state {
 		text-align: center;
-		padding: 60px 20px;
-		color: #666;
+		padding: 4rem 2rem;
+		max-width: 500px;
+		margin: 0 auto;
+
+		.empty-icon {
+			color: #6b7280;
+			margin-bottom: 1.5rem;
+		}
 
 		h2 {
-			margin: 20px 0 10px;
-			color: #333;
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: #374151;
+			margin: 0 0 0.75rem 0;
 		}
 
 		p {
-			font-size: 1.1rem;
+			color: #6b7280;
+			font-size: 1rem;
+			line-height: 1.5;
+			margin: 0;
 		}
 	}
 
-	.controls {
+	/* Filter Bar */
+	.filter-bar {
+		position: sticky;
+		top: 0;
+		background: white;
+		border-bottom: 1px solid #e5e7eb;
+		padding: 1rem;
+		z-index: 10;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+		@media (min-width: 768px) {
+			padding: 1.25rem 2rem;
+		}
+	}
+
+	.filter-controls {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 20px;
-		padding: 20px;
-		background: #f8f9fa;
-		border-radius: 12px;
-		gap: 20px;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
 
-		@media (max-width: 768px) {
-			flex-direction: column;
-			gap: 15px;
-		}
-
-		.filter-controls,
-		.sort-controls {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-
-			label {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				font-weight: 500;
-				color: #555;
-			}
-
-			select {
-				padding: 8px 12px;
-				border: 1px solid #ddd;
-				border-radius: 6px;
-				background: white;
-				font-size: 0.9rem;
-				cursor: pointer;
-
-				&:focus {
-					outline: none;
-					border-color: #007bff;
-					box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-				}
-			}
-		}
-
-		.sort-order {
-			padding: 8px;
-			border: 1px solid #ddd;
-			border-radius: 6px;
-			background: white;
-			cursor: pointer;
-			transition: all 0.2s ease;
-
-			&:hover {
-				background: #e9ecef;
-				border-color: #007bff;
-			}
-
-			&:focus {
-				outline: none;
-				border-color: #007bff;
-				box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-			}
+		@media (min-width: 768px) {
+			margin-bottom: 0;
 		}
 	}
 
-	.results-summary {
-		text-align: center;
-		margin-bottom: 20px;
-		color: #666;
-		font-size: 0.9rem;
-		font-style: italic;
-	}
-
-	.history-list {
+	.filter-group {
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: 0.25rem;
+
+		label {
+			font-size: 0.75rem;
+			font-weight: 500;
+			color: #6b7280;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
 	}
 
-	.history-item {
-		display: flex;
-		gap: 20px;
-		padding: 20px;
-		background: #f8f9fa;
-		border-radius: 12px;
+	.filter-select {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.5rem;
+		background: white;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #374151;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		border: 2px solid transparent;
 
-		&:hover {
-			background: #e9ecef;
-			border-color: #007bff;
-			transform: translateY(-2px);
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		&:focus {
+			outline: none;
+			border-color: #667eea;
+			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 		}
 
-		@media (max-width: 768px) {
-			flex-direction: column;
-			gap: 15px;
+		&:hover {
+			border-color: #9ca3af;
 		}
 	}
 
-	.poster {
-		flex-shrink: 0;
-		width: 120px;
-		height: 180px;
-		border-radius: 8px;
-		overflow: hidden;
+	.sort-toggle {
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.5rem;
+		background: white;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 
-		img {
+		&:hover {
+			background: #f9fafb;
+			border-color: #9ca3af;
+		}
+
+		&:focus {
+			outline: none;
+			border-color: #667eea;
+			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+		}
+	}
+
+	.results-count {
+		font-size: 0.875rem;
+		color: #6b7280;
+		font-weight: 500;
+	}
+
+	/* Content Grid */
+	.content-grid {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		@media (min-width: 768px) {
+			padding: 2rem;
+			gap: 1.5rem;
+		}
+	}
+
+	/* Viewing Card */
+	.viewing-card {
+		background: white;
+		border-radius: 1rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		overflow: hidden;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		border: 1px solid #f3f4f6;
+
+		&:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		}
+
+		@media (min-width: 768px) {
+			display: flex;
+		}
+	}
+
+	/* Poster Section */
+	.poster-section {
+		flex-shrink: 0;
+		width: 100%;
+		height: 200px;
+		background: #f3f4f6;
+
+		@media (min-width: 768px) {
+			width: 140px;
+			height: 210px;
+		}
+
+		.poster-image {
 			width: 100%;
 			height: 100%;
 			object-fit: cover;
@@ -427,137 +522,194 @@
 		.poster-placeholder {
 			width: 100%;
 			height: 100%;
-			background: #ddd;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			color: #999;
-		}
-
-		@media (max-width: 768px) {
-			width: 80px;
-			height: 120px;
-			align-self: center;
+			color: #9ca3af;
+			background: #f9fafb;
 		}
 	}
 
-	.details {
+	/* Content Section */
+	.content-section {
 		flex: 1;
+		padding: 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 15px;
-	}
+		gap: 0.75rem;
 
-	.title-section {
-		h3 {
-			font-size: 1.4rem;
-			margin-bottom: 8px;
-			color: #333;
-		}
-
-		.metadata {
-			display: flex;
-			gap: 15px;
-			flex-wrap: wrap;
-			font-size: 0.9rem;
-			color: #666;
-
-			.date {
-				font-weight: 500;
-			}
-
-			.type {
-				text-transform: capitalize;
-				background: #007bff;
-				color: white;
-				padding: 2px 8px;
-				border-radius: 4px;
-				font-size: 0.8rem;
-			}
-
-			.rating {
-				display: flex;
-				align-items: center;
-				gap: 4px;
-				color: #ffc107;
-				font-weight: 500;
-			}
+		@media (min-width: 768px) {
+			padding: 1.25rem;
 		}
 	}
 
-	.attendees {
-		.attendee-count {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			font-weight: 500;
-			color: #555;
-			margin-bottom: 8px;
-		}
+	/* Card Header */
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
 
-		.attendee-list {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 12px;
-		}
+	.content-title {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: #111827;
+		margin: 0;
+		line-height: 1.3;
+		flex: 1;
 
-		.attendee {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			background: white;
-			padding: 6px 12px;
-			border-radius: 20px;
-			font-size: 0.9rem;
-			border: 1px solid #ddd;
-
-			.name {
-				font-weight: 500;
-			}
-
-			.individual-rating {
-				display: flex;
-				align-items: center;
-				gap: 2px;
-				color: #ffc107;
-				font-size: 0.8rem;
-			}
-
-			.no-rating {
-				color: #999;
-				font-size: 0.8rem;
-			}
+		@media (min-width: 768px) {
+			font-size: 1.25rem;
 		}
 	}
 
-	.notes {
+	.header-badges {
+		display: flex;
+		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.type-badge {
+		background: #667eea;
+		color: white;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.375rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-transform: capitalize;
+	}
+
+	.rating-badge {
+		background: #fbbf24;
+		color: #92400e;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.375rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	/* Metadata Row */
+	.metadata-row {
+		display: flex;
+		gap: 1rem;
+		font-size: 0.875rem;
+		color: #6b7280;
+	}
+
+	.date-time,
+	.attendee-count {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-weight: 500;
+	}
+
+	/* Attendees Section */
+	.attendees-section {
+		border-top: 1px solid #f3f4f6;
+		padding-top: 0.75rem;
+	}
+
+	.attendees-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.attendee-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem;
+		background: #f9fafb;
+		border-radius: 0.5rem;
+		font-size: 0.875rem;
+	}
+
+	.attendee-name {
+		font-weight: 500;
+		color: #374151;
+	}
+
+	.attendee-rating {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		color: #fbbf24;
+		font-weight: 600;
+		font-size: 0.75rem;
+	}
+
+	.no-rating {
+		color: #9ca3af;
+		font-size: 0.75rem;
+	}
+
+	/* Notes Section */
+	.notes-section {
 		display: flex;
 		align-items: flex-start;
-		gap: 8px;
-		padding: 12px;
-		background: white;
-		border-radius: 8px;
-		border-left: 4px solid #007bff;
-		font-style: italic;
-		color: #555;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		background: #fef3c7;
+		border-radius: 0.5rem;
+		border-left: 3px solid #f59e0b;
+		font-size: 0.875rem;
+		color: #92400e;
 	}
 
-	@media (max-width: 768px) {
+	.notes-text {
+		font-style: italic;
+		line-height: 1.4;
+	}
+
+	/* Dark Theme Support */
+	@media (prefers-color-scheme: dark) {
 		.family-history {
-			padding: 15px;
+			background: #111827;
 		}
 
-		.header h1 {
-			font-size: 2rem;
+		.filter-bar {
+			background: #1f2937;
+			border-bottom-color: #374151;
 		}
 
-		.history-item {
-			padding: 15px;
+		.viewing-card {
+			background: #1f2937;
+			border-color: #374151;
 		}
 
-		.attendees .attendee-list {
-			flex-direction: column;
-			gap: 8px;
+		.content-title {
+			color: #f9fafb;
+		}
+
+		.attendee-item {
+			background: #374151;
+		}
+
+		.attendee-name {
+			color: #e5e7eb;
+		}
+
+		.filter-select,
+		.sort-toggle {
+			background: #374151;
+			border-color: #4b5563;
+			color: #f9fafb;
+
+			&:hover {
+				background: #4b5563;
+			}
+		}
+
+		.poster-placeholder {
+			background: #374151;
+			color: #6b7280;
 		}
 	}
 </style>
+
