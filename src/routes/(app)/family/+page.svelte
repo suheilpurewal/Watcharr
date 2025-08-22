@@ -247,11 +247,11 @@
 						<!-- Metadata Row -->
 						<div class="metadata-row">
 							<div class="date-time">
-								<Icon i="calendar" wh={12} />
+								<Icon i="calendar" wh={10} />
 								{formatDate(item.startedAt)}
 							</div>
 							<div class="attendee-count">
-								<Icon i="people" wh={12} />
+								<Icon i="people" wh={10} />
 								{item.attendeeCount} {item.attendeeCount === 1 ? "person" : "people"}
 							</div>
 						</div>
@@ -262,18 +262,22 @@
 								<button 
 									class="ratings-toggle"
 									onclick={(e) => { e.stopPropagation(); toggleRatings(item.sessionId); }}
+									title={expandedRatings.has(item.sessionId) ? "Hide individual ratings" : "Show individual ratings"}
 								>
 									<div class="ratings-summary">
 										<Icon i="star" wh={14} />
 										<span class="average-rating">
 											{formatRating(item.averageRating)} average
 										</span>
+										<span class="expand-hint">Click to {expandedRatings.has(item.sessionId) ? "hide" : "show"} details</span>
 									</div>
-									<Icon 
-										i={expandedRatings.has(item.sessionId) ? "chevron-up" : "chevron-down"} 
-										wh={16} 
-										class="expand-icon"
-									/>
+									<div class="expand-indicator">
+										<Icon 
+											i={expandedRatings.has(item.sessionId) ? "chevron-up" : "chevron-down"} 
+											wh={16} 
+											class="expand-icon"
+										/>
+									</div>
 								</button>
 
 								{#if expandedRatings.has(item.sessionId)}
@@ -321,11 +325,11 @@
 
 	/* Header Section */
 	.header {
-		background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+		background: #111827;
 		color: white;
 		padding: 2rem 1rem;
 		text-align: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
 		@media (min-width: 768px) {
 			padding: 3rem 2rem;
@@ -388,12 +392,12 @@
 		h2 {
 			font-size: 1.5rem;
 			font-weight: 600;
-			color: #374151;
+			color: #f9fafb;
 			margin: 0 0 0.75rem 0;
 		}
 
 		p {
-			color: #6b7280;
+			color: #9ca3af;
 			font-size: 1rem;
 			line-height: 1.5;
 			margin: 0;
@@ -404,11 +408,11 @@
 	.filter-bar {
 		position: sticky;
 		top: 0;
-		background: white;
-		border-bottom: 1px solid #e5e7eb;
+		background: #1f2937;
+		border-bottom: 1px solid #374151;
 		padding: 1rem;
 		z-index: 10;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
 		@media (min-width: 768px) {
 			padding: 1.25rem 2rem;
@@ -434,7 +438,7 @@
 		label {
 			font-size: 0.75rem;
 			font-weight: 500;
-			color: #6b7280;
+			color: #9ca3af;
 			text-transform: uppercase;
 			letter-spacing: 0.05em;
 		}
@@ -442,12 +446,12 @@
 
 	.filter-select {
 		padding: 0.5rem 0.75rem;
-		border: 1px solid #d1d5db;
+		border: 1px solid #4b5563;
 		border-radius: 0.5rem;
-		background: white;
+		background: #374151;
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: #374151;
+		color: #f9fafb;
 		cursor: pointer;
 		transition: all 0.2s ease;
 
@@ -458,24 +462,25 @@
 		}
 
 		&:hover {
-			border-color: #9ca3af;
+			border-color: #6b7280;
 		}
 	}
 
 	.sort-toggle {
 		padding: 0.5rem;
-		border: 1px solid #d1d5db;
+		border: 1px solid #4b5563;
 		border-radius: 0.5rem;
-		background: white;
+		background: #374151;
 		cursor: pointer;
 		transition: all 0.2s ease;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		color: #f9fafb;
 
 		&:hover {
-			background: #f9fafb;
-			border-color: #9ca3af;
+			background: #4b5563;
+			border-color: #6b7280;
 		}
 
 		&:focus {
@@ -487,7 +492,7 @@
 
 	.results-count {
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: #9ca3af;
 		font-weight: 500;
 	}
 
@@ -508,17 +513,17 @@
 
 	/* Viewing Card */
 	.viewing-card {
-		background: white;
+		background: #1f2937;
 		border-radius: 1rem;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 		overflow: hidden;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		border: 1px solid #f3f4f6;
+		border: 1px solid #374151;
 
 		&:hover {
 			transform: translateY(-2px);
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 		}
 
 		@media (min-width: 768px) {
@@ -531,7 +536,7 @@
 		flex-shrink: 0;
 		width: 100%;
 		height: 200px;
-		background: #f3f4f6;
+		background: #374151;
 
 		@media (min-width: 768px) {
 			width: 140px;
@@ -550,8 +555,8 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			color: #9ca3af;
-			background: #f9fafb;
+			color: #6b7280;
+			background: #374151;
 		}
 	}
 
@@ -579,7 +584,7 @@
 	.content-title {
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: #111827;
+		color: #f9fafb;
 		margin: 0;
 		line-height: 1.3;
 		flex: 1;
@@ -610,7 +615,7 @@
 		display: flex;
 		gap: 1rem;
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: #9ca3af;
 	}
 
 	.date-time,
@@ -623,7 +628,7 @@
 
 	/* Ratings Section */
 	.ratings-section {
-		border-top: 1px solid #f3f4f6;
+		border-top: 1px solid #374151;
 		padding-top: 0.75rem;
 	}
 
@@ -631,21 +636,24 @@
 		width: 100%;
 		background: none;
 		border: none;
-		padding: 0.5rem;
+		padding: 0.75rem;
 		cursor: pointer;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		border-radius: 0.5rem;
-		transition: background-color 0.2s ease;
+		transition: all 0.2s ease;
+		border: 1px solid transparent;
 
 		&:hover {
-			background: #f9fafb;
+			background: #374151;
+			border-color: #4b5563;
 		}
 
 		&:focus {
 			outline: none;
-			background: #f3f4f6;
+			background: #374151;
+			border-color: #3b82f6;
 		}
 	}
 
@@ -656,21 +664,50 @@
 		color: #fbbf24;
 		font-weight: 600;
 		font-size: 0.875rem;
+		flex: 1;
 	}
 
 	.average-rating {
-		color: #92400e;
+		color: #fbbf24;
+	}
+
+	.expand-hint {
+		color: #9ca3af;
+		font-weight: 400;
+		font-size: 0.75rem;
+		margin-left: 0.5rem;
+		opacity: 0.8;
+	}
+
+	.expand-indicator {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		background: #374151;
+		transition: all 0.2s ease;
 	}
 
 	.expand-icon {
-		color: #6b7280;
+		color: #9ca3af;
 		transition: transform 0.2s ease;
+		font-size: 0.875rem;
+	}
+
+	.ratings-toggle:hover .expand-indicator {
+		background: #4b5563;
+	}
+
+	.ratings-toggle:hover .expand-icon {
+		color: #d1d5db;
 	}
 
 	.ratings-details {
 		margin-top: 0.75rem;
 		padding-top: 0.75rem;
-		border-top: 1px solid #f3f4f6;
+		border-top: 1px solid #374151;
 	}
 
 	.attendees-list {
@@ -684,14 +721,14 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 0.5rem;
-		background: #f9fafb;
+		background: #374151;
 		border-radius: 0.5rem;
 		font-size: 0.875rem;
 	}
 
 	.attendee-name {
 		font-weight: 500;
-		color: #374151;
+		color: #e5e7eb;
 	}
 
 	.attendee-rating {
@@ -714,11 +751,11 @@
 		align-items: flex-start;
 		gap: 0.5rem;
 		padding: 0.75rem;
-		background: #fef3c7;
+		background: #1e293b;
 		border-radius: 0.5rem;
 		border-left: 3px solid #f59e0b;
 		font-size: 0.875rem;
-		color: #92400e;
+		color: #fbbf24;
 	}
 
 	.notes-text {
